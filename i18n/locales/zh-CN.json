@@ -1,4 +1,74 @@
 {
   "home": "论文",
-  "back": "返回"
+  "back": "返回",
+  "writingStudio": {
+    "toolbar": {
+      "marks": {
+        "bold": "加粗",
+        "code": "行内代码",
+        "highlight": "高亮",
+        "italic": "斜体",
+        "link": "链接",
+        "strike": "删除线",
+        "subscript": "下标",
+        "superscript": "上标",
+        "textStyle": "文本样式",
+        "underline": "下划线"
+      },
+      "groups": {
+        "blockNodes": "块节点",
+        "insertNodes": "插入节点",
+        "tableNodes": "表格节点"
+      },
+      "labels": {
+        "nodeBlocks": "块级节点",
+        "mediaInline": "媒体与行内",
+        "tableActions": "表格操作"
+      },
+      "block": {
+        "paragraph": "段落",
+        "heading1": "一级标题",
+        "heading2": "二级标题",
+        "heading3": "三级标题",
+        "blockquote": "引用",
+        "bulletList": "无序列表",
+        "orderedList": "有序列表",
+        "taskList": "任务列表",
+        "codeBlock": "代码块（Lowlight）",
+        "details": "折叠详情",
+        "hardBreak": "硬换行",
+        "horizontalRule": "分割线"
+      },
+      "insert": {
+        "image": "图片",
+        "audio": "音频",
+        "youtube": "YouTube",
+        "twitch": "Twitch",
+        "emoji": "Emoji",
+        "mention": "提及"
+      },
+      "table": {
+        "insert3x3": "插入 3 x 3 表格",
+        "addColumnBefore": "前方插入列",
+        "addColumnAfter": "后方插入列",
+        "deleteColumn": "删除列",
+        "addRowBefore": "上方插入行",
+        "addRowAfter": "下方插入行",
+        "deleteRow": "删除行",
+        "toggleHeaderRow": "切换表头行",
+        "toggleHeaderColumn": "切换表头列",
+        "mergeSplitCells": "合并 / 拆分单元格",
+        "deleteTable": "删除表格"
+      }
+    },
+    "prompts": {
+      "link": "请输入链接地址（留空会移除链接）",
+      "image": "请输入图片地址",
+      "audio": "请输入音频地址（mp3/wav/ogg 等）",
+      "youtube": "请输入 YouTube 链接",
+      "twitch": "请输入 Twitch 链接",
+      "emoji": "请输入 Emoji shortcode（例如 grinning）",
+      "mention": "请输入提及名称（不需要 {'@'}）"
+    }
+  }
 }

@@ -1,4 +1,74 @@
 {
   "home": "论文",
-  "back": "返回"
+  "back": "返回",
+  "writingStudio": {
+    "toolbar": {
+      "marks": {
+        "bold": "粗體",
+        "code": "行內程式碼",
+        "highlight": "高亮",
+        "italic": "斜體",
+        "link": "連結",
+        "strike": "刪除線",
+        "subscript": "下標",
+        "superscript": "上標",
+        "textStyle": "文字樣式",
+        "underline": "底線"
+      },
+      "groups": {
+        "blockNodes": "區塊節點",
+        "insertNodes": "插入節點",
+        "tableNodes": "表格節點"
+      },
+      "labels": {
+        "nodeBlocks": "區塊節點",
+        "mediaInline": "媒體與行內",
+        "tableActions": "表格操作"
+      },
+      "block": {
+        "paragraph": "段落",
+        "heading1": "標題 1",
+        "heading2": "標題 2",
+        "heading3": "標題 3",
+        "blockquote": "引用",
+        "bulletList": "無序清單",
+        "orderedList": "有序清單",
+        "taskList": "任務清單",
+        "codeBlock": "程式碼區塊（Lowlight）",
+        "details": "摺疊詳情",
+        "hardBreak": "硬換行",
+        "horizontalRule": "分隔線"
+      },
+      "insert": {
+        "image": "圖片",
+        "audio": "音訊",
+        "youtube": "YouTube",
+        "twitch": "Twitch",
+        "emoji": "Emoji",
+        "mention": "提及"
+      },
+      "table": {
+        "insert3x3": "插入 3 x 3 表格",
+        "addColumnBefore": "前方插入欄",
+        "addColumnAfter": "後方插入欄",
+        "deleteColumn": "刪除欄",
+        "addRowBefore": "上方插入列",
+        "addRowAfter": "下方插入列",
+        "deleteRow": "刪除列",
+        "toggleHeaderRow": "切換表頭列",
+        "toggleHeaderColumn": "切換表頭欄",
+        "mergeSplitCells": "合併 / 拆分儲存格",
+        "deleteTable": "刪除表格"
+      }
+    },
+    "prompts": {
+      "link": "請輸入連結網址（留空會移除連結）",
+      "image": "請輸入圖片網址",
+      "audio": "請輸入音訊網址（mp3/wav/ogg 等）",
+      "youtube": "請輸入 YouTube 連結",
+      "twitch": "請輸入 Twitch 連結",
+      "emoji": "請輸入 Emoji shortcode（例如 grinning）",
+      "mention": "請輸入提及名稱（不需要 {'@'}）"
+    }
+  }
 }

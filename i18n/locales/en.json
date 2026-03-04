@@ -1,4 +1,74 @@
 {
   "home": "Article",
-  "back": "Back"
+  "back": "Back",
+  "writingStudio": {
+    "toolbar": {
+      "marks": {
+        "bold": "Bold",
+        "code": "Code",
+        "highlight": "Highlight",
+        "italic": "Italic",
+        "link": "Link",
+        "strike": "Strike",
+        "subscript": "Subscript",
+        "superscript": "Superscript",
+        "textStyle": "Text Style",
+        "underline": "Underline"
+      },
+      "groups": {
+        "blockNodes": "Block Nodes",
+        "insertNodes": "Insert Nodes",
+        "tableNodes": "Table Nodes"
+      },
+      "labels": {
+        "nodeBlocks": "Node Blocks",
+        "mediaInline": "Media & Inline",
+        "tableActions": "Table Actions"
+      },
+      "block": {
+        "paragraph": "Paragraph",
+        "heading1": "Heading 1",
+        "heading2": "Heading 2",
+        "heading3": "Heading 3",
+        "blockquote": "Blockquote",
+        "bulletList": "Bullet List",
+        "orderedList": "Ordered List",
+        "taskList": "Task List",
+        "codeBlock": "Code Block (Lowlight)",
+        "details": "Details",
+        "hardBreak": "Hard Break",
+        "horizontalRule": "Horizontal Rule"
+      },
+      "insert": {
+        "image": "Image",
+        "audio": "Audio",
+        "youtube": "Youtube",
+        "twitch": "Twitch",
+        "emoji": "Emoji",
+        "mention": "Mention"
+      },
+      "table": {
+        "insert3x3": "Insert 3 x 3 Table",
+        "addColumnBefore": "Add Column Before",
+        "addColumnAfter": "Add Column After",
+        "deleteColumn": "Delete Column",
+        "addRowBefore": "Add Row Before",
+        "addRowAfter": "Add Row After",
+        "deleteRow": "Delete Row",
+        "toggleHeaderRow": "Toggle Header Row",
+        "toggleHeaderColumn": "Toggle Header Column",
+        "mergeSplitCells": "Merge / Split Cells",
+        "deleteTable": "Delete Table"
+      }
+    },
+    "prompts": {
+      "link": "Enter link URL (leave empty to remove)",
+      "image": "Enter image URL",
+      "audio": "Enter audio URL (mp3/wav/ogg, etc.)",
+      "youtube": "Enter YouTube URL",
+      "twitch": "Enter Twitch URL",
+      "emoji": "Enter emoji shortcode (for example: grinning)",
+      "mention": "Enter mention value (without {'@'})"
+    }
+  }
 }
