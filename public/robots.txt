@@ -1,0 +1,5 @@
+User-Agent: *
+Allow: /
+
+# Sitemap
+Sitemap: https://article.micromatrix.org/sitemap.xml
