@@ -22,7 +22,18 @@
         "justify": "两端对齐"
       },
       "image": {
-        "resetSize": "重置尺寸"
+        "resetSize": "重置尺寸",
+        "upload": "上传图片",
+        "uploadSelectFile": "选择文件",
+        "uploadClear": "清空列表",
+        "uploadAreaTitle": "点击上传或拖拽图片到这里",
+        "uploadAreaHint": "最多 {count} 张，每张不超过 {size}MB",
+        "uploadModeApi": "已启用上传接口（显示实时上传进度）",
+        "uploadModeLocal": "未配置上传接口，当前使用本地插入",
+        "uploadStatusSuccess": "已完成",
+        "uploadStatusFailed": "上传失败",
+        "uploadErrorInvalidType": "仅支持图片文件",
+        "uploadErrorFileSize": "文件超过 {size}MB 限制"
       },
       "groups": {
         "paragraphHeading": "段落与标题",
@@ -54,7 +65,7 @@
         "horizontalRule": "分割线"
       },
       "insert": {
-        "image": "图片",
+        "imageByUrl": "图片链接",
         "audio": "音频",
         "youtube": "YouTube",
         "twitch": "Twitch",

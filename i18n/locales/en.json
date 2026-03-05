@@ -22,7 +22,18 @@
         "justify": "Justify"
       },
       "image": {
-        "resetSize": "Reset Size"
+        "resetSize": "Reset Size",
+        "upload": "Upload Image",
+        "uploadSelectFile": "Select File",
+        "uploadClear": "Clear List",
+        "uploadAreaTitle": "Click to upload or drag images here",
+        "uploadAreaHint": "Maximum {count} files, {size}MB each",
+        "uploadModeApi": "Upload API enabled (real-time progress available)",
+        "uploadModeLocal": "Upload API is not configured, using local insert",
+        "uploadStatusSuccess": "Completed",
+        "uploadStatusFailed": "Upload failed",
+        "uploadErrorInvalidType": "Image files only",
+        "uploadErrorFileSize": "File exceeds {size}MB limit"
       },
       "groups": {
         "paragraphHeading": "Paragraph & Headings",
@@ -54,7 +65,7 @@
         "horizontalRule": "Horizontal Rule"
       },
       "insert": {
-        "image": "Image",
+        "imageByUrl": "Image URL",
         "audio": "Audio",
         "youtube": "Youtube",
         "twitch": "Twitch",

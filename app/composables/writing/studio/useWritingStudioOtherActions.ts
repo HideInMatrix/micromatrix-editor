@@ -1,4 +1,5 @@
 import { useI18n } from "#imports";
+import type { ImageAlignValue } from "../extensions/useTipTapImageExtension";
 import type { WritingStudioEditorRef } from "./useWritingStudioActionTypes";
 
 const promptValue = (message: string, defaultValue = "") => {
@@ -14,15 +15,82 @@ const promptValue = (message: string, defaultValue = "") => {
   return input.trim();
 };
 
+export type WritingStudioImageUploadProgressHandler = (progress: number) => void;
+
+export type WritingStudioUploadedImage = {
+  src: string;
+  alt?: string;
+  title?: string;
+  width?: number | null;
+  height?: number | null;
+  align?: ImageAlignValue;
+};
+
+export type WritingStudioImageUploader = (
+  file: File,
+  onProgress: WritingStudioImageUploadProgressHandler,
+) => Promise<string | WritingStudioUploadedImage>;
+
+export type InsertImageFromFileOptions = {
+  onProgress?: WritingStudioImageUploadProgressHandler;
+  uploader?: WritingStudioImageUploader;
+  align?: ImageAlignValue;
+  alt?: string;
+  title?: string;
+};
+
+const readImageAsDataUrl = (
+  file: File,
+  onProgress?: WritingStudioImageUploadProgressHandler,
+) =>
+  new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+
+    reader.onprogress = (event) => {
+      if (!event.lengthComputable || !onProgress) {
+        return;
+      }
+
+      const percent = Math.round((event.loaded / event.total) * 100);
+      onProgress(percent);
+    };
+
+    reader.onload = () => {
+      if (typeof reader.result !== "string") {
+        reject(new Error("Invalid image data"));
+        return;
+      }
+
+      onProgress?.(100);
+      resolve(reader.result);
+    };
+
+    reader.onerror = () => {
+      reject(reader.error ?? new Error("Failed to read image file"));
+    };
+
+    reader.readAsDataURL(file);
+  });
+
 export const useWritingStudioOtherActions = (editor: WritingStudioEditorRef) => {
   const { t } = useI18n();
 
   const setImageAlign = (align: "left" | "center" | "right") => {
-    editor.value?.chain().focus().updateAttributes("image", { align }).run();
+    const chain = editor.value?.chain().focus() as any;
+    if (!chain?.setImageAlign) {
+      return;
+    }
+
+    chain.setImageAlign(align).run();
   };
 
   const resetImageSize = () => {
-    editor.value?.chain().focus().updateAttributes("image", { width: null, height: null }).run();
+    const chain = editor.value?.chain().focus() as any;
+    if (!chain?.resetImageSize) {
+      return;
+    }
+
+    chain.resetImageSize().run();
   };
 
   const setTextAlign = (alignment: "left" | "center" | "right" | "justify") => {
@@ -99,7 +167,87 @@ export const useWritingStudioOtherActions = (editor: WritingStudioEditorRef) => 
       return;
     }
 
-    editor.value?.chain().focus().setImage({ src }).run();
+    const chain = editor.value?.chain().focus() as any;
+    if (!chain?.setImageWithAlignment) {
+      return;
+    }
+
+    chain.setImageWithAlignment({ src }).run();
+  };
+
+  const insertImageFromFile = async (
+    file: File,
+    options?: InsertImageFromFileOptions,
+  ): Promise<boolean> => {
+    if (!editor.value || !import.meta.client) {
+      return false;
+    }
+
+    if (!file.type.startsWith("image/")) {
+      return false;
+    }
+
+    const onProgress = options?.onProgress;
+
+    try {
+      const fallbackAlt = file.name || undefined;
+      let uploaded: WritingStudioUploadedImage;
+
+      if (options?.uploader) {
+        const response = await options.uploader(file, (progress) => {
+          onProgress?.(progress);
+        });
+
+        if (typeof response === "string") {
+          uploaded = {
+            src: response,
+            alt: options.alt ?? fallbackAlt,
+            title: options.title,
+            align: options.align,
+          };
+        } else {
+          uploaded = {
+            ...response,
+            src: response.src,
+            alt: response.alt ?? options.alt ?? fallbackAlt,
+            title: response.title ?? options.title,
+            align: response.align ?? options.align,
+          };
+        }
+      } else {
+        const src = await readImageAsDataUrl(file, onProgress);
+        uploaded = {
+          src,
+          alt: options?.alt ?? fallbackAlt,
+          title: options?.title,
+          align: options?.align,
+        };
+      }
+
+      if (!uploaded.src || uploaded.src.trim().length === 0) {
+        return false;
+      }
+
+      const chain = editor.value.chain().focus() as any;
+      if (!chain?.setImageWithAlignment) {
+        return false;
+      }
+
+      const success = chain
+        .setImageWithAlignment({
+          ...uploaded,
+        })
+        .run();
+
+      if (!success) {
+        return false;
+      }
+
+      onProgress?.(100);
+      return true;
+    } catch {
+      return false;
+    }
   };
 
   const insertAudio = () => {
@@ -257,6 +405,7 @@ export const useWritingStudioOtherActions = (editor: WritingStudioEditorRef) => 
     toggleSuperscript,
     toggleUnderline,
     insertImage,
+    insertImageFromFile,
     insertAudio,
     insertYoutube,
     insertTwitch,

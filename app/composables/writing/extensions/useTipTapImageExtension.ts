@@ -1,6 +1,17 @@
 import { Image } from "@tiptap/extension-image";
 
-type ImageAlignValue = "left" | "center" | "right";
+export type ImageAlignValue = "left" | "center" | "right";
+
+type SetImageWithAlignmentOptions = {
+    src: string;
+    alt?: string;
+    title?: string;
+    width?: number | null;
+    height?: number | null;
+    align?: ImageAlignValue;
+};
+
+const defaultImageAlign: ImageAlignValue = "center";
 
 const imageAlignValues: ImageAlignValue[] = ["left", "center", "right"];
 
@@ -8,15 +19,19 @@ const isImageAlignValue = (value: unknown): value is ImageAlignValue => {
     return typeof value === "string" && imageAlignValues.includes(value as ImageAlignValue);
 };
 
+const normalizeImageAlign = (value: unknown): ImageAlignValue => {
+    return isImageAlignValue(value) ? value : defaultImageAlign;
+};
+
 const WritingStudioImage = Image.extend({
     addAttributes() {
         return {
             ...this.parent?.(),
             align: {
-                default: "center",
+                default: defaultImageAlign,
                 parseHTML: (element) => {
                     const align = element.getAttribute("data-align");
-                    return isImageAlignValue(align) ? align : "center";
+                    return normalizeImageAlign(align);
                 },
                 renderHTML: (attributes) => {
                     if (!isImageAlignValue(attributes.align)) {
@@ -30,6 +45,41 @@ const WritingStudioImage = Image.extend({
             },
         };
     },
+    addCommands() {
+        return {
+            ...this.parent?.(),
+            setImageWithAlignment: (options: SetImageWithAlignmentOptions) => ({ commands }: any) => {
+                const { align, ...restOptions } = options;
+
+                return commands.insertContent({
+                    type: this.name,
+                    attrs: {
+                        ...restOptions,
+                        align: normalizeImageAlign(align),
+                    },
+                });
+            },
+            setImageAlign: (align: ImageAlignValue) => ({ commands, editor }: any) => {
+                if (!editor.isActive(this.name)) {
+                    return false;
+                }
+
+                return commands.updateAttributes(this.name, {
+                    align: normalizeImageAlign(align),
+                });
+            },
+            resetImageSize: () => ({ commands, editor }: any) => {
+                if (!editor.isActive(this.name)) {
+                    return false;
+                }
+
+                return commands.updateAttributes(this.name, {
+                    width: null,
+                    height: null,
+                });
+            },
+        };
+    },
 });
 
 export const useTipTapImageExtension = () => {
@@ -40,6 +90,7 @@ export const useTipTapImageExtension = () => {
         },
         resize: {
             enabled: true,
+            directions: ["left", "right", "bottom-left", "bottom-right", "top-left", "top-right"],
             minWidth: 120,
             minHeight: 80,
             alwaysPreserveAspectRatio: true,

@@ -22,7 +22,18 @@
         "justify": "左右對齊"
       },
       "image": {
-        "resetSize": "重設尺寸"
+        "resetSize": "重設尺寸",
+        "upload": "上傳圖片",
+        "uploadSelectFile": "選擇檔案",
+        "uploadClear": "清空列表",
+        "uploadAreaTitle": "點擊上傳或拖拽圖片到這裡",
+        "uploadAreaHint": "最多 {count} 張，每張不超過 {size}MB",
+        "uploadModeApi": "已啟用上傳介面（顯示即時上傳進度）",
+        "uploadModeLocal": "尚未設定上傳介面，目前使用本地插入",
+        "uploadStatusSuccess": "已完成",
+        "uploadStatusFailed": "上傳失敗",
+        "uploadErrorInvalidType": "僅支援圖片檔案",
+        "uploadErrorFileSize": "檔案超過 {size}MB 限制"
       },
       "groups": {
         "paragraphHeading": "段落與標題",
@@ -54,7 +65,7 @@
         "horizontalRule": "分隔線"
       },
       "insert": {
-        "image": "圖片",
+        "imageByUrl": "圖片連結",
         "audio": "音訊",
         "youtube": "YouTube",
         "twitch": "Twitch",

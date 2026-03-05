@@ -8,10 +8,15 @@ import {
   AlignLeft,
   AlignRight,
   Bold,
+  CircleCheck,
+  CloudUpload,
   Code2,
+  FileImage,
   Highlighter,
+  ImagePlus,
   Italic,
   Link2,
+  LoaderCircle,
   Maximize2,
   GripVertical,
   Strikethrough,
@@ -19,6 +24,7 @@ import {
   Superscript as SuperscriptIcon,
   Type,
   Underline as UnderlineIcon,
+  X,
 } from "lucide-vue-next";
 import { Button } from "@/components/ui/button";
 import {
@@ -38,6 +44,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useWritingStudioDragHandle } from "~/composables/writing/studio/useWritingStudioDragHandle";
+import { useWritingStudioImageApiUploader } from "~/composables/writing/studio/useWritingStudioImageApiUploader";
+import type { WritingStudioImageUploadItem } from "~/composables/writing/studio/useWritingStudioImageUpload";
+import { useWritingStudioImageUpload } from "~/composables/writing/studio/useWritingStudioImageUpload";
 import { useWritingStudioToolbarActions } from "~/composables/writing/studio/useWritingStudioToolbarActions";
 import { useWritingStudioToolbarState } from "~/composables/writing/studio/useWritingStudioToolbarState";
 import { useTipTapEditor } from "~/composables/writing/useTipTapEditor";
@@ -52,6 +61,7 @@ const {
   canRun,
 } = useWritingStudioToolbarState(editor);
 const { dragHandleNestedOptions, handleDragHandleStart } = useWritingStudioDragHandle();
+const { uploader: imageApiUploader, isApiUploadEnabled } = useWritingStudioImageApiUploader();
 const {
   toggleBold,
   toggleCode,
@@ -77,6 +87,7 @@ const {
   setHardBreak,
   setHorizontalRule,
   insertImage,
+  insertImageFromFile,
   insertAudio,
   insertYoutube,
   insertTwitch,
@@ -213,10 +224,68 @@ const currentImageAlign = (): ImageAlignValue => {
 const shouldShowImageMenu = ({ editor: currentEditor }: any) => {
   return currentEditor.isEditable && currentEditor.isActive("image");
 };
+
+const {
+  imageUploadInputRef,
+  isImageUploadPanelOpen,
+  isImageUploadDragging,
+  imageUploadItems,
+  maxImageUploadFiles,
+  maxImageUploadFileSizeMb,
+  formatImageUploadFileSize,
+  closeImageUploadPanel,
+  openImageUploadPicker,
+  clearImageUploadItems,
+  removeImageUploadItem,
+  handleImageUploadChange,
+  handleImageUploadDragOver,
+  handleImageUploadDragLeave,
+  handleImageUploadDrop,
+} = useWritingStudioImageUpload({
+  insertImageFromFile,
+  uploader: imageApiUploader,
+  maxFiles: 3,
+  maxFileSizeMb: 5,
+});
+
+const openImageUploadPanelAndPick = () => {
+  openImageUploadPicker();
+};
+
+const imageUploadStatusText = (item: WritingStudioImageUploadItem) => {
+  if (item.status === "success") {
+    return t("writingStudio.toolbar.image.uploadStatusSuccess");
+  }
+
+  if (item.status === "error") {
+    if (item.errorCode === "invalid_type") {
+      return t("writingStudio.toolbar.image.uploadErrorInvalidType");
+    }
+
+    if (item.errorCode === "file_too_large") {
+      return t("writingStudio.toolbar.image.uploadErrorFileSize", {
+        size: maxImageUploadFileSizeMb,
+      });
+    }
+
+    return t("writingStudio.toolbar.image.uploadStatusFailed");
+  }
+
+  return `${item.progress}%`;
+};
 </script>
 
 <template>
   <section class="space-y-3">
+    <input
+      ref="imageUploadInputRef"
+      type="file"
+      class="hidden"
+      multiple
+      accept="image/png,image/jpeg,image/webp,image/gif,image/svg+xml,image/avif"
+      @change="handleImageUploadChange"
+    >
+
     <div class="flex flex-wrap items-center gap-1 rounded-lg border bg-card p-2 shadow-sm">
       <Select
         :model-value="currentParagraphHeading()"
@@ -481,7 +550,7 @@ const shouldShowImageMenu = ({ editor: currentEditor }: any) => {
         <DropdownMenuContent align="start" class="w-60">
           <DropdownMenuLabel>{{ t("writingStudio.toolbar.labels.mediaInline") }}</DropdownMenuLabel>
           <DropdownMenuItem @select.prevent="insertImage">
-            {{ t("writingStudio.toolbar.insert.image") }}
+            {{ t("writingStudio.toolbar.insert.imageByUrl") }}
           </DropdownMenuItem>
           <DropdownMenuItem @select.prevent="insertAudio">
             {{ t("writingStudio.toolbar.insert.audio") }}
@@ -501,6 +570,17 @@ const shouldShowImageMenu = ({ editor: currentEditor }: any) => {
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
+
+      <Button
+        variant="outline"
+        size="sm"
+        :disabled="!editor"
+        class="h-8 px-2 text-xs"
+        @click="openImageUploadPanelAndPick"
+      >
+        <ImagePlus />
+        {{ t("writingStudio.toolbar.image.upload") }}
+      </Button>
 
       <DropdownMenu>
         <DropdownMenuTrigger as-child>
@@ -580,6 +660,113 @@ const shouldShowImageMenu = ({ editor: currentEditor }: any) => {
         </DropdownMenuContent>
       </DropdownMenu>
     </div>
+
+    <section v-if="isImageUploadPanelOpen" class="ws-image-upload-panel">
+      <div class="ws-image-upload-panel-header">
+        <span class="ws-image-upload-panel-title">{{ t("writingStudio.toolbar.image.upload") }}</span>
+        <div class="flex items-center gap-2">
+          <Button
+            variant="ghost"
+            size="sm"
+            class="h-7 px-2 text-xs"
+            @click="openImageUploadPicker"
+          >
+            <CloudUpload />
+            {{ t("writingStudio.toolbar.image.uploadSelectFile") }}
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            class="h-7 px-2 text-xs"
+            @click="clearImageUploadItems"
+          >
+            {{ t("writingStudio.toolbar.image.uploadClear") }}
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            class="h-7 w-7"
+            @click="closeImageUploadPanel"
+          >
+            <X :size="14" />
+          </Button>
+        </div>
+      </div>
+
+      <button
+        type="button"
+        class="ws-image-upload-dropzone"
+        :class="{ 'is-dragging': isImageUploadDragging }"
+        @click="openImageUploadPicker"
+        @dragover="handleImageUploadDragOver"
+        @dragleave="handleImageUploadDragLeave"
+        @drop="handleImageUploadDrop"
+      >
+        <FileImage class="ws-image-upload-dropzone-icon" />
+        <span class="ws-image-upload-dropzone-title">
+          {{ t("writingStudio.toolbar.image.uploadAreaTitle") }}
+        </span>
+        <span class="ws-image-upload-dropzone-hint">
+          {{
+            t("writingStudio.toolbar.image.uploadAreaHint", {
+              count: maxImageUploadFiles,
+              size: maxImageUploadFileSizeMb,
+            })
+          }}
+        </span>
+      </button>
+
+      <p class="ws-image-upload-mode-text">
+        {{
+          isApiUploadEnabled
+            ? t("writingStudio.toolbar.image.uploadModeApi")
+            : t("writingStudio.toolbar.image.uploadModeLocal")
+        }}
+      </p>
+
+      <div v-if="imageUploadItems.length > 0" class="ws-image-upload-list">
+        <div v-for="item in imageUploadItems" :key="item.id" class="ws-image-upload-item">
+          <div class="ws-image-upload-item-main">
+            <div class="ws-image-upload-item-name-row">
+              <span class="ws-image-upload-item-name">{{ item.name }}</span>
+              <button
+                type="button"
+                class="ws-image-upload-item-remove"
+                @click="removeImageUploadItem(item.id)"
+              >
+                <X :size="14" />
+              </button>
+            </div>
+
+            <div class="ws-image-upload-item-meta-row">
+              <span class="ws-image-upload-item-size">
+                {{ formatImageUploadFileSize(item.size) }}
+              </span>
+              <span class="ws-image-upload-item-status">
+                <LoaderCircle
+                  v-if="item.status === 'uploading'"
+                  :size="12"
+                  class="animate-spin"
+                />
+                <CircleCheck v-else-if="item.status === 'success'" :size="12" />
+                {{ imageUploadStatusText(item) }}
+              </span>
+            </div>
+
+            <div class="ws-image-upload-progress-track">
+              <div
+                class="ws-image-upload-progress-fill"
+                :class="{
+                  'is-success': item.status === 'success',
+                  'is-error': item.status === 'error',
+                }"
+                :style="{ width: `${item.progress}%` }"
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
 
     <div class="rounded-lg border bg-background px-4 py-3 shadow-sm">
       <BubbleMenu
