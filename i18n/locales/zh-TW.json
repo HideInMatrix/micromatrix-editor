@@ -22,8 +22,12 @@
         "justify": "左右對齊"
       },
       "image": {
-        "resetSize": "重設尺寸",
         "upload": "上傳圖片",
+        "linkDialogTitle": "透過連結插入圖片",
+        "linkDialogDescription": "請輸入可正常存取的圖片連結網址。",
+        "linkInputPlaceholder": "https://example.com/image.png",
+        "insertConfirm": "插入圖片",
+        "cancel": "取消",
         "uploadSelectFile": "選擇檔案",
         "uploadClear": "清空列表",
         "uploadAreaTitle": "點擊上傳或拖拽圖片到這裡",
@@ -33,10 +37,14 @@
         "uploadStatusSuccess": "已完成",
         "uploadStatusFailed": "上傳失敗",
         "uploadErrorInvalidType": "僅支援圖片檔案",
-        "uploadErrorFileSize": "檔案超過 {size}MB 限制"
+        "uploadErrorFileSize": "檔案超過 {size}MB 限制",
+        "uploadCancel": "取消上傳",
+        "uploadRetry": "重新選擇",
+        "uploadReset": "重設狀態"
       },
       "groups": {
         "paragraphHeading": "段落與標題",
+        "imageNodes": "圖片",
         "listNodes": "列表",
         "blockNodes": "區塊節點",
         "insertNodes": "插入節點",
@@ -44,6 +52,7 @@
       },
       "labels": {
         "nodeBlocks": "區塊節點",
+        "imageActions": "圖片載入方式",
         "mediaInline": "媒體與行內",
         "tableActions": "表格操作"
       },

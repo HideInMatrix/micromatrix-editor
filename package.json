@@ -15,6 +15,7 @@
     "@nuxt/scripts": "0.13.0",
     "@nuxtjs/i18n": "10.2.1",
     "@nuxtjs/sitemap": "7.6.0",
+    "@tiptap/core": "^3.20.0",
     "@tiptap/extension-audio": "^3.20.0",
     "@tiptap/extension-code-block-lowlight": "^3.20.0",
     "@tiptap/extension-details": "^3.20.0",

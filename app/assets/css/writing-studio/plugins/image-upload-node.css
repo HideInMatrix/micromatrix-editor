@@ -1,0 +1,142 @@
+.writing-editor .tiptap .ws-image-upload-node {
+  margin: 0.9rem 0;
+}
+
+.writing-editor .tiptap .ws-image-upload-node-view {
+  width: 100%;
+  border: 1px solid oklch(var(--border));
+  border-radius: 0.9rem;
+  background: oklch(var(--card));
+  padding: 0.875rem;
+  box-shadow: 0 10px 22px -16px oklch(0 0 0 / 0.45);
+}
+
+.writing-editor .tiptap .ws-image-upload-node-dropzone {
+  width: 100%;
+  border: 2px dashed oklch(var(--primary) / 0.75);
+  border-radius: 0.75rem;
+  min-height: 9rem;
+  background: oklch(var(--muted) / 0.4);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  text-align: center;
+  padding: 1rem;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+
+.writing-editor .tiptap .ws-image-upload-node-dropzone.is-dragging {
+  border-color: oklch(var(--primary));
+  background: oklch(var(--primary) / 0.12);
+}
+
+.writing-editor .tiptap .ws-image-upload-node-dropzone-icon {
+  width: 1.9rem;
+  height: 1.9rem;
+  color: oklch(var(--primary));
+}
+
+.writing-editor .tiptap .ws-image-upload-node-dropzone-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: oklch(var(--foreground));
+}
+
+.writing-editor .tiptap .ws-image-upload-node-dropzone-hint {
+  font-size: 0.86rem;
+  color: oklch(var(--muted-foreground));
+}
+
+.writing-editor .tiptap .ws-image-upload-node-item {
+  border: 1px solid oklch(var(--border));
+  border-radius: 0.75rem;
+  background: oklch(var(--background));
+  padding: 0.75rem;
+}
+
+.writing-editor .tiptap .ws-image-upload-node-item-main {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+}
+
+.writing-editor .tiptap .ws-image-upload-node-item-leading {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 999px;
+  background: oklch(var(--primary) / 0.12);
+  color: oklch(var(--primary));
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+}
+
+.writing-editor .tiptap .ws-image-upload-node-item-icon {
+  width: 1rem;
+  height: 1rem;
+}
+
+.writing-editor .tiptap .ws-image-upload-node-item-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.writing-editor .tiptap .ws-image-upload-node-item-name {
+  font-size: 0.9rem;
+  color: oklch(var(--foreground));
+  line-height: 1.2;
+  word-break: break-all;
+}
+
+.writing-editor .tiptap .ws-image-upload-node-item-meta {
+  margin-top: 0.18rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  font-size: 0.75rem;
+  color: oklch(var(--muted-foreground));
+}
+
+.writing-editor .tiptap .ws-image-upload-node-item-status {
+  color: oklch(var(--primary));
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.writing-editor .tiptap .ws-image-upload-node-item-progress-track {
+  margin-top: 0.38rem;
+  width: 100%;
+  height: 0.3rem;
+  border-radius: 999px;
+  background: oklch(var(--muted));
+  overflow: hidden;
+}
+
+.writing-editor .tiptap .ws-image-upload-node-item-progress-fill {
+  width: 0;
+  height: 100%;
+  border-radius: inherit;
+  background: oklch(var(--primary));
+  transition: width 0.18s ease;
+}
+
+.writing-editor .tiptap .ws-image-upload-node-item-progress-fill.is-error {
+  background: oklch(var(--destructive));
+}
+
+.writing-editor .tiptap .ws-image-upload-node-actions {
+  margin-top: 0.5rem;
+  display: flex;
+  gap: 0.375rem;
+}
+
+.writing-editor .tiptap .ws-image-upload-node-mode {
+  margin-top: 0.55rem;
+  font-size: 0.75rem;
+  color: oklch(var(--muted-foreground));
+}

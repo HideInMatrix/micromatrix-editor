@@ -75,23 +75,73 @@ const readImageAsDataUrl = (
 export const useWritingStudioOtherActions = (editor: WritingStudioEditorRef) => {
   const { t } = useI18n();
 
+  const applyImageAlignDomFallback = (imagePos: number, align: "left" | "center" | "right") => {
+    if (!editor.value) {
+      return;
+    }
+
+    const nodeDom = editor.value.view.nodeDOM(imagePos) as HTMLElement | null;
+    const wrapper = nodeDom?.querySelector?.("[data-resize-wrapper]") as HTMLElement | null;
+    if (!wrapper) {
+      return;
+    }
+
+    wrapper.style.display = "block";
+    wrapper.style.width = "fit-content";
+    wrapper.style.maxWidth = "100%";
+
+    if (align === "left") {
+      wrapper.style.marginLeft = "0";
+      wrapper.style.marginRight = "auto";
+      return;
+    }
+
+    if (align === "center") {
+      wrapper.style.marginLeft = "auto";
+      wrapper.style.marginRight = "auto";
+      return;
+    }
+
+    wrapper.style.marginLeft = "auto";
+    wrapper.style.marginRight = "0";
+  };
+
+  const getSelectedImagePos = () => {
+    if (!editor.value) {
+      return null;
+    }
+
+    const selection = editor.value.state.selection as any;
+    if (selection?.node?.type?.name === "image" && typeof selection.from === "number") {
+      return selection.from;
+    }
+
+    return null;
+  };
+
   const setImageAlign = (align: "left" | "center" | "right") => {
-    const chain = editor.value?.chain().focus() as any;
+    const imagePos = getSelectedImagePos();
+    const chain = editor.value?.chain() as any;
+    if (!chain) {
+      return;
+    }
+
+    chain.focus();
+    if (typeof imagePos === "number" && chain.setNodeSelection) {
+      chain.setNodeSelection(imagePos);
+    }
+
     if (!chain?.setImageAlign) {
       return;
     }
 
-    chain.setImageAlign(align).run();
-  };
-
-  const resetImageSize = () => {
-    const chain = editor.value?.chain().focus() as any;
-    if (!chain?.resetImageSize) {
-      return;
+    const success = chain.setImageAlign(align).run();
+    if (success && typeof imagePos === "number") {
+      applyImageAlignDomFallback(imagePos, align);
     }
-
-    chain.resetImageSize().run();
   };
+
+
 
   const setTextAlign = (alignment: "left" | "center" | "right" | "justify") => {
     editor.value?.chain().focus().setTextAlign(alignment).run();
@@ -157,6 +207,20 @@ export const useWritingStudioOtherActions = (editor: WritingStudioEditorRef) => 
     editor.value?.chain().focus().toggleUnderline().run();
   };
 
+  const insertImageByUrl = (src: string) => {
+    const normalizedSrc = src.trim();
+    if (!normalizedSrc) {
+      return false;
+    }
+
+    const chain = editor.value?.chain().focus() as any;
+    if (!chain?.setImageWithAlignment) {
+      return false;
+    }
+
+    return chain.setImageWithAlignment({ src: normalizedSrc }).run();
+  };
+
   const insertImage = () => {
     const src = promptValue(
       t("writingStudio.prompts.image"),
@@ -167,12 +231,13 @@ export const useWritingStudioOtherActions = (editor: WritingStudioEditorRef) => 
       return;
     }
 
-    const chain = editor.value?.chain().focus() as any;
-    if (!chain?.setImageWithAlignment) {
-      return;
-    }
+    insertImageByUrl(src);
+  };
 
-    chain.setImageWithAlignment({ src }).run();
+  const insertImageUpload = () => {
+    editor.value?.chain().focus().insertContent({
+      type: "imageUpload",
+    }).run();
   };
 
   const insertImageFromFile = async (
@@ -392,7 +457,6 @@ export const useWritingStudioOtherActions = (editor: WritingStudioEditorRef) => 
 
   return {
     setImageAlign,
-    resetImageSize,
     setTextAlign,
     toggleBold,
     toggleCode,
@@ -404,7 +468,9 @@ export const useWritingStudioOtherActions = (editor: WritingStudioEditorRef) => 
     toggleSubscript,
     toggleSuperscript,
     toggleUnderline,
+    insertImageByUrl,
     insertImage,
+    insertImageUpload,
     insertImageFromFile,
     insertAudio,
     insertYoutube,

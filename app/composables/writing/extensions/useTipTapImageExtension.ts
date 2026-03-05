@@ -11,7 +11,7 @@ type SetImageWithAlignmentOptions = {
     align?: ImageAlignValue;
 };
 
-const defaultImageAlign: ImageAlignValue = "center";
+const defaultImageAlign: ImageAlignValue = "left";
 
 const imageAlignValues: ImageAlignValue[] = ["left", "center", "right"];
 
@@ -90,7 +90,7 @@ export const useTipTapImageExtension = () => {
         },
         resize: {
             enabled: true,
-            directions: ["left", "right", "bottom-left", "bottom-right", "top-left", "top-right"],
+            directions: ["left", "right",], //可选值  "bottom-left", "bottom-right", "top-left", "top-right"
             minWidth: 120,
             minHeight: 80,
             alwaysPreserveAspectRatio: true,

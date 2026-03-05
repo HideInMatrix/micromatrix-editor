@@ -22,6 +22,7 @@ export default defineNuxtConfig({
       account: process.env.NUXT_PUBLIC_ACCOUNT,
       password: process.env.NUXT_PUBLIC_PASSWORD,
       imgflCesdkLicense: process.env.NUXT_PUBLIC_IMGFL_CESDK_LICENSE,
+      writingStudioImageUploadEndpoint: process.env.NUXT_PUBLIC_WRITING_STUDIO_IMAGE_UPLOAD_ENDPOINT,
     },
   },
   shadcn: {

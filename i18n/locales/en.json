@@ -22,8 +22,12 @@
         "justify": "Justify"
       },
       "image": {
-        "resetSize": "Reset Size",
         "upload": "Upload Image",
+        "linkDialogTitle": "Insert image by URL",
+        "linkDialogDescription": "Paste a publicly accessible image URL.",
+        "linkInputPlaceholder": "https://example.com/image.png",
+        "insertConfirm": "Insert Image",
+        "cancel": "Cancel",
         "uploadSelectFile": "Select File",
         "uploadClear": "Clear List",
         "uploadAreaTitle": "Click to upload or drag images here",
@@ -33,10 +37,14 @@
         "uploadStatusSuccess": "Completed",
         "uploadStatusFailed": "Upload failed",
         "uploadErrorInvalidType": "Image files only",
-        "uploadErrorFileSize": "File exceeds {size}MB limit"
+        "uploadErrorFileSize": "File exceeds {size}MB limit",
+        "uploadCancel": "Cancel Upload",
+        "uploadRetry": "Choose Again",
+        "uploadReset": "Reset State"
       },
       "groups": {
         "paragraphHeading": "Paragraph & Headings",
+        "imageNodes": "Images",
         "listNodes": "Lists",
         "blockNodes": "Block Nodes",
         "insertNodes": "Insert Nodes",
@@ -44,6 +52,7 @@
       },
       "labels": {
         "nodeBlocks": "Node Blocks",
+        "imageActions": "Image Load Methods",
         "mediaInline": "Media & Inline",
         "tableActions": "Table Actions"
       },

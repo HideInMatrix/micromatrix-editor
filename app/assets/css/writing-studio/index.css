@@ -8,6 +8,7 @@
 @import "./plugins/emoji.css";
 @import "./plugins/media.css";
 @import "./plugins/image.css";
+@import "./plugins/image-upload-node.css";
 @import "./plugins/list.css";
 @import "./plugins/table.css";
 @import "./plugins/task-list.css";
