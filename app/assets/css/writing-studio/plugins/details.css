@@ -1,0 +1,5 @@
+.writing-editor .tiptap .ws-details {
+  margin: 0.8rem 0;
+  border: 1px solid oklch(var(--border));
+  border-radius: 0.5rem;
+}

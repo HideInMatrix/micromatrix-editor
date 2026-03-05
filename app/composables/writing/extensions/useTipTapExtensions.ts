@@ -1,32 +1,31 @@
-import { Audio } from "@tiptap/extension-audio";
 import { CodeBlockLowlight } from "@tiptap/extension-code-block-lowlight";
 import { Details, DetailsContent, DetailsSummary } from "@tiptap/extension-details";
 import { Emoji } from "@tiptap/extension-emoji";
 import { Highlight } from "@tiptap/extension-highlight";
-import { Image } from "@tiptap/extension-image";
 import { Link } from "@tiptap/extension-link";
 import { Mention } from "@tiptap/extension-mention";
 import { Subscript } from "@tiptap/extension-subscript";
 import { Superscript } from "@tiptap/extension-superscript";
-import { Table } from "@tiptap/extension-table";
-import { TableCell } from "@tiptap/extension-table-cell";
-import { TableHeader } from "@tiptap/extension-table-header";
-import { TableRow } from "@tiptap/extension-table-row";
 import { TaskItem } from "@tiptap/extension-task-item";
 import { TaskList } from "@tiptap/extension-task-list";
+import { TextAlign } from "@tiptap/extension-text-align";
 import { TextStyle } from "@tiptap/extension-text-style";
-import { Twitch } from "@tiptap/extension-twitch";
 import { Underline } from "@tiptap/extension-underline";
-import { Youtube } from "@tiptap/extension-youtube";
 import StarterKit from "@tiptap/starter-kit";
 import { common, createLowlight } from "lowlight";
+import { useTipTapMediaExtensions } from "./useTipTapMediaExtensions";
 import { useMarkdownExtension } from "./useMarkdown";
+import { useTipTapTableExtensions } from "./useTipTapTableExtensions";
+import { useTipTapTwitchParent } from "./useTipTapTwitchParent";
 
 const lowlight = createLowlight(common);
 
 export const useTipTapEditorPlugins = () => {
     const Markdown = useMarkdownExtension();
-    const twitchParent = import.meta.client ? window.location.hostname : "localhost";
+    const twitchParent = useTipTapTwitchParent();
+    const mediaExtensions = useTipTapMediaExtensions(twitchParent);
+    const tableExtensions = useTipTapTableExtensions();
+
     return [
         StarterKit.configure({
             codeBlock: false,
@@ -70,46 +69,17 @@ export const useTipTapEditorPlugins = () => {
                 class: "ws-mention",
             },
         }),
-        Image.configure({
-            allowBase64: true,
-            HTMLAttributes: {
-                class: "ws-media",
-            },
-        }),
-        Audio.configure({
-            controls: true,
-            HTMLAttributes: {
-                class: "ws-media",
-            },
-        }),
-        Youtube.configure({
-            width: 720,
-            height: 405,
-            HTMLAttributes: {
-                class: "ws-media",
-            },
-        }),
-        Twitch.configure({
-            parent: twitchParent,
-            width: 720,
-            height: 405,
-            HTMLAttributes: {
-                class: "ws-media",
-            },
-        }),
+        ...mediaExtensions,
         TaskList,
         TaskItem.configure({
             nested: true,
         }),
-        Table.configure({
-            resizable: true,
-            HTMLAttributes: {
-                class: "ws-table",
-            },
+        TextAlign.configure({
+            types: ["heading", "paragraph"],
+            alignments: ["left", "center", "right", "justify"],
+            defaultAlignment: "left",
         }),
-        TableRow,
-        TableHeader,
-        TableCell,
+        ...tableExtensions,
         Underline,
         Markdown,
     ]

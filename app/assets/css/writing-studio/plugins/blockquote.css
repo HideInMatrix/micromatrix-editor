@@ -1,0 +1,6 @@
+.writing-editor .tiptap blockquote {
+  margin: 0.8rem 0;
+  padding-left: 0.8rem;
+  border-left: 3px solid oklch(var(--border));
+  color: oklch(var(--muted-foreground));
+}

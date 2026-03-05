@@ -1,11 +1,20 @@
 <script lang="ts" setup>
 import { EditorContent } from "@tiptap/vue-3";
+import { BubbleMenu } from "@tiptap/vue-3/menus";
+import { DragHandle } from "@tiptap/extension-drag-handle-vue-3";
+import type { DragHandleRule, NestedOptions } from "@tiptap/extension-drag-handle";
 import {
+  AlignCenter,
+  AlignJustify,
+  AlignLeft,
+  AlignRight,
   Bold,
   Code2,
   Highlighter,
   Italic,
   Link2,
+  Maximize2,
+  GripVertical,
   Strikethrough,
   Subscript as SubscriptIcon,
   Superscript as SuperscriptIcon,
@@ -22,6 +31,13 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Separator } from "@/components/ui/separator";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useWritingStudioToolbarActions } from "~/composables/writing/studio/useWritingStudioToolbarActions";
 import { useWritingStudioToolbarState } from "~/composables/writing/studio/useWritingStudioToolbarState";
 import { useTipTapEditor } from "~/composables/writing/useTipTapEditor";
@@ -46,6 +62,9 @@ const {
   toggleSubscript,
   toggleSuperscript,
   toggleUnderline,
+  setImageAlign,
+  resetImageSize,
+  setTextAlign,
   setParagraph,
   toggleHeading,
   toggleBlockquote,
@@ -74,11 +93,272 @@ const {
   mergeOrSplitCells,
   deleteTable,
 } = useWritingStudioToolbarActions(editor);
+
+type ParagraphHeadingValue =
+  | "paragraph"
+  | "heading1"
+  | "heading2"
+  | "heading3"
+  | "heading4"
+  | "heading5"
+  | "heading6";
+
+type ListTypeValue = "bulletList" | "orderedList" | "taskList";
+type TextAlignValue = "left" | "center" | "right" | "justify";
+type ImageAlignValue = "left" | "center" | "right";
+
+const headingLevelMap: Record<Exclude<ParagraphHeadingValue, "paragraph">, 1 | 2 | 3 | 4 | 5 | 6> = {
+  heading1: 1,
+  heading2: 2,
+  heading3: 3,
+  heading4: 4,
+  heading5: 5,
+  heading6: 6,
+};
+
+const currentParagraphHeading = (): ParagraphHeadingValue => {
+  if (isNodeActive("heading", { level: 1 })) {
+    return "heading1";
+  }
+  if (isNodeActive("heading", { level: 2 })) {
+    return "heading2";
+  }
+  if (isNodeActive("heading", { level: 3 })) {
+    return "heading3";
+  }
+  if (isNodeActive("heading", { level: 4 })) {
+    return "heading4";
+  }
+  if (isNodeActive("heading", { level: 5 })) {
+    return "heading5";
+  }
+  if (isNodeActive("heading", { level: 6 })) {
+    return "heading6";
+  }
+
+  return "paragraph";
+};
+
+const handleParagraphHeadingChange = (value: unknown) => {
+  if (typeof value !== "string") {
+    return;
+  }
+
+  if (value === "paragraph") {
+    setParagraph();
+    return;
+  }
+
+  if (value in headingLevelMap) {
+    toggleHeading(headingLevelMap[value as keyof typeof headingLevelMap]);
+  }
+};
+
+const currentListType = (): ListTypeValue | undefined => {
+  if (isNodeActive("bulletList")) {
+    return "bulletList";
+  }
+  if (isNodeActive("orderedList")) {
+    return "orderedList";
+  }
+  if (isNodeActive("taskList")) {
+    return "taskList";
+  }
+
+  return undefined;
+};
+
+const handleListTypeChange = (value: unknown) => {
+  if (value === "bulletList") {
+    toggleBulletList();
+    return;
+  }
+  if (value === "orderedList") {
+    toggleOrderedList();
+    return;
+  }
+  if (value === "taskList") {
+    toggleTaskList();
+  }
+};
+
+const currentTextAlign = (): TextAlignValue => {
+  const paragraphAlign = editor.value?.getAttributes("paragraph").textAlign;
+  const headingAlign = editor.value?.getAttributes("heading").textAlign;
+  const alignment = headingAlign ?? paragraphAlign;
+
+  if (
+    alignment === "left"
+    || alignment === "center"
+    || alignment === "right"
+    || alignment === "justify"
+  ) {
+    return alignment;
+  }
+
+  return "left";
+};
+
+const currentImageAlign = (): ImageAlignValue => {
+  const alignment = editor.value?.getAttributes("image").align;
+
+  if (alignment === "left" || alignment === "center" || alignment === "right") {
+    return alignment;
+  }
+
+  return "center";
+};
+
+const shouldShowImageMenu = ({ editor: currentEditor }: any) => {
+  return currentEditor.isEditable && currentEditor.isActive("image");
+};
+
+const tableNodeNames = new Set(["table", "tableRow", "tableCell", "tableHeader"]);
+
+const excludeTableContextRule: DragHandleRule = {
+  id: "exclude-table-context",
+  evaluate: ({ node, parent, $pos }) => {
+    if (tableNodeNames.has(node.type.name)) {
+      return 1000;
+    }
+    if (parent && tableNodeNames.has(parent.type.name)) {
+      return 1000;
+    }
+
+    for (let depth = $pos.depth; depth >= 0; depth -= 1) {
+      if (tableNodeNames.has($pos.node(depth).type.name)) {
+        return 1000;
+      }
+    }
+
+    return 0;
+  },
+};
+
+const dragHandleNestedOptions: NestedOptions = {
+  rules: [excludeTableContextRule],
+};
+
+const handleDragHandleStart = (event: DragEvent) => {
+  queueMicrotask(() => {
+    if (!event.dataTransfer) {
+      return;
+    }
+
+    if (!event.dataTransfer.types.includes("text/plain")) {
+      event.dataTransfer.setData("text/plain", " ");
+    }
+
+    event.dataTransfer.effectAllowed = "copyMove";
+  });
+};
 </script>
 
 <template>
   <section class="space-y-3">
     <div class="flex flex-wrap items-center gap-1 rounded-lg border bg-card p-2 shadow-sm">
+      <Select
+        :model-value="currentParagraphHeading()"
+        :disabled="!editor"
+        @update:model-value="handleParagraphHeadingChange"
+      >
+        <SelectTrigger class="h-8 w-[6rem] px-2 text-xs">
+          <SelectValue :placeholder="t('writingStudio.toolbar.groups.paragraphHeading')" />
+        </SelectTrigger>
+        <SelectContent align="start" class="w-[220px]">
+          <SelectItem value="paragraph">
+            {{ t("writingStudio.toolbar.block.paragraph") }}
+          </SelectItem>
+          <SelectItem value="heading1">
+            {{ t("writingStudio.toolbar.block.heading1") }}
+          </SelectItem>
+          <SelectItem value="heading2">
+            {{ t("writingStudio.toolbar.block.heading2") }}
+          </SelectItem>
+          <SelectItem value="heading3">
+            {{ t("writingStudio.toolbar.block.heading3") }}
+          </SelectItem>
+          <SelectItem value="heading4">
+            {{ t("writingStudio.toolbar.block.heading4") }}
+          </SelectItem>
+          <SelectItem value="heading5">
+            {{ t("writingStudio.toolbar.block.heading5") }}
+          </SelectItem>
+          <SelectItem value="heading6">
+            {{ t("writingStudio.toolbar.block.heading6") }}
+          </SelectItem>
+        </SelectContent>
+      </Select>
+
+      <Select
+        :model-value="currentListType()"
+        :disabled="!editor"
+        @update:model-value="handleListTypeChange"
+      >
+        <SelectTrigger class="h-8 w-[6rem] px-2 text-xs">
+          <SelectValue :placeholder="t('writingStudio.toolbar.groups.listNodes')" />
+        </SelectTrigger>
+        <SelectContent align="start" class="w-[200px]">
+          <SelectItem value="bulletList">
+            {{ t("writingStudio.toolbar.block.bulletList") }}
+          </SelectItem>
+          <SelectItem value="orderedList">
+            {{ t("writingStudio.toolbar.block.orderedList") }}
+          </SelectItem>
+          <SelectItem value="taskList">
+            {{ t("writingStudio.toolbar.block.taskList") }}
+          </SelectItem>
+        </SelectContent>
+      </Select>
+
+      <Separator orientation="vertical" class="mx-1 h-6" />
+
+      <Button
+        variant="ghost"
+        size="sm"
+        :disabled="!editor || !canRun((current) => current.can().setTextAlign('left'))"
+        :class="toolbarButtonClass(currentTextAlign() === 'left')"
+        @click="setTextAlign('left')"
+      >
+        <AlignLeft />
+        {{ t("writingStudio.toolbar.align.left") }}
+      </Button>
+
+      <Button
+        variant="ghost"
+        size="sm"
+        :disabled="!editor || !canRun((current) => current.can().setTextAlign('center'))"
+        :class="toolbarButtonClass(currentTextAlign() === 'center')"
+        @click="setTextAlign('center')"
+      >
+        <AlignCenter />
+        {{ t("writingStudio.toolbar.align.center") }}
+      </Button>
+
+      <Button
+        variant="ghost"
+        size="sm"
+        :disabled="!editor || !canRun((current) => current.can().setTextAlign('right'))"
+        :class="toolbarButtonClass(currentTextAlign() === 'right')"
+        @click="setTextAlign('right')"
+      >
+        <AlignRight />
+        {{ t("writingStudio.toolbar.align.right") }}
+      </Button>
+
+      <Button
+        variant="ghost"
+        size="sm"
+        :disabled="!editor || !canRun((current) => current.can().setTextAlign('justify'))"
+        :class="toolbarButtonClass(currentTextAlign() === 'justify')"
+        @click="setTextAlign('justify')"
+      >
+        <AlignJustify />
+        {{ t("writingStudio.toolbar.align.justify") }}
+      </Button>
+
+      <Separator orientation="vertical" class="mx-1 h-6" />
+
       <Button
         variant="ghost"
         size="sm"
@@ -88,17 +368,6 @@ const {
       >
         <Bold />
         {{ t("writingStudio.toolbar.marks.bold") }}
-      </Button>
-
-      <Button
-        variant="ghost"
-        size="sm"
-        :disabled="!editor"
-        :class="toolbarButtonClass(isMarkActive('code'))"
-        @click="toggleCode"
-      >
-        <Code2 />
-        {{ t("writingStudio.toolbar.marks.code") }}
       </Button>
 
       <Button
@@ -127,22 +396,35 @@ const {
         variant="ghost"
         size="sm"
         :disabled="!editor"
-        :class="toolbarButtonClass(isMarkActive('link'))"
-        @click="toggleLink"
+        :class="toolbarButtonClass(isMarkActive('strike'))"
+        @click="toggleStrike"
       >
-        <Link2 />
-        {{ t("writingStudio.toolbar.marks.link") }}
+        <Strikethrough />
+        {{ t("writingStudio.toolbar.marks.strike") }}
+      </Button>
+
+      <Separator orientation="vertical" class="mx-1 h-6" />
+
+      <Button
+        variant="ghost"
+        size="sm"
+        :disabled="!editor"
+        :class="toolbarButtonClass(isMarkActive('code'))"
+        @click="toggleCode"
+      >
+        <Code2 />
+        {{ t("writingStudio.toolbar.marks.code") }}
       </Button>
 
       <Button
         variant="ghost"
         size="sm"
         :disabled="!editor"
-        :class="toolbarButtonClass(isMarkActive('strike'))"
-        @click="toggleStrike"
+        :class="toolbarButtonClass(isMarkActive('link'))"
+        @click="toggleLink"
       >
-        <Strikethrough />
-        {{ t("writingStudio.toolbar.marks.strike") }}
+        <Link2 />
+        {{ t("writingStudio.toolbar.marks.link") }}
       </Button>
 
       <Separator orientation="vertical" class="mx-1 h-6" />
@@ -202,53 +484,10 @@ const {
         <DropdownMenuContent align="start" class="w-60">
           <DropdownMenuLabel>{{ t("writingStudio.toolbar.labels.nodeBlocks") }}</DropdownMenuLabel>
           <DropdownMenuItem
-            :class="dropdownItemClass(isNodeActive('paragraph'))"
-            @select.prevent="setParagraph"
-          >
-            {{ t("writingStudio.toolbar.block.paragraph") }}
-          </DropdownMenuItem>
-          <DropdownMenuItem
-            :class="dropdownItemClass(isNodeActive('heading', { level: 1 }))"
-            @select.prevent="toggleHeading(1)"
-          >
-            {{ t("writingStudio.toolbar.block.heading1") }}
-          </DropdownMenuItem>
-          <DropdownMenuItem
-            :class="dropdownItemClass(isNodeActive('heading', { level: 2 }))"
-            @select.prevent="toggleHeading(2)"
-          >
-            {{ t("writingStudio.toolbar.block.heading2") }}
-          </DropdownMenuItem>
-          <DropdownMenuItem
-            :class="dropdownItemClass(isNodeActive('heading', { level: 3 }))"
-            @select.prevent="toggleHeading(3)"
-          >
-            {{ t("writingStudio.toolbar.block.heading3") }}
-          </DropdownMenuItem>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem
             :class="dropdownItemClass(isNodeActive('blockquote'))"
             @select.prevent="toggleBlockquote"
           >
             {{ t("writingStudio.toolbar.block.blockquote") }}
-          </DropdownMenuItem>
-          <DropdownMenuItem
-            :class="dropdownItemClass(isNodeActive('bulletList'))"
-            @select.prevent="toggleBulletList"
-          >
-            {{ t("writingStudio.toolbar.block.bulletList") }}
-          </DropdownMenuItem>
-          <DropdownMenuItem
-            :class="dropdownItemClass(isNodeActive('orderedList'))"
-            @select.prevent="toggleOrderedList"
-          >
-            {{ t("writingStudio.toolbar.block.orderedList") }}
-          </DropdownMenuItem>
-          <DropdownMenuItem
-            :class="dropdownItemClass(isNodeActive('taskList'))"
-            @select.prevent="toggleTaskList"
-          >
-            {{ t("writingStudio.toolbar.block.taskList") }}
           </DropdownMenuItem>
           <DropdownMenuItem
             :class="dropdownItemClass(isNodeActive('codeBlock'))"
@@ -382,130 +621,77 @@ const {
     </div>
 
     <div class="rounded-lg border bg-background px-4 py-3 shadow-sm">
+      <BubbleMenu
+        v-if="editor"
+        plugin-key="writing-studio-image-menu"
+        :editor="editor"
+        :should-show="shouldShowImageMenu"
+        :options="{ placement: 'top', offset: 10 }"
+      >
+        <div class="ws-image-menu">
+          <Button
+            variant="ghost"
+            size="sm"
+            :class="toolbarButtonClass(currentImageAlign() === 'left')"
+            :title="t('writingStudio.toolbar.align.left')"
+            :aria-label="t('writingStudio.toolbar.align.left')"
+            @click="setImageAlign('left')"
+          >
+            <AlignLeft />
+          </Button>
+
+          <Button
+            variant="ghost"
+            size="sm"
+            :class="toolbarButtonClass(currentImageAlign() === 'center')"
+            :title="t('writingStudio.toolbar.align.center')"
+            :aria-label="t('writingStudio.toolbar.align.center')"
+            @click="setImageAlign('center')"
+          >
+            <AlignCenter />
+          </Button>
+
+          <Button
+            variant="ghost"
+            size="sm"
+            :class="toolbarButtonClass(currentImageAlign() === 'right')"
+            :title="t('writingStudio.toolbar.align.right')"
+            :aria-label="t('writingStudio.toolbar.align.right')"
+            @click="setImageAlign('right')"
+          >
+            <AlignRight />
+          </Button>
+
+          <Separator orientation="vertical" class="mx-1 h-5" />
+
+          <Button
+            variant="ghost"
+            size="sm"
+            class="h-8 px-2 text-xs"
+            :title="t('writingStudio.toolbar.image.resetSize')"
+            :aria-label="t('writingStudio.toolbar.image.resetSize')"
+            @click="resetImageSize"
+          >
+            <Maximize2 />
+            {{ t("writingStudio.toolbar.image.resetSize") }}
+          </Button>
+        </div>
+      </BubbleMenu>
+
+      <DragHandle
+        v-if="editor"
+        :editor="editor"
+        class="ws-drag-handle"
+        :nested="dragHandleNestedOptions"
+        :compute-position-config="{ placement: 'left-start', strategy: 'absolute' }"
+        :on-element-drag-start="handleDragHandleStart"
+      >
+        <GripVertical class="ws-drag-handle-icon" :size="16" :stroke-width="2.5" aria-hidden="true" />
+      </DragHandle>
+
       <EditorContent :editor="editor" class="writing-editor" />
     </div>
   </section>
 </template>
 
-<style scoped>
-.writing-editor :deep(.tiptap) {
-  min-height: 320px;
-  outline: none;
-  line-height: 1.7;
-}
-
-.writing-editor :deep(.tiptap p) {
-  margin: 0.6rem 0;
-}
-
-.writing-editor :deep(.tiptap h1, .tiptap h2, .tiptap h3, .tiptap h4, .tiptap h5, .tiptap h6) {
-  margin: 0.8rem 0 0.5rem;
-  line-height: 1.3;
-  font-weight: 700;
-}
-
-.writing-editor :deep(.tiptap h1) {
-  font-size: 2rem;
-}
-
-.writing-editor :deep(.tiptap h2) {
-  font-size: 1.625rem;
-}
-
-.writing-editor :deep(.tiptap h3) {
-  font-size: 1.375rem;
-}
-
-.writing-editor :deep(.tiptap h4) {
-  font-size: 1.25rem;
-}
-
-.writing-editor :deep(.tiptap h5) {
-  font-size: 1.125rem;
-}
-
-.writing-editor :deep(.tiptap h6) {
-  font-size: 1rem;
-}
-
-.writing-editor :deep(.tiptap blockquote) {
-  margin: 0.8rem 0;
-  padding-left: 0.8rem;
-  border-left: 3px solid hsl(var(--border));
-  color: hsl(var(--muted-foreground));
-}
-
-.writing-editor :deep(.tiptap pre) {
-  margin: 0.8rem 0;
-  padding: 0.75rem 0.9rem;
-  border-radius: 0.5rem;
-  background: hsl(var(--secondary));
-  overflow-x: auto;
-}
-
-.writing-editor :deep(.tiptap .ws-text-style) {
-  font-family: "JetBrains Mono", monospace;
-  letter-spacing: 0.02em;
-  border-bottom: 1px dotted currentColor;
-}
-
-.writing-editor :deep(.tiptap .ws-mention) {
-  padding: 0.1rem 0.35rem;
-  border-radius: 9999px;
-  background: hsl(var(--secondary));
-  color: hsl(var(--secondary-foreground));
-}
-
-.writing-editor :deep(.tiptap .ws-emoji) {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.writing-editor :deep(.tiptap .ws-media) {
-  display: block;
-  max-width: 100%;
-  margin: 0.8rem 0;
-}
-
-.writing-editor :deep(.tiptap .tableWrapper) {
-  margin: 0.8rem 0;
-  overflow-x: auto;
-}
-
-.writing-editor :deep(.tiptap table) {
-  width: 100%;
-  border-collapse: collapse;
-}
-
-.writing-editor :deep(.tiptap th, .tiptap td) {
-  min-width: 90px;
-  border: 1px solid hsl(var(--border));
-  padding: 0.35rem 0.5rem;
-}
-
-.writing-editor :deep(.tiptap th) {
-  background: hsl(var(--muted));
-}
-
-.writing-editor :deep(.tiptap ul[data-type="taskList"]) {
-  list-style: none;
-  padding-left: 0.4rem;
-}
-
-.writing-editor :deep(.tiptap li[data-type="taskItem"]) {
-  display: flex;
-  gap: 0.45rem;
-  align-items: flex-start;
-}
-
-.writing-editor :deep(.tiptap li[data-type="taskItem"] > label) {
-  margin-top: 0.2rem;
-}
-
-.writing-editor :deep(.tiptap .ws-details) {
-  margin: 0.8rem 0;
-  border: 1px solid hsl(var(--border));
-  border-radius: 0.5rem;
-}
-</style>
+<style src="~/assets/css/writing-studio/index.css"></style>

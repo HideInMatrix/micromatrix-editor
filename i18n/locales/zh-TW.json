@@ -15,7 +15,18 @@
         "textStyle": "文字樣式",
         "underline": "底線"
       },
+      "align": {
+        "left": "靠左對齊",
+        "center": "置中對齊",
+        "right": "靠右對齊",
+        "justify": "左右對齊"
+      },
+      "image": {
+        "resetSize": "重設尺寸"
+      },
       "groups": {
+        "paragraphHeading": "段落與標題",
+        "listNodes": "列表",
         "blockNodes": "區塊節點",
         "insertNodes": "插入節點",
         "tableNodes": "表格節點"
@@ -30,6 +41,9 @@
         "heading1": "標題 1",
         "heading2": "標題 2",
         "heading3": "標題 3",
+        "heading4": "標題 4",
+        "heading5": "標題 5",
+        "heading6": "標題 6",
         "blockquote": "引用",
         "bulletList": "無序清單",
         "orderedList": "有序清單",

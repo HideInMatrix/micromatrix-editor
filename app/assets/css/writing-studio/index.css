@@ -1,0 +1,13 @@
+@import "./plugins/editor-base.css";
+@import "./plugins/drag-handle.css";
+@import "./plugins/heading.css";
+@import "./plugins/blockquote.css";
+@import "./plugins/code-block.css";
+@import "./plugins/text-style.css";
+@import "./plugins/mention.css";
+@import "./plugins/emoji.css";
+@import "./plugins/media.css";
+@import "./plugins/image.css";
+@import "./plugins/table.css";
+@import "./plugins/task-list.css";
+@import "./plugins/details.css";

@@ -1,0 +1,34 @@
+.writing-editor .tiptap h1,
+.writing-editor .tiptap h2,
+.writing-editor .tiptap h3,
+.writing-editor .tiptap h4,
+.writing-editor .tiptap h5,
+.writing-editor .tiptap h6 {
+  margin: 0.8rem 0 0.5rem;
+  line-height: 1.3;
+  font-weight: 700;
+}
+
+.writing-editor .tiptap h1 {
+  font-size: 2rem;
+}
+
+.writing-editor .tiptap h2 {
+  font-size: 1.625rem;
+}
+
+.writing-editor .tiptap h3 {
+  font-size: 1.375rem;
+}
+
+.writing-editor .tiptap h4 {
+  font-size: 1.25rem;
+}
+
+.writing-editor .tiptap h5 {
+  font-size: 1.125rem;
+}
+
+.writing-editor .tiptap h6 {
+  font-size: 1rem;
+}

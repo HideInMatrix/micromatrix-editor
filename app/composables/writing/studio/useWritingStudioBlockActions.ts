@@ -5,7 +5,7 @@ export const useWritingStudioBlockActions = (editor: WritingStudioEditorRef) => 
     editor.value?.chain().focus().setParagraph().run();
   };
 
-  const toggleHeading = (level: 1 | 2 | 3) => {
+  const toggleHeading = (level: 1 | 2 | 3 | 4 | 5 | 6) => {
     editor.value?.chain().focus().toggleHeading({ level }).run();
   };
 

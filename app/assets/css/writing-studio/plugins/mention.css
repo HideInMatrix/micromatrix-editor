@@ -1,0 +1,6 @@
+.writing-editor .tiptap .ws-mention {
+  padding: 0.1rem 0.35rem;
+  border-radius: 9999px;
+  background: oklch(var(--secondary));
+  color: oklch(var(--secondary-foreground));
+}

@@ -1,0 +1,36 @@
+.ws-drag-handle {
+  display: inline-flex;
+  gap: 0.25rem;
+  align-items: center;
+  justify-content: center;
+  min-width: 2rem;
+  height: 2rem;
+  padding: 0 0.5rem;
+  border: 1px solid transparent;
+  border-radius: 0.375rem;
+  background: transparent;
+  color: oklch(var(--muted-foreground));
+  font-size: 0.875rem;
+  font-weight: 600;
+  white-space: nowrap;
+  line-height: 1;
+  cursor: grab;
+  user-select: none;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.ws-drag-handle:hover {
+  background: oklch(var(--foreground) / 0.06);
+  color: oklch(var(--foreground) / 0.85);
+}
+
+.ws-drag-handle:active {
+  background: oklch(var(--foreground) / 0.12);
+  color: oklch(var(--foreground));
+  cursor: grabbing;
+}
+
+.ws-drag-handle .ws-drag-handle-icon {
+  width: 1rem;
+  height: 1rem;
+}

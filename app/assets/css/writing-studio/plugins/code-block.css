@@ -1,0 +1,7 @@
+.writing-editor .tiptap pre {
+  margin: 0.8rem 0;
+  padding: 0.75rem 0.9rem;
+  border-radius: 0.5rem;
+  background: oklch(var(--secondary));
+  overflow-x: auto;
+}

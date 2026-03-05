@@ -1,0 +1,14 @@
+.writing-editor .tiptap ul[data-type="taskList"] {
+  list-style: none;
+  padding-left: 0.4rem;
+}
+
+.writing-editor .tiptap li[data-type="taskItem"] {
+  display: flex;
+  gap: 0.45rem;
+  align-items: flex-start;
+}
+
+.writing-editor .tiptap li[data-type="taskItem"] > label {
+  margin-top: 0.2rem;
+}

@@ -17,6 +17,18 @@ const promptValue = (message: string, defaultValue = "") => {
 export const useWritingStudioOtherActions = (editor: WritingStudioEditorRef) => {
   const { t } = useI18n();
 
+  const setImageAlign = (align: "left" | "center" | "right") => {
+    editor.value?.chain().focus().updateAttributes("image", { align }).run();
+  };
+
+  const resetImageSize = () => {
+    editor.value?.chain().focus().updateAttributes("image", { width: null, height: null }).run();
+  };
+
+  const setTextAlign = (alignment: "left" | "center" | "right" | "justify") => {
+    editor.value?.chain().focus().setTextAlign(alignment).run();
+  };
+
   const toggleBold = () => {
     editor.value?.chain().focus().toggleBold().run();
   };
@@ -231,6 +243,9 @@ export const useWritingStudioOtherActions = (editor: WritingStudioEditorRef) => 
   };
 
   return {
+    setImageAlign,
+    resetImageSize,
+    setTextAlign,
     toggleBold,
     toggleCode,
     toggleHighlight,

@@ -15,7 +15,18 @@
         "textStyle": "文本样式",
         "underline": "下划线"
       },
+      "align": {
+        "left": "左对齐",
+        "center": "居中",
+        "right": "右对齐",
+        "justify": "两端对齐"
+      },
+      "image": {
+        "resetSize": "重置尺寸"
+      },
       "groups": {
+        "paragraphHeading": "段落与标题",
+        "listNodes": "列表",
         "blockNodes": "块节点",
         "insertNodes": "插入节点",
         "tableNodes": "表格节点"
@@ -30,6 +41,9 @@
         "heading1": "一级标题",
         "heading2": "二级标题",
         "heading3": "三级标题",
+        "heading4": "四级标题",
+        "heading5": "五级标题",
+        "heading6": "六级标题",
         "blockquote": "引用",
         "bulletList": "无序列表",
         "orderedList": "有序列表",

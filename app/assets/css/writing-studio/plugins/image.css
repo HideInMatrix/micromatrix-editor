@@ -1,0 +1,38 @@
+.writing-editor .tiptap img.ws-image {
+  display: block;
+  max-width: 100%;
+  margin-top: 0.8rem;
+  margin-bottom: 0.8rem;
+}
+
+.writing-editor .tiptap img.ws-image[data-align="left"] {
+  margin-left: 0;
+  margin-right: auto;
+}
+
+.writing-editor .tiptap img.ws-image[data-align="center"] {
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.writing-editor .tiptap img.ws-image[data-align="right"] {
+  margin-left: auto;
+  margin-right: 0;
+}
+
+.writing-editor .tiptap img.ws-image.ProseMirror-selectednode {
+  outline: 2px solid oklch(var(--primary) / 0.45);
+  outline-offset: 2px;
+  border-radius: 0.375rem;
+}
+
+.ws-image-menu {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  border: 1px solid oklch(var(--border));
+  border-radius: 0.5rem;
+  background: oklch(var(--popover));
+  padding: 0.25rem;
+  box-shadow: 0 10px 24px -12px oklch(0 0 0 / 0.5);
+}
