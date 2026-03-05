@@ -1,0 +1,29 @@
+.writing-editor .tiptap ul:not([data-type="taskList"]),
+.writing-editor .tiptap ol {
+  margin: 0.75rem 0;
+  padding-left: 1.5rem;
+}
+
+.writing-editor .tiptap ul:not([data-type="taskList"]) {
+  list-style: disc;
+}
+
+.writing-editor .tiptap ul:not([data-type="taskList"]) ul {
+  list-style: circle;
+}
+
+.writing-editor .tiptap ul:not([data-type="taskList"]) ul ul {
+  list-style: square;
+}
+
+.writing-editor .tiptap ol {
+  list-style: decimal;
+}
+
+.writing-editor .tiptap li {
+  margin: 0.2rem 0;
+}
+
+.writing-editor .tiptap li > p {
+  margin: 0;
+}

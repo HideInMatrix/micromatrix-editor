@@ -3,12 +3,26 @@
   padding-left: 0.4rem;
 }
 
-.writing-editor .tiptap li[data-type="taskItem"] {
+.writing-editor .tiptap ul[data-type="taskList"] > li {
   display: flex;
   gap: 0.45rem;
-  align-items: flex-start;
+  align-items: center;
 }
 
-.writing-editor .tiptap li[data-type="taskItem"] > label {
-  margin-top: 0.2rem;
+.writing-editor .tiptap ul[data-type="taskList"] > li > label {
+  margin: 0;
+  display: inline-flex;
+  align-items: center;
+}
+
+.writing-editor .tiptap ul[data-type="taskList"] > li > label input {
+  margin: 0;
+}
+
+.writing-editor .tiptap ul[data-type="taskList"] > li > div {
+  flex: 1;
+}
+
+.writing-editor .tiptap ul[data-type="taskList"] > li > div > p {
+  margin: 0;
 }

@@ -2,7 +2,6 @@
 import { EditorContent } from "@tiptap/vue-3";
 import { BubbleMenu } from "@tiptap/vue-3/menus";
 import { DragHandle } from "@tiptap/extension-drag-handle-vue-3";
-import type { DragHandleRule, NestedOptions } from "@tiptap/extension-drag-handle";
 import {
   AlignCenter,
   AlignJustify,
@@ -38,6 +37,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useWritingStudioDragHandle } from "~/composables/writing/studio/useWritingStudioDragHandle";
 import { useWritingStudioToolbarActions } from "~/composables/writing/studio/useWritingStudioToolbarActions";
 import { useWritingStudioToolbarState } from "~/composables/writing/studio/useWritingStudioToolbarState";
 import { useTipTapEditor } from "~/composables/writing/useTipTapEditor";
@@ -51,6 +51,7 @@ const {
   isNodeActive,
   canRun,
 } = useWritingStudioToolbarState(editor);
+const { dragHandleNestedOptions, handleDragHandleStart } = useWritingStudioDragHandle();
 const {
   toggleBold,
   toggleCode,
@@ -211,46 +212,6 @@ const currentImageAlign = (): ImageAlignValue => {
 
 const shouldShowImageMenu = ({ editor: currentEditor }: any) => {
   return currentEditor.isEditable && currentEditor.isActive("image");
-};
-
-const tableNodeNames = new Set(["table", "tableRow", "tableCell", "tableHeader"]);
-
-const excludeTableContextRule: DragHandleRule = {
-  id: "exclude-table-context",
-  evaluate: ({ node, parent, $pos }) => {
-    if (tableNodeNames.has(node.type.name)) {
-      return 1000;
-    }
-    if (parent && tableNodeNames.has(parent.type.name)) {
-      return 1000;
-    }
-
-    for (let depth = $pos.depth; depth >= 0; depth -= 1) {
-      if (tableNodeNames.has($pos.node(depth).type.name)) {
-        return 1000;
-      }
-    }
-
-    return 0;
-  },
-};
-
-const dragHandleNestedOptions: NestedOptions = {
-  rules: [excludeTableContextRule],
-};
-
-const handleDragHandleStart = (event: DragEvent) => {
-  queueMicrotask(() => {
-    if (!event.dataTransfer) {
-      return;
-    }
-
-    if (!event.dataTransfer.types.includes("text/plain")) {
-      event.dataTransfer.setData("text/plain", " ");
-    }
-
-    event.dataTransfer.effectAllowed = "copyMove";
-  });
 };
 </script>
 
@@ -683,7 +644,7 @@ const handleDragHandleStart = (event: DragEvent) => {
         :editor="editor"
         class="ws-drag-handle"
         :nested="dragHandleNestedOptions"
-        :compute-position-config="{ placement: 'left-start', strategy: 'absolute' }"
+        :compute-position-config="{ placement: 'left-start' }"
         :on-element-drag-start="handleDragHandleStart"
       >
         <GripVertical class="ws-drag-handle-icon" :size="16" :stroke-width="2.5" aria-hidden="true" />
