@@ -17,6 +17,27 @@ export const useWritingStudioBlockActions = (editor: WritingStudioEditorRef) => 
     editor.value?.chain().focus().toggleCodeBlock().run();
   };
 
+  const setCodeBlockLanguage = (language: string) => {
+    if (!editor.value || !editor.value.isActive("codeBlock")) {
+      return;
+    }
+
+    const normalizedLanguage = language.trim() || "plaintext";
+    editor.value.chain().focus().updateAttributes("codeBlock", {
+      language: normalizedLanguage,
+    }).run();
+  };
+
+  const setCodeBlockWrap = (wrap: boolean) => {
+    if (!editor.value || !editor.value.isActive("codeBlock")) {
+      return;
+    }
+
+    editor.value.chain().focus().updateAttributes("codeBlock", {
+      wrap,
+    }).run();
+  };
+
   const toggleDetails = () => {
     if (!editor.value) {
       return;
@@ -44,6 +65,8 @@ export const useWritingStudioBlockActions = (editor: WritingStudioEditorRef) => 
     toggleHeading,
     toggleBlockquote,
     toggleCodeBlock,
+    setCodeBlockLanguage,
+    setCodeBlockWrap,
     toggleDetails,
     setHardBreak,
     setHorizontalRule,

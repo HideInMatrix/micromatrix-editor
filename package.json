@@ -17,6 +17,7 @@
     "@nuxtjs/sitemap": "7.6.0",
     "@tiptap/core": "^3.20.0",
     "@tiptap/extension-audio": "^3.20.0",
+    "@tiptap/extension-code-block": "^3.20.0",
     "@tiptap/extension-code-block-lowlight": "^3.20.0",
     "@tiptap/extension-details": "^3.20.0",
     "@tiptap/extension-drag-handle": "^3.20.0",

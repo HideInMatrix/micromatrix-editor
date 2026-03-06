@@ -1,6 +1,5 @@
 <script lang="ts" setup>
 import { EditorContent } from "@tiptap/vue-3";
-import { BubbleMenu } from "@tiptap/vue-3/menus";
 import { DragHandle } from "@tiptap/extension-drag-handle-vue-3";
 import {
   AlignCenter,
@@ -8,7 +7,6 @@ import {
   AlignLeft,
   AlignRight,
   Bold,
-  Code2,
   Highlighter,
   Italic,
   Link2,
@@ -19,7 +17,10 @@ import {
   Type,
   Underline as UnderlineIcon,
 } from "lucide-vue-next";
+import WritingStudioCodeToolbar from "@/components/paper/WritingStudioCodeToolbar.vue";
+import WritingStudioCodeBlockBubbleMenu from "@/components/paper/WritingStudioCodeBlockBubbleMenu.vue";
 import WritingStudioImageGroup from "@/components/paper/WritingStudioImageGroup.vue";
+import WritingStudioImageNodeBubbleMenu from "@/components/paper/WritingStudioImageNodeBubbleMenu.vue";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -72,6 +73,8 @@ const {
   toggleOrderedList,
   toggleTaskList,
   toggleCodeBlock,
+  setCodeBlockLanguage,
+  setCodeBlockWrap,
   toggleDetails,
   setHardBreak,
   setHorizontalRule,
@@ -106,7 +109,6 @@ type ParagraphHeadingValue =
 
 type ListTypeValue = "bulletList" | "orderedList" | "taskList";
 type TextAlignValue = "left" | "center" | "right" | "justify";
-type ImageAlignValue = "left" | "center" | "right";
 
 const headingLevelMap: Record<Exclude<ParagraphHeadingValue, "paragraph">, 1 | 2 | 3 | 4 | 5 | 6> = {
   heading1: 1,
@@ -200,23 +202,6 @@ const currentTextAlign = (): TextAlignValue => {
   return "left";
 };
 
-const currentImageAlign = (): ImageAlignValue => {
-  const alignment = editor.value?.getAttributes("image").align;
-
-  if (alignment === "left" || alignment === "center" || alignment === "right") {
-    return alignment;
-  }
-
-  return "center";
-};
-
-const shouldShowImageMenu = ({ editor: currentEditor }: any) => {
-  return currentEditor.isEditable && currentEditor.isActive("image");
-};
-
-const preventImageMenuMouseDown = (event: MouseEvent) => {
-  event.preventDefault();
-};
 </script>
 
 <template>
@@ -370,16 +355,14 @@ const preventImageMenuMouseDown = (event: MouseEvent) => {
 
       <Separator orientation="vertical" class="mx-1 h-6" />
 
-      <Button
-        variant="ghost"
-        size="sm"
+      <WritingStudioCodeToolbar
         :disabled="!editor"
-        :class="toolbarButtonClass(isMarkActive('code'))"
-        @click="toggleCode"
-      >
-        <Code2 />
-        {{ t("writingStudio.toolbar.marks.code") }}
-      </Button>
+        :is-code-active="isMarkActive('code')"
+        :is-code-block-active="isNodeActive('codeBlock')"
+        :dropdown-item-class="dropdownItemClass"
+        @toggle-code="toggleCode"
+        @toggle-code-block="toggleCodeBlock"
+      />
 
       <Button
         variant="ghost"
@@ -453,12 +436,6 @@ const preventImageMenuMouseDown = (event: MouseEvent) => {
             @select.prevent="toggleBlockquote"
           >
             {{ t("writingStudio.toolbar.block.blockquote") }}
-          </DropdownMenuItem>
-          <DropdownMenuItem
-            :class="dropdownItemClass(isNodeActive('codeBlock'))"
-            @select.prevent="toggleCodeBlock"
-          >
-            {{ t("writingStudio.toolbar.block.codeBlock") }}
           </DropdownMenuItem>
           <DropdownMenuItem
             :class="dropdownItemClass(isNodeActive('details'))"
@@ -588,61 +565,28 @@ const preventImageMenuMouseDown = (event: MouseEvent) => {
       </DropdownMenu>
     </div>
 
+    <WritingStudioImageNodeBubbleMenu
+      :editor="editor"
+      :toolbar-button-class="toolbarButtonClass"
+      :set-image-align="setImageAlign"
+    />
+    <WritingStudioCodeBlockBubbleMenu
+      :editor="editor"
+      :set-code-block-language="setCodeBlockLanguage"
+      :set-code-block-wrap="setCodeBlockWrap"
+    />
+
+    <DragHandle
+      v-if="editor"
+      :editor="editor"
+      class="ws-drag-handle"
+      :nested="dragHandleNestedOptions"
+      :compute-position-config="{ placement: 'left-start' }"
+      :on-element-drag-start="handleDragHandleStart"
+    >
+      <GripVertical class="ws-drag-handle-icon" :size="16" :stroke-width="2.5" aria-hidden="true" />
+    </DragHandle>
     <div class="rounded-lg border bg-background px-4 py-3 shadow-sm">
-      <BubbleMenu
-        v-if="editor"
-        plugin-key="writing-studio-image-menu"
-        :editor="editor"
-        :should-show="shouldShowImageMenu"
-        :options="{ placement: 'top', offset: 10 }"
-      >
-        <div class="ws-image-menu" @mousedown="preventImageMenuMouseDown">
-          <Button
-            variant="ghost"
-            size="sm"
-            :class="toolbarButtonClass(currentImageAlign() === 'left')"
-            :title="t('writingStudio.toolbar.align.left')"
-            :aria-label="t('writingStudio.toolbar.align.left')"
-            @click="setImageAlign('left')"
-          >
-            <AlignLeft />
-          </Button>
-
-          <Button
-            variant="ghost"
-            size="sm"
-            :class="toolbarButtonClass(currentImageAlign() === 'center')"
-            :title="t('writingStudio.toolbar.align.center')"
-            :aria-label="t('writingStudio.toolbar.align.center')"
-            @click="setImageAlign('center')"
-          >
-            <AlignCenter />
-          </Button>
-
-          <Button
-            variant="ghost"
-            size="sm"
-            :class="toolbarButtonClass(currentImageAlign() === 'right')"
-            :title="t('writingStudio.toolbar.align.right')"
-            :aria-label="t('writingStudio.toolbar.align.right')"
-            @click="setImageAlign('right')"
-          >
-            <AlignRight />
-          </Button>
-
-        </div>
-      </BubbleMenu>
-
-      <DragHandle
-        v-if="editor"
-        :editor="editor"
-        class="ws-drag-handle"
-        :nested="dragHandleNestedOptions"
-        :compute-position-config="{ placement: 'left-start' }"
-        :on-element-drag-start="handleDragHandleStart"
-      >
-        <GripVertical class="ws-drag-handle-icon" :size="16" :stroke-width="2.5" aria-hidden="true" />
-      </DragHandle>
 
       <EditorContent :editor="editor" class="writing-editor" />
     </div>

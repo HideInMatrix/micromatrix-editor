@@ -1,4 +1,3 @@
-import { CodeBlockLowlight } from "@tiptap/extension-code-block-lowlight";
 import { Details, DetailsContent, DetailsSummary } from "@tiptap/extension-details";
 import { Emoji } from "@tiptap/extension-emoji";
 import { Highlight } from "@tiptap/extension-highlight";
@@ -12,17 +11,16 @@ import { TextAlign } from "@tiptap/extension-text-align";
 import { TextStyle } from "@tiptap/extension-text-style";
 import { Underline } from "@tiptap/extension-underline";
 import StarterKit from "@tiptap/starter-kit";
-import { common, createLowlight } from "lowlight";
+import { useTipTapCodeBlockLowlightExtension } from "./useTipTapCodeBlockLowlightExtension";
 import { useTipTapMediaExtensions } from "./useTipTapMediaExtensions";
 import { useMarkdownExtension } from "./useMarkdown";
 import { useTipTapTableExtensions } from "./useTipTapTableExtensions";
 import { useTipTapTwitchParent } from "./useTipTapTwitchParent";
 
-const lowlight = createLowlight(common);
-
 export const useTipTapEditorPlugins = () => {
     const Markdown = useMarkdownExtension();
     const twitchParent = useTipTapTwitchParent();
+    const codeBlockLowlightExtension = useTipTapCodeBlockLowlightExtension();
     const mediaExtensions = useTipTapMediaExtensions(twitchParent);
     const tableExtensions = useTipTapTableExtensions();
 
@@ -32,9 +30,7 @@ export const useTipTapEditorPlugins = () => {
             link: false,
             underline: false,
         }),
-        CodeBlockLowlight.configure({
-            lowlight,
-        }),
+        codeBlockLowlightExtension,
         Highlight.configure({
             multicolor: true,
         }),

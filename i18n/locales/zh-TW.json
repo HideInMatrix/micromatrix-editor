@@ -44,6 +44,7 @@
       },
       "groups": {
         "paragraphHeading": "段落與標題",
+        "codeNodes": "程式碼",
         "imageNodes": "圖片",
         "listNodes": "列表",
         "blockNodes": "區塊節點",
@@ -52,9 +53,20 @@
       },
       "labels": {
         "nodeBlocks": "區塊節點",
+        "codeActions": "程式碼命令",
         "imageActions": "圖片載入方式",
         "mediaInline": "媒體與行內",
         "tableActions": "表格操作"
+      },
+      "code": {
+        "language": "程式碼語言",
+        "searchLanguage": "搜尋語言...",
+        "noLanguageResult": "找不到語言",
+        "copy": "複製程式碼",
+        "copied": "已複製",
+        "settings": "程式碼設定",
+        "enableWrap": "開啟自動換行",
+        "disableWrap": "關閉自動換行"
       },
       "block": {
         "paragraph": "段落",

@@ -44,6 +44,7 @@
       },
       "groups": {
         "paragraphHeading": "Paragraph & Headings",
+        "codeNodes": "Code",
         "imageNodes": "Images",
         "listNodes": "Lists",
         "blockNodes": "Block Nodes",
@@ -52,9 +53,20 @@
       },
       "labels": {
         "nodeBlocks": "Node Blocks",
+        "codeActions": "Code Commands",
         "imageActions": "Image Load Methods",
         "mediaInline": "Media & Inline",
         "tableActions": "Table Actions"
+      },
+      "code": {
+        "language": "Code Language",
+        "searchLanguage": "Search language...",
+        "noLanguageResult": "No language found",
+        "copy": "Copy code",
+        "copied": "Copied",
+        "settings": "Code settings",
+        "enableWrap": "Enable word wrap",
+        "disableWrap": "Disable word wrap"
       },
       "block": {
         "paragraph": "Paragraph",

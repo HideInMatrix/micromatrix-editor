@@ -1,7 +1,109 @@
-.writing-editor .tiptap pre {
+.writing-editor .tiptap :not(pre) > code {
+  display: inline-block;
+  margin: 0 0.1rem;
+  border: 1px solid oklch(var(--border));
+  border-radius: 0.375rem;
+  background: oklch(var(--muted));
+  color: oklch(var(--foreground));
+  padding: 0.1rem 0.35rem;
+  font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-size: 0.85em;
+  line-height: 1.4;
+  vertical-align: baseline;
+}
+
+.writing-editor .tiptap pre,
+.writing-editor .tiptap pre.ws-code-block {
   margin: 0.8rem 0;
-  padding: 0.75rem 0.9rem;
-  border-radius: 0.5rem;
-  background: oklch(var(--secondary));
+  padding: 0.9rem 1rem;
+  border: 1px solid oklch(var(--border));
+  border-radius: 0.625rem;
+  background: oklch(var(--muted));
+  color: oklch(var(--foreground));
   overflow-x: auto;
+  min-height: 4.5rem;
+}
+
+.writing-editor .tiptap pre code,
+.writing-editor .tiptap pre.ws-code-block code {
+  display: block;
+  min-width: max-content;
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  padding: 0;
+  color: inherit;
+  font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-size: 0.875rem;
+  line-height: 1.6;
+}
+
+.writing-editor .tiptap pre[data-wrap="true"],
+.writing-editor .tiptap pre.ws-code-block[data-wrap="true"] {
+  overflow-x: hidden;
+}
+
+.writing-editor .tiptap pre[data-wrap="true"] code,
+.writing-editor .tiptap pre.ws-code-block[data-wrap="true"] code {
+  min-width: 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.writing-editor .tiptap pre code .hljs-comment,
+.writing-editor .tiptap pre code .hljs-quote {
+  color: oklch(var(--muted-foreground));
+}
+
+.writing-editor .tiptap pre code .hljs-keyword,
+.writing-editor .tiptap pre code .hljs-selector-tag,
+.writing-editor .tiptap pre code .hljs-literal,
+.writing-editor .tiptap pre code .hljs-type {
+  color: oklch(var(--primary));
+  font-weight: 600;
+}
+
+.writing-editor .tiptap pre code .hljs-string,
+.writing-editor .tiptap pre code .hljs-regexp,
+.writing-editor .tiptap pre code .hljs-symbol,
+.writing-editor .tiptap pre code .hljs-bullet,
+.writing-editor .tiptap pre code .hljs-addition {
+  color: oklch(0.62 0.17 142);
+}
+
+.writing-editor .tiptap pre code .hljs-number,
+.writing-editor .tiptap pre code .hljs-meta,
+.writing-editor .tiptap pre code .hljs-variable,
+.writing-editor .tiptap pre code .hljs-template-variable {
+  color: oklch(0.68 0.16 35);
+}
+
+.writing-editor .tiptap pre code .hljs-title,
+.writing-editor .tiptap pre code .hljs-section,
+.writing-editor .tiptap pre code .hljs-attr,
+.writing-editor .tiptap pre code .hljs-attribute,
+.writing-editor .tiptap pre code .hljs-name {
+  color: oklch(0.64 0.14 250);
+}
+
+.ws-code-block-menu {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  border: 1px solid oklch(var(--border));
+  border-radius: 0.625rem;
+  background: oklch(var(--popover) / 0.98);
+  padding: 0.25rem;
+  box-shadow: 0 10px 24px -12px oklch(0 0 0 / 0.45);
+  backdrop-filter: blur(4px);
+}
+
+.ws-code-block-menu .ws-code-block-language-trigger {
+  min-width: 5rem;
+  justify-content: space-between;
+}
+
+.ws-code-block-menu .ws-code-block-icon-button {
+  color: oklch(var(--muted-foreground));
 }

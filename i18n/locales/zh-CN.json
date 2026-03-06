@@ -44,6 +44,7 @@
       },
       "groups": {
         "paragraphHeading": "段落与标题",
+        "codeNodes": "代码",
         "imageNodes": "图片",
         "listNodes": "列表",
         "blockNodes": "块节点",
@@ -52,9 +53,20 @@
       },
       "labels": {
         "nodeBlocks": "块级节点",
+        "codeActions": "代码命令",
         "imageActions": "图片载入方式",
         "mediaInline": "媒体与行内",
         "tableActions": "表格操作"
+      },
+      "code": {
+        "language": "代码语言",
+        "searchLanguage": "搜索语言...",
+        "noLanguageResult": "未匹配到语言",
+        "copy": "复制代码",
+        "copied": "已复制",
+        "settings": "代码设置",
+        "enableWrap": "开启自动换行",
+        "disableWrap": "关闭自动换行"
       },
       "block": {
         "paragraph": "段落",
