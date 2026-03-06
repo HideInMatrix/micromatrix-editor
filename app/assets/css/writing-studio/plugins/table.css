@@ -1,6 +1,10 @@
 .writing-editor .tiptap .tableWrapper {
-  margin: 1.5rem 0;
+  box-sizing: border-box;
+  width: calc(100% - 1.5rem);
+  max-width: calc(100% - 1.5rem);
+  margin: 1.25rem 1.5rem 1.5rem 0;
   overflow-x: auto;
+  overflow-y: visible;
 }
 
 .writing-editor .tiptap table {
@@ -8,13 +12,17 @@
   overflow: hidden;
   table-layout: fixed;
   width: 100%;
+  max-width: 100%;
   border-collapse: collapse;
 }
 
 .writing-editor .tiptap th,
-.writing-editor .tiptap td {
+.writing-editor .tiptap td,
+.writing-editor .tiptap .ws-table-header,
+.writing-editor .tiptap .ws-table-cell {
   box-sizing: border-box;
   min-width: 1em;
+  width: auto;
   border: 1px solid oklch(var(--border));
   padding: 6px 8px;
   position: relative;
@@ -22,14 +30,33 @@
 }
 
 .writing-editor .tiptap th>*,
-.writing-editor .tiptap td>* {
+.writing-editor .tiptap td>*,
+.writing-editor .tiptap .ws-table-header>*,
+.writing-editor .tiptap .ws-table-cell>* {
   margin-bottom: 0;
 }
 
-.writing-editor .tiptap th {
-  background: oklch(var(--muted));
+.writing-editor .tiptap th,
+.writing-editor .tiptap .ws-table-header {
+  background: transparent;
   font-weight: 700;
   text-align: left;
+}
+
+.writing-editor .tiptap th::before,
+.writing-editor .tiptap .ws-table-header::before {
+  content: "";
+  position: absolute;
+  inset: 1px;
+  z-index: 0;
+  pointer-events: none;
+  background: oklch(var(--muted));
+}
+
+.writing-editor .tiptap th>*,
+.writing-editor .tiptap .ws-table-header>* {
+  position: relative;
+  z-index: 1;
 }
 
 .writing-editor .tiptap table .selectedCell::after {
@@ -43,7 +70,7 @@
 
 .writing-editor .tiptap table .selectedCell {
   border-style: double;
-  border-color: rgba(0, 0, 0, .2);
+  border-color: oklch(var(--primary));
   background-color: rgba(0, 0, 0, .05);
 }
 
@@ -52,6 +79,7 @@
   top: 0;
   right: -2px;
   bottom: -2px;
+  z-index: 4;
   width: 4px;
   pointer-events: none;
   background: oklch(var(--primary));
@@ -60,4 +88,82 @@
 .writing-editor .tiptap.resize-cursor {
   cursor: ew-resize;
   cursor: col-resize;
+}
+
+.ws-table-hover-control {
+  box-sizing: border-box;
+  position: absolute;
+  z-index: 30;
+  cursor: default;
+}
+
+.ws-table-hover-control--column {
+  min-height: 4rem;
+  padding-inline-start: 0.5rem;
+}
+
+.ws-table-hover-control--row {
+  min-width: 6rem;
+  padding-top: 0.5rem;
+}
+
+.ws-table-hover-trigger {
+  align-self: center;
+  border: 1px solid oklch(var(--border));
+  border-radius: 0.35rem;
+  background: oklch(var(--background));
+  color: oklch(var(--muted-foreground));
+  box-shadow: 0 6px 14px -12px oklch(0 0 0 / 0.3);
+  transition: background-color 0.18s ease, color 0.18s ease, border-color 0.18s ease;
+}
+
+.ws-table-hover-trigger:hover {
+  background: oklch(var(--accent));
+  color: oklch(var(--foreground));
+  border-color: oklch(var(--border));
+}
+
+.ws-table-hover-trigger:focus-visible {
+  outline: 2px solid oklch(var(--ring));
+  outline-offset: 2px;
+}
+
+.ws-table-hover-control--column .ws-table-hover-trigger {
+  width: 1rem;
+  height: 100%;
+  cursor: col-resize;
+}
+
+.ws-table-hover-control--row .ws-table-hover-trigger {
+  width: 100%;
+  height: 1rem;
+  cursor: row-resize;
+}
+
+.ws-table-hover-card {
+  min-width: 10rem;
+  max-width: 13rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  padding: 0.7rem 0.9rem;
+  border-radius: 0.9rem;
+  background: oklch(0.28 0 0 / 0.96);
+  color: white;
+  box-shadow: 0 18px 32px -20px oklch(0 0 0 / 0.65);
+  text-wrap: pretty;
+}
+
+.ws-table-hover-tooltip-title {
+  font-size: 0.98rem;
+  font-weight: 700;
+  line-height: 1.25;
+  text-align: center;
+}
+
+.ws-table-hover-tooltip-description {
+  font-size: 0.88rem;
+  line-height: 1.35;
+  text-align: center;
+  color: rgba(255, 255, 255, 0.82);
 }

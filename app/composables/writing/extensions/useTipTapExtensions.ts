@@ -1,7 +1,6 @@
 import { Details, DetailsContent, DetailsSummary } from "@tiptap/extension-details";
 import { Emoji } from "@tiptap/extension-emoji";
 import { Highlight } from "@tiptap/extension-highlight";
-import { Link } from "@tiptap/extension-link";
 import { Mention } from "@tiptap/extension-mention";
 import { Subscript } from "@tiptap/extension-subscript";
 import { Superscript } from "@tiptap/extension-superscript";
@@ -12,6 +11,7 @@ import { TextStyle } from "@tiptap/extension-text-style";
 import { Underline } from "@tiptap/extension-underline";
 import StarterKit from "@tiptap/starter-kit";
 import { useTipTapCodeBlockLowlightExtension } from "./useTipTapCodeBlockLowlightExtension";
+import { useTipTapLinkExtension } from "./useTipTapLinkExtension";
 import { useTipTapMediaExtensions } from "./useTipTapMediaExtensions";
 import { useMarkdownExtension } from "./useMarkdown";
 import { useTipTapTableExtensions } from "./useTipTapTableExtensions";
@@ -21,6 +21,7 @@ export const useTipTapEditorPlugins = () => {
     const Markdown = useMarkdownExtension();
     const twitchParent = useTipTapTwitchParent();
     const codeBlockLowlightExtension = useTipTapCodeBlockLowlightExtension();
+    const linkExtension = useTipTapLinkExtension();
     const mediaExtensions = useTipTapMediaExtensions(twitchParent);
     const tableExtensions = useTipTapTableExtensions();
 
@@ -34,13 +35,7 @@ export const useTipTapEditorPlugins = () => {
         Highlight.configure({
             multicolor: true,
         }),
-        Link.configure({
-            openOnClick: false,
-            HTMLAttributes: {
-                rel: "noopener noreferrer nofollow",
-                target: "_blank",
-            },
-        }),
+        linkExtension,
         Subscript,
         Superscript,
         TextStyle.configure({

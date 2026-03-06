@@ -21,6 +21,8 @@ import WritingStudioCodeToolbar from "@/components/paper/WritingStudioCodeToolba
 import WritingStudioCodeBlockBubbleMenu from "@/components/paper/WritingStudioCodeBlockBubbleMenu.vue";
 import WritingStudioImageGroup from "@/components/paper/WritingStudioImageGroup.vue";
 import WritingStudioImageNodeBubbleMenu from "@/components/paper/WritingStudioImageNodeBubbleMenu.vue";
+import WritingStudioLinkBubbleMenu from "@/components/paper/WritingStudioLinkBubbleMenu.vue";
+import WritingStudioTableHoverControls from "@/components/paper/WritingStudioTableHoverControls.vue";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -39,6 +41,11 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useWritingStudioDragHandle } from "~/composables/writing/studio/useWritingStudioDragHandle";
+import {
+  applyWritingStudioLinkState,
+  getWritingStudioLinkDraftState,
+  type WritingStudioActiveLinkState,
+} from "~/composables/writing/studio/useWritingStudioLinkState";
 import { useWritingStudioToolbarActions } from "~/composables/writing/studio/useWritingStudioToolbarActions";
 import { useWritingStudioToolbarState } from "~/composables/writing/studio/useWritingStudioToolbarState";
 import { useTipTapEditor } from "~/composables/writing/useTipTapEditor";
@@ -58,7 +65,6 @@ const {
   toggleCode,
   toggleHighlight,
   toggleItalic,
-  toggleLink,
   toggleTextStyle,
   toggleStrike,
   toggleSubscript,
@@ -109,6 +115,13 @@ type ParagraphHeadingValue =
 
 type ListTypeValue = "bulletList" | "orderedList" | "taskList";
 type TextAlignValue = "left" | "center" | "right" | "justify";
+
+const isLinkEditorOpen = ref(false);
+const linkEditorHref = ref("https://");
+const linkEditorText = ref("");
+const linkEditorCanRemove = ref(false);
+const pendingLinkRange = ref<Pick<WritingStudioActiveLinkState, "from" | "to"> | null>(null);
+const editorSurfaceRef = ref<HTMLElement | null>(null);
 
 const headingLevelMap: Record<Exclude<ParagraphHeadingValue, "paragraph">, 1 | 2 | 3 | 4 | 5 | 6> = {
   heading1: 1,
@@ -202,10 +215,72 @@ const currentTextAlign = (): TextAlignValue => {
   return "left";
 };
 
+const openLinkEditor = (linkState?: WritingStudioActiveLinkState | null) => {
+  const draftState = linkState
+    ? {
+        ...linkState,
+        canRemove: true,
+      }
+    : getWritingStudioLinkDraftState(editor.value);
+
+  if (!draftState) {
+    return;
+  }
+
+  pendingLinkRange.value = {
+    from: draftState.from,
+    to: draftState.to,
+  };
+  linkEditorHref.value = draftState.href || "https://";
+  linkEditorText.value = draftState.text;
+  linkEditorCanRemove.value = draftState.canRemove;
+  isLinkEditorOpen.value = true;
+};
+
+const closeLinkEditor = () => {
+  isLinkEditorOpen.value = false;
+  pendingLinkRange.value = null;
+  linkEditorCanRemove.value = false;
+};
+
+const saveLinkFromMenu = () => {
+  const success = applyWritingStudioLinkState(
+    editor.value,
+    {
+      href: linkEditorHref.value,
+      text: linkEditorText.value,
+    },
+    pendingLinkRange.value,
+  );
+
+  if (!success) {
+    return;
+  }
+
+  closeLinkEditor();
+};
+
+const removeLinkFromMenu = () => {
+  const success = applyWritingStudioLinkState(
+    editor.value,
+    {
+      href: "",
+      text: linkEditorText.value,
+    },
+    pendingLinkRange.value,
+  );
+
+  if (!success) {
+    return;
+  }
+
+  closeLinkEditor();
+};
+
 </script>
 
 <template>
-  <section class="space-y-3">
+  <section class="space-y-3 h-dvh">
     <div class="flex flex-wrap items-center gap-1 rounded-lg border bg-card p-2 shadow-sm">
       <Select
         :model-value="currentParagraphHeading()"
@@ -369,7 +444,7 @@ const currentTextAlign = (): TextAlignValue => {
         size="sm"
         :disabled="!editor"
         :class="toolbarButtonClass(isMarkActive('link'))"
-        @click="toggleLink"
+        @click="openLinkEditor()"
       >
         <Link2 />
         {{ t("writingStudio.toolbar.marks.link") }}
@@ -570,6 +645,19 @@ const currentTextAlign = (): TextAlignValue => {
       :toolbar-button-class="toolbarButtonClass"
       :set-image-align="setImageAlign"
     />
+    <WritingStudioLinkBubbleMenu
+      :editor="editor"
+      :is-editing="isLinkEditorOpen"
+      :href="linkEditorHref"
+      :text="linkEditorText"
+      :can-remove="linkEditorCanRemove"
+      @edit-link="openLinkEditor"
+      @update:href="linkEditorHref = $event"
+      @update:text="linkEditorText = $event"
+      @save-link="saveLinkFromMenu"
+      @cancel-link-edit="closeLinkEditor"
+      @remove-link="removeLinkFromMenu"
+    />
     <WritingStudioCodeBlockBubbleMenu
       :editor="editor"
       :set-code-block-language="setCodeBlockLanguage"
@@ -586,8 +674,8 @@ const currentTextAlign = (): TextAlignValue => {
     >
       <GripVertical class="ws-drag-handle-icon" :size="16" :stroke-width="2.5" aria-hidden="true" />
     </DragHandle>
-    <div class="rounded-lg border bg-background px-4 py-3 shadow-sm">
-
+    <div ref="editorSurfaceRef" class="relative rounded-lg border bg-background px-4 py-3 shadow-sm max-w-6xl mx-auto">
+      <WritingStudioTableHoverControls :editor="editor" :container="editorSurfaceRef" />
       <EditorContent :editor="editor" class="writing-editor" />
     </div>
   </section>
