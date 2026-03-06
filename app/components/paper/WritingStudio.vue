@@ -22,6 +22,7 @@ import WritingStudioCodeBlockBubbleMenu from "@/components/paper/WritingStudioCo
 import WritingStudioImageGroup from "@/components/paper/WritingStudioImageGroup.vue";
 import WritingStudioImageNodeBubbleMenu from "@/components/paper/WritingStudioImageNodeBubbleMenu.vue";
 import WritingStudioLinkBubbleMenu from "@/components/paper/WritingStudioLinkBubbleMenu.vue";
+import WritingStudioTableColumnBubbleMenu from "@/components/paper/WritingStudioTableColumnBubbleMenu.vue";
 import WritingStudioTableHoverControls from "@/components/paper/WritingStudioTableHoverControls.vue";
 import { Button } from "@/components/ui/button";
 import {
@@ -676,6 +677,7 @@ const removeLinkFromMenu = () => {
     </DragHandle>
     <div ref="editorSurfaceRef" class="relative rounded-lg border bg-background px-4 py-3 shadow-sm max-w-6xl mx-auto">
       <WritingStudioTableHoverControls :editor="editor" :container="editorSurfaceRef" />
+      <WritingStudioTableColumnBubbleMenu :editor="editor" :container="editorSurfaceRef" />
       <EditorContent :editor="editor" class="writing-editor" />
     </div>
   </section>

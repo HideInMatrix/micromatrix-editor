@@ -48,6 +48,48 @@ const createTableCellAttributes = () => {
                 return parseColWidth(element);
             },
         },
+        textColor: {
+            default: null,
+            parseHTML: (element: HTMLElement) => {
+                const value = element.style.color || element.getAttribute("data-text-color");
+                return value || null;
+            },
+            renderHTML: (attributes: Record<string, unknown>) => {
+                const textColor = typeof attributes.textColor === "string"
+                    ? attributes.textColor
+                    : null;
+
+                if (!textColor) {
+                    return {};
+                }
+
+                return {
+                    "data-text-color": textColor,
+                    style: `color: ${textColor};`,
+                };
+            },
+        },
+        backgroundColor: {
+            default: null,
+            parseHTML: (element: HTMLElement) => {
+                const value = element.style.backgroundColor || element.getAttribute("data-background-color");
+                return value || null;
+            },
+            renderHTML: (attributes: Record<string, unknown>) => {
+                const backgroundColor = typeof attributes.backgroundColor === "string"
+                    ? attributes.backgroundColor
+                    : null;
+
+                if (!backgroundColor) {
+                    return {};
+                }
+
+                return {
+                    "data-background-color": backgroundColor,
+                    style: `background-color: ${backgroundColor};`,
+                };
+            },
+        },
     };
 };
 

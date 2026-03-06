@@ -107,6 +107,9 @@ importers:
       '@tiptap/markdown':
         specifier: ^3.20.0
         version: 3.20.0(@tiptap/core@3.20.0(@tiptap/pm@3.20.0))(@tiptap/pm@3.20.0)
+      '@tiptap/pm':
+        specifier: ^3.20.0
+        version: 3.20.0
       '@tiptap/starter-kit':
         specifier: ^3.20.0
         version: 3.20.0

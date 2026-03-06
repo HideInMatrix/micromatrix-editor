@@ -123,7 +123,46 @@
         "toggleHeaderRow": "切換表頭列",
         "toggleHeaderColumn": "切換表頭欄",
         "mergeSplitCells": "合併 / 拆分儲存格",
-        "deleteTable": "刪除表格"
+        "deleteTable": "刪除表格",
+        "columnMenu": {
+          "handle": "選取整欄",
+          "search": "搜尋欄操作或顏色",
+          "empty": "沒有符合的操作",
+          "color": "顏色",
+          "insertLeft": "左側插入欄",
+          "insertRight": "右側插入欄",
+          "duplicate": "複製欄",
+          "clear": "清空欄內容",
+          "delete": "刪除欄",
+          "colors": {
+            "text": {
+              "title": "文字顏色",
+              "default": "預設",
+              "gray": "灰色",
+              "brown": "棕色",
+              "orange": "橘色",
+              "yellow": "黃色",
+              "green": "綠色",
+              "blue": "藍色",
+              "purple": "紫色",
+              "pink": "粉色",
+              "red": "紅色"
+            },
+            "background": {
+              "title": "背景顏色",
+              "default": "預設",
+              "gray": "灰底",
+              "brown": "棕底",
+              "orange": "橘底",
+              "yellow": "黃底",
+              "green": "綠底",
+              "blue": "藍底",
+              "purple": "紫底",
+              "pink": "粉底",
+              "red": "紅底"
+            }
+          }
+        }
       }
     },
     "prompts": {

@@ -123,7 +123,46 @@
         "toggleHeaderRow": "Toggle Header Row",
         "toggleHeaderColumn": "Toggle Header Column",
         "mergeSplitCells": "Merge / Split Cells",
-        "deleteTable": "Delete Table"
+        "deleteTable": "Delete Table",
+        "columnMenu": {
+          "handle": "Select column",
+          "search": "Search actions or colors",
+          "empty": "No matching actions",
+          "color": "Color",
+          "insertLeft": "Insert column left",
+          "insertRight": "Insert column right",
+          "duplicate": "Duplicate column",
+          "clear": "Clear column content",
+          "delete": "Delete column",
+          "colors": {
+            "text": {
+              "title": "Text color",
+              "default": "Default",
+              "gray": "Gray",
+              "brown": "Brown",
+              "orange": "Orange",
+              "yellow": "Yellow",
+              "green": "Green",
+              "blue": "Blue",
+              "purple": "Purple",
+              "pink": "Pink",
+              "red": "Red"
+            },
+            "background": {
+              "title": "Background color",
+              "default": "Default",
+              "gray": "Gray background",
+              "brown": "Brown background",
+              "orange": "Orange background",
+              "yellow": "Yellow background",
+              "green": "Green background",
+              "blue": "Blue background",
+              "purple": "Purple background",
+              "pink": "Pink background",
+              "red": "Red background"
+            }
+          }
+        }
       }
     },
     "prompts": {

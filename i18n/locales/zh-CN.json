@@ -123,7 +123,46 @@
         "toggleHeaderRow": "切换表头行",
         "toggleHeaderColumn": "切换表头列",
         "mergeSplitCells": "合并 / 拆分单元格",
-        "deleteTable": "删除表格"
+        "deleteTable": "删除表格",
+        "columnMenu": {
+          "handle": "选择整列",
+          "search": "搜索列操作或颜色",
+          "empty": "没有匹配的操作",
+          "color": "颜色",
+          "insertLeft": "左侧插入列",
+          "insertRight": "右侧插入列",
+          "duplicate": "复制列",
+          "clear": "清空列内容",
+          "delete": "删除列",
+          "colors": {
+            "text": {
+              "title": "文字颜色",
+              "default": "默认",
+              "gray": "灰色",
+              "brown": "棕色",
+              "orange": "橙色",
+              "yellow": "黄色",
+              "green": "绿色",
+              "blue": "蓝色",
+              "purple": "紫色",
+              "pink": "粉色",
+              "red": "红色"
+            },
+            "background": {
+              "title": "背景颜色",
+              "default": "默认",
+              "gray": "灰底",
+              "brown": "棕底",
+              "orange": "橙底",
+              "yellow": "黄底",
+              "green": "绿底",
+              "blue": "蓝底",
+              "purple": "紫底",
+              "pink": "粉底",
+              "red": "红底"
+            }
+          }
+        }
       }
     },
     "prompts": {
