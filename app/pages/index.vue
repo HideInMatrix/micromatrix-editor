@@ -10,7 +10,7 @@ useHead({
 
 <template>
   <ClientOnly>
-    <PaperWritingStudio />
+    <WritingStudio />
     <template #fallback>
       <div class="grid min-h-screen place-items-center text-sm text-muted-foreground">
         正在初始化编辑器...
