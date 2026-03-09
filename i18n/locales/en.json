@@ -131,7 +131,6 @@
           "color": "Color",
           "insertLeft": "Insert column left",
           "insertRight": "Insert column right",
-          "duplicate": "Duplicate column",
           "clear": "Clear column content",
           "delete": "Delete column",
           "colors": {
@@ -165,7 +164,8 @@
         },
         "selectionMenu": {
           "handle": "Cell actions",
-          "mergeCells": "Merge cells"
+          "mergeCells": "Merge cells",
+          "splitCell": "Split cell"
         }
       }
     },

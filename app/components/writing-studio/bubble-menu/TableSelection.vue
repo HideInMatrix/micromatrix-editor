@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { Editor } from "@tiptap/vue-3";
 import { BubbleMenu } from "@tiptap/vue-3/menus";
-import { ChevronRight, GripVertical, PaintBucket, TableCellsMerge, Type } from "lucide-vue-next";
+import { ArrowDownToLine, ArrowUpToLine, ChevronRight, GripVertical, PaintBucket, TableCellsMerge, TableCellsSplit, Trash2, Type } from "lucide-vue-next";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
@@ -28,12 +28,7 @@ const handleAnchorRef = ref<HTMLElement | null>(null);
 const isMenuOpen = ref(false);
 const openedSelectionKey = ref<string | null>(null);
 const activeColorMenuKind = ref<WritingStudioTableColorKind | null>(null);
-const {
-  activeCell,
-  selectionOverlay,
-  selectedCellCount,
-  canMergeSelectedCells,
-} = useWritingStudioTableColumnMenuState(editorRef);
+const { activeCell, selectionOverlay, selectedCellCount, canMergeSelectedCells } = useWritingStudioTableColumnMenuState(editorRef);
 
 const TABLE_SELECTION_MENU_PLUGIN_KEY = "writing-studio-table-selection-menu";
 
@@ -44,9 +39,7 @@ const requestSelectionMenuPositionUpdate = async () => {
 
   await nextTick();
 
-  props.editor.view.dispatch(
-    props.editor.state.tr.setMeta(TABLE_SELECTION_MENU_PLUGIN_KEY, "updatePosition"),
-  );
+  props.editor.view.dispatch(props.editor.state.tr.setMeta(TABLE_SELECTION_MENU_PLUGIN_KEY, "updatePosition"));
 };
 
 const closeColorMenu = () => {
@@ -76,43 +69,21 @@ const currentSelectionKey = computed(() => {
   const { selection } = editor.state;
   const selectionType = selection.constructor.name;
 
-  return [
-    selectionType,
-    currentCell.tablePos,
-    currentCell.cellPos,
-    selection.from,
-    selection.to,
-  ].join(":");
+  return [selectionType, currentCell.tablePos, currentCell.cellPos, selection.from, selection.to].join(":");
 });
 
-const canShowSelectionMenu = computed(() => {
-  if (!props.editor?.isEditable || !isMenuOpen.value) {
+const isSelectionMenuContextValid = (editor: Editor | null | undefined) => {
+  if (!editor?.isEditable || !activeCell.value || !openedSelectionKey.value) {
     return false;
   }
 
-  return Boolean(activeCell.value && openedSelectionKey.value && currentSelectionKey.value === openedSelectionKey.value);
-});
+  return currentSelectionKey.value === openedSelectionKey.value;
+};
 
 watch(
-  canShowSelectionMenu,
-  (value) => {
-    if (!value && isMenuOpen.value) {
-      closeSelectionMenu();
-    }
-  },
-  {
-    flush: "post",
-  },
-);
-
-watch(
-  currentSelectionKey,
-  (value) => {
-    if (!isMenuOpen.value) {
-      return;
-    }
-
-    if (!value || value !== openedSelectionKey.value) {
+  () => isMenuOpen.value && !isSelectionMenuContextValid(props.editor),
+  (shouldClose) => {
+    if (shouldClose) {
       closeSelectionMenu();
     }
   },
@@ -145,7 +116,7 @@ const handleStyle = computed(() => {
 
   return {
     top: `${rect.top - containerRect.top + rect.height / 2}px`,
-    left: `${rect.left - containerRect.left + rect.width}px`,
+    left: `${rect.left - containerRect.left + rect.width - 1}px`,
   };
 });
 
@@ -189,13 +160,7 @@ const getSelectionMenuVirtualElement = () => {
 const shouldShowSelectionMenu = (menuProps: any) => {
   const currentEditor = menuProps?.editor as Editor | undefined;
 
-  return Boolean(
-    currentEditor?.isEditable
-    && isMenuOpen.value
-    && activeCell.value
-    && openedSelectionKey.value
-    && currentSelectionKey.value === openedSelectionKey.value,
-  );
+  return Boolean(isMenuOpen.value && isSelectionMenuContextValid(currentEditor));
 };
 
 const applySelectionColor = (kind: WritingStudioTableColorKind, value: WritingStudioTableCellColorValue) => {
@@ -225,16 +190,38 @@ const mergeSelectedCells = () => {
 
   closeSelectionMenu();
 };
+
+const runSelectionAction = (actionId: "addRowBefore" | "addRowAfter" | "deleteRow" | "splitCell") => {
+  if (!props.editor) {
+    return;
+  }
+
+  closeColorMenu();
+
+  let success = false;
+
+  if (actionId === "addRowBefore") {
+    success = props.editor.chain().focus().addRowBefore().run();
+  }
+  else if (actionId === "addRowAfter") {
+    success = props.editor.chain().focus().addRowAfter().run();
+  }
+  else if (actionId === "deleteRow") {
+    success = props.editor.chain().focus().deleteRow().run();
+  }
+  else {
+    success = props.editor.chain().focus().splitCell().run();
+  }
+
+  if (success) {
+    closeSelectionMenu();
+  }
+};
 </script>
 
 <template>
   <Teleport v-if="currentTableWrapper && handleStyle" :to="currentTableWrapper">
-    <div
-      ref="handleAnchorRef"
-      contenteditable="false"
-      class="ws-table-selection-handle-anchor"
-      :style="handleStyle"
-    >
+    <div ref="handleAnchorRef" contenteditable="false" class="ws-table-selection-handle-anchor" :style="handleStyle">
       <Button
         type="button"
         variant="outline"
@@ -243,8 +230,7 @@ const mergeSelectedCells = () => {
         :aria-label="t('writingStudio.toolbar.table.selectionMenu.handle')"
         @pointerdown.prevent.stop
         @mousedown.prevent.stop
-        @click.stop="openSelectionMenu"
-      >
+        @click.stop="openSelectionMenu">
         <GripVertical class="ws-table-selection-handle-icon" />
       </Button>
     </div>
@@ -256,8 +242,7 @@ const mergeSelectedCells = () => {
     :editor="editor"
     :should-show="shouldShowSelectionMenu"
     :get-referenced-virtual-element="getSelectionMenuVirtualElement"
-    :options="{ placement: 'bottom-start' }"
-  >
+    :options="{ placement: 'bottom-start' }">
     <div class="ws-table-column-bubble-layer">
       <Card class="ws-table-selection-menu">
         <div class="ws-table-selection-menu-items">
@@ -276,16 +261,9 @@ const mergeSelectedCells = () => {
                   closeColorMenu();
                 }
               }
-            "
-          >
+            ">
             <HoverCardTrigger as-child>
-              <button
-                type="button"
-                class="ws-table-column-menu-item"
-                :class="{ 'ws-table-column-menu-item--active': activeColorMenuKind === 'text' }"
-                @mousedown.prevent
-                @mouseenter="openColorMenu('text')"
-              >
+              <button type="button" class="ws-table-column-menu-item" :class="{ 'ws-table-column-menu-item--active': activeColorMenuKind === 'text' }" @mousedown.prevent @mouseenter="openColorMenu('text')">
                 <Type class="ws-table-column-menu-icon" />
                 <span class="flex-1 text-left">
                   {{ t("writingStudio.toolbar.table.columnMenu.colors.text.title") }}
@@ -296,10 +274,7 @@ const mergeSelectedCells = () => {
 
             <HoverCardContent side="right" align="start" :side-offset="12" class="ws-table-color-menu">
               <div @pointerenter="openColorMenu('text')">
-                <ColorPanel
-                  :kinds="['text']"
-                  @select="({ kind, value }) => applySelectionColor(kind, value)"
-                />
+                <ColorPanel :kinds="['text']" @select="({ kind, value }) => applySelectionColor(kind, value)" />
               </div>
             </HoverCardContent>
           </HoverCard>
@@ -319,16 +294,9 @@ const mergeSelectedCells = () => {
                   closeColorMenu();
                 }
               }
-            "
-          >
+            ">
             <HoverCardTrigger as-child>
-              <button
-                type="button"
-                class="ws-table-column-menu-item"
-                :class="{ 'ws-table-column-menu-item--active': activeColorMenuKind === 'background' }"
-                @mousedown.prevent
-                @mouseenter="openColorMenu('background')"
-              >
+              <button type="button" class="ws-table-column-menu-item" :class="{ 'ws-table-column-menu-item--active': activeColorMenuKind === 'background' }" @mousedown.prevent @mouseenter="openColorMenu('background')">
                 <PaintBucket class="ws-table-column-menu-icon" />
                 <span class="flex-1 text-left">
                   {{ t("writingStudio.toolbar.table.columnMenu.colors.background.title") }}
@@ -339,25 +307,43 @@ const mergeSelectedCells = () => {
 
             <HoverCardContent side="right" align="start" :side-offset="12" class="ws-table-color-menu">
               <div @pointerenter="openColorMenu('background')">
-                <ColorPanel
-                  :kinds="['background']"
-                  @select="({ kind, value }) => applySelectionColor(kind, value)"
-                />
+                <ColorPanel :kinds="['background']" @select="({ kind, value }) => applySelectionColor(kind, value)" />
               </div>
             </HoverCardContent>
           </HoverCard>
 
-          <button
-            v-if="selectedCellCount > 1 && canMergeSelectedCells"
-            type="button"
-            class="ws-table-column-menu-item"
-            @mousedown.prevent
-            @mouseenter="closeColorMenu"
-            @click="mergeSelectedCells"
-          >
+          <button v-if="selectedCellCount > 1 && canMergeSelectedCells" type="button" class="ws-table-column-menu-item" @mousedown.prevent @mouseenter="closeColorMenu" @click="mergeSelectedCells">
             <TableCellsMerge class="ws-table-column-menu-icon" />
             <span class="flex-1 text-left">
               {{ t("writingStudio.toolbar.table.selectionMenu.mergeCells") }}
+            </span>
+          </button>
+
+          <button type="button" class="ws-table-column-menu-item" @mousedown.prevent @mouseenter="closeColorMenu" @click="runSelectionAction('addRowBefore')">
+            <ArrowUpToLine class="ws-table-column-menu-icon" />
+            <span class="flex-1 text-left">
+              {{ t("writingStudio.toolbar.table.addRowBefore") }}
+            </span>
+          </button>
+
+          <button type="button" class="ws-table-column-menu-item" @mousedown.prevent @mouseenter="closeColorMenu" @click="runSelectionAction('addRowAfter')">
+            <ArrowDownToLine class="ws-table-column-menu-icon" />
+            <span class="flex-1 text-left">
+              {{ t("writingStudio.toolbar.table.addRowAfter") }}
+            </span>
+          </button>
+
+          <button type="button" class="ws-table-column-menu-item ws-table-column-menu-item--danger" @mousedown.prevent @mouseenter="closeColorMenu" @click="runSelectionAction('deleteRow')">
+            <Trash2 class="ws-table-column-menu-icon" />
+            <span class="flex-1 text-left">
+              {{ t("writingStudio.toolbar.table.deleteRow") }}
+            </span>
+          </button>
+
+          <button type="button" class="ws-table-column-menu-item" @mousedown.prevent @mouseenter="closeColorMenu" @click="runSelectionAction('splitCell')">
+            <TableCellsSplit class="ws-table-column-menu-icon" />
+            <span class="flex-1 text-left">
+              {{ t("writingStudio.toolbar.table.selectionMenu.splitCell") }}
             </span>
           </button>
         </div>

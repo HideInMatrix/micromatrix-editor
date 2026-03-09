@@ -131,7 +131,6 @@
           "color": "顏色",
           "insertLeft": "左側插入欄",
           "insertRight": "右側插入欄",
-          "duplicate": "複製欄",
           "clear": "清空欄內容",
           "delete": "刪除欄",
           "colors": {
@@ -165,7 +164,8 @@
         },
         "selectionMenu": {
           "handle": "選取儲存格操作",
-          "mergeCells": "合併儲存格"
+          "mergeCells": "合併儲存格",
+          "splitCell": "拆分儲存格"
         }
       }
     },

@@ -728,6 +728,27 @@ export const selectWritingStudioTableColumn = (
   return true;
 };
 
+export const refreshWritingStudioCellSelection = (
+  editor: Editor | null | undefined,
+) => {
+  if (!editor) {
+    return false;
+  }
+
+  const { selection } = editor.state;
+  if (!(selection instanceof CellSelection)) {
+    return false;
+  }
+
+  const refreshedSelection = new CellSelection(selection.$headCell, selection.$anchorCell);
+  if (selection.eq(refreshedSelection)) {
+    return false;
+  }
+
+  editor.view.dispatch(editor.state.tr.setSelection(refreshedSelection));
+  return true;
+};
+
 const updateWritingStudioTableCells = (
   editor: Editor,
   cells: WritingStudioTableColumnCellInfo[],
@@ -844,65 +865,28 @@ export const clearWritingStudioTableColumnContent = (
   });
 };
 
-export const duplicateWritingStudioTableColumn = (
+export const clearWritingStudioSelectedTableCellsContent = (
   editor: Editor | null | undefined,
-  cell: WritingStudioResolvedTableCell | null,
 ) => {
-  if (!editor || !cell) {
+  if (!editor) {
     return false;
   }
 
-  const tableCells = resolveWritingStudioTableColumnCells(editor, cell);
-  if (tableCells.length === 0) {
+  const paragraphNode = editor.state.schema.nodes.paragraph?.createAndFill();
+  if (!paragraphNode) {
     return false;
   }
 
-  const snapshot = tableCells.map(({ cellPos }) => {
-    const node = editor.state.doc.nodeAt(cellPos);
-    return node?.toJSON() ?? null;
-  });
-
-  const added = editor.chain().focus().setTextSelection(cell.cellPos + 1).addColumnAfter().run();
-  if (!added) {
-    return false;
-  }
-
-  const nextActiveCell = resolveWritingStudioActiveTableCell(editor);
-  if (!nextActiveCell) {
-    return true;
-  }
-
-  const nextColumnIndex = nextActiveCell.columnIndex;
-  const nextColumnCells = resolveWritingStudioTableColumnCells(editor, nextActiveCell);
-  if (nextColumnCells.length === 0) {
-    return true;
-  }
-
-  let tr = editor.state.tr;
-  nextColumnCells.forEach((cellInfo, index) => {
-    const sourceJson = snapshot[index];
-    const currentNode = tr.doc.nodeAt(cellInfo.cellPos);
-    if (!sourceJson || !currentNode) {
+  return updateWritingStudioSelectedTableCells(editor, (cellInfo, tr) => {
+    const node = tr.doc.nodeAt(cellInfo.cellPos);
+    if (!node) {
       return;
     }
 
-    const sourceNode = editor.schema.nodeFromJSON(sourceJson);
-    tr.setNodeMarkup(cellInfo.cellPos, undefined, sourceNode.attrs);
-    tr.replaceWith(
-      cellInfo.cellPos + 1,
-      cellInfo.cellPos + currentNode.nodeSize - 1,
-      sourceNode.content,
-    );
+    const from = cellInfo.cellPos + 1;
+    const to = cellInfo.cellPos + node.nodeSize - 1;
+    tr.replaceWith(from, to, paragraphNode);
   });
-
-  editor.view.dispatch(tr.scrollIntoView());
-
-  const refreshedCell = resolveWritingStudioActiveTableCell(editor);
-  if (refreshedCell && refreshedCell.columnIndex === nextColumnIndex) {
-    selectWritingStudioTableColumn(editor, refreshedCell);
-  }
-
-  return true;
 };
 
 export const insertWritingStudioTableColumn = (
@@ -929,6 +913,18 @@ export const insertWritingStudioTableColumn = (
   return true;
 };
 
+export const insertWritingStudioSelectedTableColumns = (
+  editor: Editor | null | undefined,
+  side: "before" | "after",
+) => {
+  if (!editor) {
+    return false;
+  }
+
+  const chain = editor.chain().focus() as any;
+  return side === "before" ? chain.addColumnBefore().run() : chain.addColumnAfter().run();
+};
+
 export const deleteWritingStudioTableColumn = (
   editor: Editor | null | undefined,
   cell: WritingStudioResolvedTableCell | null,
@@ -938,6 +934,21 @@ export const deleteWritingStudioTableColumn = (
   }
 
   const success = editor.chain().focus().setTextSelection(cell.cellPos + 1).deleteColumn().run();
+  if (success) {
+    editor.commands.focus();
+  }
+
+  return success;
+};
+
+export const deleteWritingStudioSelectedTableColumns = (
+  editor: Editor | null | undefined,
+) => {
+  if (!editor) {
+    return false;
+  }
+
+  const success = editor.chain().focus().deleteColumn().run();
   if (success) {
     editor.commands.focus();
   }

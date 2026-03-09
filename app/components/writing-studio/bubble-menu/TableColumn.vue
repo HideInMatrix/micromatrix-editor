@@ -2,24 +2,28 @@
 import type { Editor } from "@tiptap/vue-3";
 import type { Component } from "vue";
 import { BubbleMenu } from "@tiptap/vue-3/menus";
-import { ArrowLeft, ArrowRight, ChevronRight, CircleX, Copy, GripHorizontal, PaintRoller, Trash2 } from "lucide-vue-next";
+import { ArrowLeft, ArrowRight, ChevronRight, CircleX, GripHorizontal, PaintRoller, Trash2 } from "lucide-vue-next";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import ColorPanel from "@/components/writing-studio/bubble-menu/table/ColorPanel.vue";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
 import { Input } from "@/components/ui/input";
 import {
+  clearWritingStudioSelectedTableCellsContent,
   clearWritingStudioTableColumnContent,
+  deleteWritingStudioSelectedTableColumns,
   deleteWritingStudioTableColumn,
-  duplicateWritingStudioTableColumn,
   getWritingStudioTableColorPreset,
+  insertWritingStudioSelectedTableColumns,
   insertWritingStudioTableColumn,
   isWritingStudioColumnSelectionActive,
+  refreshWritingStudioCellSelection,
   resolveWritingStudioActiveTableCell,
   resolveWritingStudioTableCellRect,
   resolveWritingStudioTableColumnRect,
   resolveWritingStudioTableWrapperElement,
   selectWritingStudioTableColumn,
+  setWritingStudioTableSelectedCellColors,
   setWritingStudioTableColumnCellColors,
   useWritingStudioTableColumnColors,
   useWritingStudioTableColumnMenuState,
@@ -32,7 +36,7 @@ const props = defineProps<{
   container: HTMLElement | null;
 }>();
 
-type TableColumnActionId = "color" | "insertLeft" | "insertRight" | "duplicate" | "clear" | "delete";
+type TableColumnActionId = "color" | "insertLeft" | "insertRight" | "clear" | "delete";
 
 type TableColumnActionItem = {
   id: TableColumnActionId;
@@ -45,10 +49,11 @@ type TableColumnActionItem = {
 
 const { t } = useI18n();
 const editorRef = computed(() => props.editor);
+const handleAnchorRef = ref<HTMLElement | null>(null);
 const isMenuOpen = ref(false);
 const isColorMenuOpen = ref(false);
 const searchQuery = ref("");
-const { activeCell, isColumnSelection, isRowSelection, selectionOverlay } = useWritingStudioTableColumnMenuState(editorRef);
+const { activeCell, isColumnSelection, selectionOverlay } = useWritingStudioTableColumnMenuState(editorRef);
 const colorPresets = useWritingStudioTableColumnColors();
 
 const TABLE_COLUMN_MENU_PLUGIN_KEY = "writing-studio-table-column-menu";
@@ -78,7 +83,6 @@ const requestColumnMenuPositionUpdate = async () => {
   }
 
   await nextTick();
-
   props.editor.view.dispatch(
     props.editor.state.tr.setMeta(TABLE_COLUMN_MENU_PLUGIN_KEY, "updatePosition"),
   );
@@ -130,13 +134,6 @@ const tableColumnActions = computed<TableColumnActionItem[]>(() => {
       keyword: "insert right add after",
     },
     {
-      id: "duplicate",
-      icon: Copy,
-      label: t("writingStudio.toolbar.table.columnMenu.duplicate"),
-      keyword: "duplicate copy clone",
-      hint: "⌘D",
-    },
-    {
       id: "clear",
       icon: CircleX,
       label: t("writingStudio.toolbar.table.columnMenu.clear"),
@@ -168,24 +165,22 @@ const filteredTableActions = computed(() => {
   });
 });
 
-const canShowColumnMenu = computed(() => {
-  const currentEditor = props.editor;
-
-  if (!currentEditor?.isEditable || !isMenuOpen.value) {
+const isColumnMenuContextValid = (editor: Editor | null | undefined) => {
+  if (!editor?.isEditable || !activeCell.value) {
     return false;
   }
 
-  if (!activeCell.value || !isColumnSelection.value) {
+  if (!isWritingStudioColumnSelectionActive(editor)) {
     return false;
   }
 
-  return Boolean(resolveWritingStudioActiveTableCell(currentEditor));
-});
+  return Boolean(resolveWritingStudioActiveTableCell(editor));
+};
 
 watch(
-  canShowColumnMenu,
-  (value) => {
-    if (!value && isMenuOpen.value) {
+  () => isMenuOpen.value && !isColumnMenuContextValid(props.editor),
+  (shouldClose) => {
+    if (shouldClose) {
       closeColumnMenu();
     }
   },
@@ -194,33 +189,31 @@ watch(
   },
 );
 
-watch(
-  [editorRef, isMenuOpen, selectionOverlay],
-  ([editor, menuOpen, currentSelectionOverlay]) => {
-    const editorDom = editor?.view.dom as HTMLElement | undefined;
+watchEffect((onCleanup) => {
+  const editorDom = editorRef.value?.view.dom as HTMLElement | undefined;
+  if (!editorDom) {
+    return;
+  }
 
-    if (!editorDom) {
-      return;
-    }
-
-    if (menuOpen) {
-      editorDom.setAttribute("data-ws-column-menu-active", "true");
-      return;
-    }
-
+  if (isMenuOpen.value) {
+    editorDom.setAttribute("data-ws-column-menu-active", "true");
+  }
+  else {
     editorDom.removeAttribute("data-ws-column-menu-active");
+  }
 
-    if (currentSelectionOverlay) {
-      editorDom.setAttribute("data-ws-selection-overlay-active", "true");
-      return;
-    }
-
+  if (!isMenuOpen.value && selectionOverlay.value) {
+    editorDom.setAttribute("data-ws-selection-overlay-active", "true");
+  }
+  else {
     editorDom.removeAttribute("data-ws-selection-overlay-active");
-  },
-  {
-    immediate: true,
-  },
-);
+  }
+
+  onCleanup(() => {
+    editorDom.removeAttribute("data-ws-column-menu-active");
+    editorDom.removeAttribute("data-ws-selection-overlay-active");
+  });
+});
 
 const isSelectionOverlayActive = computed(() => {
   return Boolean(selectionOverlay.value);
@@ -237,7 +230,7 @@ const activeOutlineRect = computed(() => {
     return null;
   }
 
-  if (isMenuOpen.value || isWritingStudioColumnSelectionActive(props.editor)) {
+  if (isMenuOpen.value || isColumnSelection.value) {
     return resolveWritingStudioTableColumnRect(props.editor, currentCell);
   }
 
@@ -295,12 +288,20 @@ const handleStyle = computed(() => {
 });
 
 const getColumnMenuVirtualElement = () => {
-  if (!isMenuOpen.value || !props.editor || !isWritingStudioColumnSelectionActive(props.editor)) {
+  if (!isMenuOpen.value || !props.editor || !isColumnSelection.value) {
     return null;
   }
 
-  const currentCell = resolveWritingStudioActiveTableCell(props.editor);
-  const rect = resolveWritingStudioTableColumnRect(props.editor, currentCell);
+  const handleAnchor = handleAnchorRef.value;
+  if (handleAnchor) {
+    return {
+      contextElement: handleAnchor,
+      getBoundingClientRect: () => handleAnchor.getBoundingClientRect(),
+      getClientRects: () => [handleAnchor.getBoundingClientRect()],
+    };
+  }
+
+  const rect = activeOutlineRect.value;
 
   if (!rect || !import.meta.client) {
     return null;
@@ -327,26 +328,29 @@ const openColumnMenu = () => {
     return;
   }
 
-  const selected = selectWritingStudioTableColumn(props.editor, activeCell.value);
-
-  if (!selected) {
-    return;
-  }
-
   isColorMenuOpen.value = false;
   isMenuOpen.value = true;
+
+  if (!isColumnSelection.value) {
+    if (!selectWritingStudioTableColumn(props.editor, activeCell.value)) {
+      closeColumnMenu();
+      return;
+    }
+  }
+  else {
+    refreshWritingStudioCellSelection(props.editor);
+  }
+
+  props.editor.commands.focus();
   requestColumnMenuPositionUpdate();
 };
 
-const shouldShowColumnMenu = (menuProps: any) => {
-  const currentEditor = menuProps?.editor as Editor | undefined;
+const shouldShowColumnMenu = ({ editor }: any) => {
+  const currentEditor = editor as Editor | undefined;
 
   return Boolean(
-    currentEditor?.isEditable
-    && isMenuOpen.value
-    && activeCell.value
-    && isWritingStudioColumnSelectionActive(currentEditor)
-    && resolveWritingStudioActiveTableCell(currentEditor),
+    isMenuOpen.value
+    && isColumnMenuContextValid(currentEditor),
   );
 };
 
@@ -364,30 +368,44 @@ const runColumnAction = (actionId: TableColumnActionId) => {
   closeColorMenu();
 
   if (actionId === "insertLeft") {
-    insertWritingStudioTableColumn(props.editor, activeCell.value, "before");
+    if (isColumnSelection.value) {
+      insertWritingStudioSelectedTableColumns(props.editor, "before");
+    }
+    else {
+      insertWritingStudioTableColumn(props.editor, activeCell.value, "before");
+    }
     closeColumnMenu();
     return;
   }
 
   if (actionId === "insertRight") {
-    insertWritingStudioTableColumn(props.editor, activeCell.value, "after");
-    closeColumnMenu();
-    return;
-  }
-
-  if (actionId === "duplicate") {
-    duplicateWritingStudioTableColumn(props.editor, activeCell.value);
+    if (isColumnSelection.value) {
+      insertWritingStudioSelectedTableColumns(props.editor, "after");
+    }
+    else {
+      insertWritingStudioTableColumn(props.editor, activeCell.value, "after");
+    }
     closeColumnMenu();
     return;
   }
 
   if (actionId === "clear") {
-    clearWritingStudioTableColumnContent(props.editor, activeCell.value);
+    if (isColumnSelection.value) {
+      clearWritingStudioSelectedTableCellsContent(props.editor);
+    }
+    else {
+      clearWritingStudioTableColumnContent(props.editor, activeCell.value);
+    }
     closeColumnMenu();
     return;
   }
 
-  deleteWritingStudioTableColumn(props.editor, activeCell.value);
+  if (isColumnSelection.value) {
+    deleteWritingStudioSelectedTableColumns(props.editor);
+  }
+  else {
+    deleteWritingStudioTableColumn(props.editor, activeCell.value);
+  }
   closeColumnMenu();
 };
 
@@ -398,10 +416,18 @@ const applyColumnColor = (kind: WritingStudioTableColorKind, value: WritingStudi
 
   const preset = getWritingStudioTableColorPreset(kind, value);
 
-  setWritingStudioTableColumnCellColors(props.editor, activeCell.value, {
-    textColor: kind === "text" ? preset.textColor : undefined,
-    backgroundColor: kind === "background" ? preset.backgroundColor : undefined,
-  });
+  if (isColumnSelection.value) {
+    setWritingStudioTableSelectedCellColors(props.editor, {
+      textColor: kind === "text" ? preset.textColor : undefined,
+      backgroundColor: kind === "background" ? preset.backgroundColor : undefined,
+    });
+  }
+  else {
+    setWritingStudioTableColumnCellColors(props.editor, activeCell.value, {
+      textColor: kind === "text" ? preset.textColor : undefined,
+      backgroundColor: kind === "background" ? preset.backgroundColor : undefined,
+    });
+  }
 
   closeColorMenu();
 };
@@ -409,15 +435,22 @@ const applyColumnColor = (kind: WritingStudioTableColorKind, value: WritingStudi
 
 <template>
   <Teleport v-if="currentTableWrapper && handleStyle" :to="currentTableWrapper">
-    <div v-if="showColumnHandle" class="ws-table-column-handle-anchor" :style="handleStyle">
+    <div
+      v-if="showColumnHandle"
+      ref="handleAnchorRef"
+      contenteditable="false"
+      class="ws-table-column-handle-anchor"
+      :style="handleStyle"
+    >
       <Button
         type="button"
         variant="outline"
         class="ws-table-column-handle"
         :class="{ 'ws-table-column-handle--active': isMenuOpen }"
         :aria-label="t('writingStudio.toolbar.table.columnMenu.handle')"
-        @mousedown.prevent
-        @click="openColumnMenu">
+        @pointerdown.prevent.stop
+        @mousedown.prevent.stop
+        @click.stop="openColumnMenu">
         <GripHorizontal class="ws-table-column-handle-icon" />
       </Button>
     </div>

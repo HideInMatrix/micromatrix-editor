@@ -131,7 +131,6 @@
           "color": "颜色",
           "insertLeft": "左侧插入列",
           "insertRight": "右侧插入列",
-          "duplicate": "复制列",
           "clear": "清空列内容",
           "delete": "删除列",
           "colors": {
@@ -165,7 +164,8 @@
         },
         "selectionMenu": {
           "handle": "选择单元格操作",
-          "mergeCells": "合并单元格"
+          "mergeCells": "合并单元格",
+          "splitCell": "拆分单元格"
         }
       }
     },
