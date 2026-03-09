@@ -46,7 +46,6 @@ type TableColumnActionItem = {
 const { t } = useI18n();
 const editorRef = computed(() => props.editor);
 const containerRef = computed(() => props.container);
-const bubbleMenuAppendTarget = computed(() => containerRef.value ?? undefined);
 const handleAnchorRef = useTemplateRef<HTMLElement>("handleAnchor");
 const isMenuOpen = ref(false);
 const isColorMenuOpen = ref(false);
@@ -54,18 +53,37 @@ const searchQuery = ref("");
 const { activeCell, isColumnSelection } = useWritingStudioTableColumnMenuState(editorRef);
 const colorPresets = useWritingStudioTableColumnColors();
 
+const TABLE_COLUMN_MENU_PLUGIN_KEY = "writing-studio-table-column-menu";
+const TABLE_COLUMN_HANDLE_WIDTH_REM = 2.5;
+const TABLE_COLUMN_HANDLE_HEIGHT_REM = 1.5;
+const TABLE_COLUMN_HANDLE_TOP_OFFSET_PX = 1;
+
 const openColorMenu = () => {
   isColorMenuOpen.value = true;
+  requestColumnMenuPositionUpdate();
 };
 
 const closeColorMenu = () => {
   isColorMenuOpen.value = false;
+  requestColumnMenuPositionUpdate();
 };
 
 const closeColumnMenu = () => {
   isMenuOpen.value = false;
   isColorMenuOpen.value = false;
   searchQuery.value = "";
+};
+
+const requestColumnMenuPositionUpdate = async () => {
+  if (!props.editor || props.editor.isDestroyed) {
+    return;
+  }
+
+  await nextTick();
+
+  props.editor.view.dispatch(
+    props.editor.state.tr.setMeta(TABLE_COLUMN_MENU_PLUGIN_KEY, "updatePosition"),
+  );
 };
 
 const resolveFilteredColorEntries = (kind: WritingStudioTableColorKind) => {
@@ -152,17 +170,31 @@ const filteredTableActions = computed(() => {
   });
 });
 
-watch(activeCell, (cell) => {
-  if (!cell) {
-    closeColumnMenu();
+const canShowColumnMenu = computed(() => {
+  const currentEditor = props.editor;
+
+  if (!currentEditor?.isEditable || !isMenuOpen.value) {
+    return false;
   }
+
+  if (!activeCell.value || !isColumnSelection.value) {
+    return false;
+  }
+
+  return Boolean(resolveWritingStudioActiveTableCell(currentEditor));
 });
 
-watch(isColumnSelection, (value) => {
-  if (!value && isMenuOpen.value) {
-    closeColumnMenu();
-  }
-});
+watch(
+  canShowColumnMenu,
+  (value) => {
+    if (!value && isMenuOpen.value) {
+      closeColumnMenu();
+    }
+  },
+  {
+    flush: "post",
+  },
+);
 
 watch(
   [editorRef, isMenuOpen],
@@ -238,24 +270,26 @@ const getColumnMenuVirtualElement = () => {
     return null;
   }
 
-  const handleAnchor = handleAnchorRef.value;
+  const currentCell = resolveWritingStudioActiveTableCell(props.editor);
+  const rect = resolveWritingStudioTableColumnRect(props.editor, currentCell);
 
-  if (handleAnchor) {
-    return {
-      contextElement: handleAnchor,
-      getBoundingClientRect: () => handleAnchor.getBoundingClientRect(),
-    };
-  }
-
-  const rect = activeOutlineRect.value;
-
-  if (!rect || !props.container || !import.meta.client) {
+  if (!rect || !import.meta.client) {
     return null;
   }
 
+  const rootFontSize = Number.parseFloat(window.getComputedStyle(document.documentElement).fontSize || "16");
+  const handleWidth = TABLE_COLUMN_HANDLE_WIDTH_REM * rootFontSize;
+  const handleHeight = TABLE_COLUMN_HANDLE_HEIGHT_REM * rootFontSize;
+  const domRect = new DOMRect(
+    rect.left + rect.width / 2 - handleWidth / 2,
+    rect.top + TABLE_COLUMN_HANDLE_TOP_OFFSET_PX - handleHeight / 2,
+    handleWidth,
+    handleHeight,
+  );
+
   return {
-    contextElement: props.container,
-    getBoundingClientRect: () => new DOMRect(rect.left + rect.width / 2, rect.top, 0, 0),
+    getBoundingClientRect: () => domRect,
+    getClientRects: () => [domRect],
   };
 };
 
@@ -272,31 +306,19 @@ const openColumnMenu = () => {
 
   isColorMenuOpen.value = false;
   isMenuOpen.value = true;
+  requestColumnMenuPositionUpdate();
 };
 
 const shouldShowColumnMenu = (menuProps: any) => {
   const currentEditor = menuProps?.editor as Editor | undefined;
 
-  if (!currentEditor?.isEditable) {
-    return false;
-  }
-
-  if (!isMenuOpen.value) {
-    return false;
-  }
-
-  if (!isWritingStudioColumnSelectionActive(currentEditor)) {
-    closeColumnMenu();
-    return false;
-  }
-
-  const currentCell = resolveWritingStudioActiveTableCell(currentEditor);
-  if (!currentCell) {
-    closeColumnMenu();
-    return false;
-  }
-
-  return true;
+  return Boolean(
+    currentEditor?.isEditable
+    && isMenuOpen.value
+    && activeCell.value
+    && isWritingStudioColumnSelectionActive(currentEditor)
+    && resolveWritingStudioActiveTableCell(currentEditor),
+  );
 };
 
 const runColumnAction = (actionId: TableColumnActionId) => {
@@ -306,6 +328,7 @@ const runColumnAction = (actionId: TableColumnActionId) => {
 
   if (actionId === "color") {
     openColorMenu();
+    requestColumnMenuPositionUpdate();
     return;
   }
 
@@ -372,11 +395,10 @@ const applyColumnColor = (kind: WritingStudioTableColorKind, value: WritingStudi
     <div class="ws-table-column-selection-outline" :class="{ 'ws-table-column-selection-outline--column': isMenuOpen || isColumnSelection }" />
   </div>
   <BubbleMenu
-    v-if="editor && activeCell"
+    v-if="editor"
     plugin-key="writing-studio-table-column-menu"
     class="z-2"
     :editor="editor"
-    :append-to="bubbleMenuAppendTarget"
     :should-show="shouldShowColumnMenu"
     :get-referenced-virtual-element="getColumnMenuVirtualElement"
     :options="{ placement: 'bottom-start', strategy: 'fixed', offset: 14 }">
@@ -409,36 +431,38 @@ const applyColumnColor = (kind: WritingStudioTableColorKind, value: WritingStudi
                   </button>
                 </HoverCardTrigger>
 
-                <HoverCardContent side="right" align="start" :side-offset="12" class="ws-table-column-color-menu" @pointerenter="openColorMenu">
-                  <ScrollArea class="ws-table-column-color-scroll">
-                    <div v-if="filteredTextColorEntries.length > 0" class="ws-table-column-color-section">
-                      <div class="ws-table-column-color-title">
-                        {{ t("writingStudio.toolbar.table.columnMenu.colors.text.title") }}
+                <HoverCardContent side="right" align="start" :side-offset="12" class="ws-table-column-color-menu">
+                  <div @pointerenter="openColorMenu">
+                    <ScrollArea class="ws-table-column-color-scroll">
+                      <div v-if="filteredTextColorEntries.length > 0" class="ws-table-column-color-section">
+                        <div class="ws-table-column-color-title">
+                          {{ t("writingStudio.toolbar.table.columnMenu.colors.text.title") }}
+                        </div>
+
+                        <button v-for="[value, preset] in filteredTextColorEntries" :key="`text-${value}`" type="button" class="ws-table-column-color-item" @mousedown.prevent @click="applyColumnColor('text', value)">
+                          <span class="ws-table-column-color-swatch" :style="{ color: preset.textColor ?? 'oklch(var(--foreground))' }">
+                            <Type class="h-6 w-6" />
+                          </span>
+                          <span>{{ t(preset.labelKey) }}</span>
+                        </button>
                       </div>
 
-                      <button v-for="[value, preset] in filteredTextColorEntries" :key="`text-${value}`" type="button" class="ws-table-column-color-item" @mousedown.prevent @click="applyColumnColor('text', value)">
-                        <span class="ws-table-column-color-swatch" :style="{ color: preset.textColor ?? 'oklch(var(--foreground))' }">
-                          <Type class="h-6 w-6" />
-                        </span>
-                        <span>{{ t(preset.labelKey) }}</span>
-                      </button>
-                    </div>
+                      <Separator v-if="filteredTextColorEntries.length > 0 && filteredBackgroundColorEntries.length > 0" class="my-3" />
 
-                    <Separator v-if="filteredTextColorEntries.length > 0 && filteredBackgroundColorEntries.length > 0" class="my-3" />
+                      <div v-if="filteredBackgroundColorEntries.length > 0" class="ws-table-column-color-section">
+                        <div class="ws-table-column-color-title">
+                          {{ t("writingStudio.toolbar.table.columnMenu.colors.background.title") }}
+                        </div>
 
-                    <div v-if="filteredBackgroundColorEntries.length > 0" class="ws-table-column-color-section">
-                      <div class="ws-table-column-color-title">
-                        {{ t("writingStudio.toolbar.table.columnMenu.colors.background.title") }}
+                        <button v-for="[value, preset] in filteredBackgroundColorEntries" :key="`background-${value}`" type="button" class="ws-table-column-color-item" @mousedown.prevent @click="applyColumnColor('background', value)">
+                          <span class="ws-table-column-color-swatch" :style="{ color: preset.backgroundColor ?? 'oklch(var(--muted-foreground))' }">
+                            <Square class="h-6 w-6 fill-current" />
+                          </span>
+                          <span>{{ t(preset.labelKey) }}</span>
+                        </button>
                       </div>
-
-                      <button v-for="[value, preset] in filteredBackgroundColorEntries" :key="`background-${value}`" type="button" class="ws-table-column-color-item" @mousedown.prevent @click="applyColumnColor('background', value)">
-                        <span class="ws-table-column-color-swatch" :style="{ color: preset.backgroundColor ?? 'oklch(var(--muted-foreground))' }">
-                          <Square class="h-6 w-6 fill-current" />
-                        </span>
-                        <span>{{ t(preset.labelKey) }}</span>
-                      </button>
-                    </div>
-                  </ScrollArea>
+                    </ScrollArea>
+                  </div>
                 </HoverCardContent>
               </HoverCard>
 
