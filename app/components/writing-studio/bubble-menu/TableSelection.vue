@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { Editor } from "@tiptap/vue-3";
+import type { Component } from "vue";
 import { BubbleMenu } from "@tiptap/vue-3/menus";
 import { ArrowDownToLine, ArrowUpToLine, ChevronRight, GripVertical, PaintBucket, TableCellsMerge, TableCellsSplit, Trash2, Type } from "lucide-vue-next";
 import { Button } from "@/components/ui/button";
@@ -15,12 +16,21 @@ import {
   useWritingStudioTableColumnMenuState,
   type WritingStudioTableCellColorValue,
   type WritingStudioTableColorKind,
-} from "~/composables/writing-studio/table/useTableColumn";
+} from "~/composables/writing-studio/table/useTableOperations";
 
 const props = defineProps<{
   editor: Editor | null | undefined;
   container: HTMLElement | null;
 }>();
+
+type TableSelectionActionId = "addRowBefore" | "addRowAfter" | "deleteRow" | "splitCell";
+
+type TableSelectionActionItem = {
+  id: TableSelectionActionId;
+  icon: Component;
+  labelKey: string;
+  destructive?: boolean;
+};
 
 const { t } = useI18n();
 const editorRef = computed(() => props.editor);
@@ -191,27 +201,46 @@ const mergeSelectedCells = () => {
   closeSelectionMenu();
 };
 
-const runSelectionAction = (actionId: "addRowBefore" | "addRowAfter" | "deleteRow" | "splitCell") => {
-  if (!props.editor) {
+const tableSelectionActions: TableSelectionActionItem[] = [
+  {
+    id: "addRowBefore",
+    icon: ArrowUpToLine,
+    labelKey: "writingStudio.toolbar.table.addRowBefore",
+  },
+  {
+    id: "addRowAfter",
+    icon: ArrowDownToLine,
+    labelKey: "writingStudio.toolbar.table.addRowAfter",
+  },
+  {
+    id: "deleteRow",
+    icon: Trash2,
+    labelKey: "writingStudio.toolbar.table.deleteRow",
+    destructive: true,
+  },
+  {
+    id: "splitCell",
+    icon: TableCellsSplit,
+    labelKey: "writingStudio.toolbar.table.selectionMenu.splitCell",
+  },
+];
+
+const runSelectionAction = (actionId: TableSelectionActionId) => {
+  const editor = props.editor;
+  if (!editor) {
     return;
   }
 
   closeColorMenu();
 
-  let success = false;
+  const actionHandlers: Record<TableSelectionActionId, () => boolean> = {
+    addRowBefore: () => editor.chain().focus().addRowBefore().run(),
+    addRowAfter: () => editor.chain().focus().addRowAfter().run(),
+    deleteRow: () => editor.chain().focus().deleteRow().run(),
+    splitCell: () => editor.chain().focus().splitCell().run(),
+  };
 
-  if (actionId === "addRowBefore") {
-    success = props.editor.chain().focus().addRowBefore().run();
-  }
-  else if (actionId === "addRowAfter") {
-    success = props.editor.chain().focus().addRowAfter().run();
-  }
-  else if (actionId === "deleteRow") {
-    success = props.editor.chain().focus().deleteRow().run();
-  }
-  else {
-    success = props.editor.chain().focus().splitCell().run();
-  }
+  const success = actionHandlers[actionId]();
 
   if (success) {
     closeSelectionMenu();
@@ -319,31 +348,18 @@ const runSelectionAction = (actionId: "addRowBefore" | "addRowAfter" | "deleteRo
             </span>
           </button>
 
-          <button type="button" class="ws-table-column-menu-item" @mousedown.prevent @mouseenter="closeColorMenu" @click="runSelectionAction('addRowBefore')">
-            <ArrowUpToLine class="ws-table-column-menu-icon" />
+          <button
+            v-for="action in tableSelectionActions"
+            :key="action.id"
+            type="button"
+            class="ws-table-column-menu-item"
+            :class="{ 'ws-table-column-menu-item--danger': action.destructive }"
+            @mousedown.prevent
+            @mouseenter="closeColorMenu"
+            @click="runSelectionAction(action.id)">
+            <component :is="action.icon" class="ws-table-column-menu-icon" />
             <span class="flex-1 text-left">
-              {{ t("writingStudio.toolbar.table.addRowBefore") }}
-            </span>
-          </button>
-
-          <button type="button" class="ws-table-column-menu-item" @mousedown.prevent @mouseenter="closeColorMenu" @click="runSelectionAction('addRowAfter')">
-            <ArrowDownToLine class="ws-table-column-menu-icon" />
-            <span class="flex-1 text-left">
-              {{ t("writingStudio.toolbar.table.addRowAfter") }}
-            </span>
-          </button>
-
-          <button type="button" class="ws-table-column-menu-item ws-table-column-menu-item--danger" @mousedown.prevent @mouseenter="closeColorMenu" @click="runSelectionAction('deleteRow')">
-            <Trash2 class="ws-table-column-menu-icon" />
-            <span class="flex-1 text-left">
-              {{ t("writingStudio.toolbar.table.deleteRow") }}
-            </span>
-          </button>
-
-          <button type="button" class="ws-table-column-menu-item" @mousedown.prevent @mouseenter="closeColorMenu" @click="runSelectionAction('splitCell')">
-            <TableCellsSplit class="ws-table-column-menu-icon" />
-            <span class="flex-1 text-left">
-              {{ t("writingStudio.toolbar.table.selectionMenu.splitCell") }}
+              {{ t(action.labelKey) }}
             </span>
           </button>
         </div>

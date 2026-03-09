@@ -6,7 +6,7 @@ import {
   useWritingStudioTableColumnColors,
   type WritingStudioTableCellColorValue,
   type WritingStudioTableColorKind,
-} from "~/composables/writing-studio/table/useTableColumn";
+} from "~/composables/writing-studio/table/useTableOperations";
 
 const props = withDefaults(defineProps<{
   searchQuery?: string;

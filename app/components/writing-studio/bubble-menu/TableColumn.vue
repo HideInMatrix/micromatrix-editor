@@ -29,7 +29,7 @@ import {
   useWritingStudioTableColumnMenuState,
   type WritingStudioTableCellColorValue,
   type WritingStudioTableColorKind,
-} from "~/composables/writing-studio/table/useTableColumn";
+} from "~/composables/writing-studio/table/useTableOperations";
 
 const props = defineProps<{
   editor: Editor | null | undefined;
@@ -323,25 +323,37 @@ const getColumnMenuVirtualElement = () => {
   };
 };
 
+const ensureColumnSelection = () => {
+  const editor = props.editor;
+  const cell = activeCell.value;
+
+  if (!editor || !cell) {
+    return false;
+  }
+
+  if (isColumnSelection.value) {
+    refreshWritingStudioCellSelection(editor);
+    return true;
+  }
+
+  return selectWritingStudioTableColumn(editor, cell);
+};
+
 const openColumnMenu = () => {
-  if (!props.editor || !activeCell.value) {
+  const editor = props.editor;
+  if (!editor || !activeCell.value) {
     return;
   }
 
   isColorMenuOpen.value = false;
   isMenuOpen.value = true;
 
-  if (!isColumnSelection.value) {
-    if (!selectWritingStudioTableColumn(props.editor, activeCell.value)) {
-      closeColumnMenu();
-      return;
-    }
-  }
-  else {
-    refreshWritingStudioCellSelection(props.editor);
+  if (!ensureColumnSelection()) {
+    closeColumnMenu();
+    return;
   }
 
-  props.editor.commands.focus();
+  editor.commands.focus();
   requestColumnMenuPositionUpdate();
 };
 
@@ -355,7 +367,10 @@ const shouldShowColumnMenu = ({ editor }: any) => {
 };
 
 const runColumnAction = (actionId: TableColumnActionId) => {
-  if (!props.editor || !activeCell.value) {
+  const editor = props.editor;
+  const cell = activeCell.value;
+
+  if (!editor || !cell) {
     return;
   }
 
@@ -367,66 +382,67 @@ const runColumnAction = (actionId: TableColumnActionId) => {
 
   closeColorMenu();
 
-  if (actionId === "insertLeft") {
-    if (isColumnSelection.value) {
-      insertWritingStudioSelectedTableColumns(props.editor, "before");
-    }
-    else {
-      insertWritingStudioTableColumn(props.editor, activeCell.value, "before");
-    }
-    closeColumnMenu();
-    return;
+  const runOnSelection = isColumnSelection.value;
+
+  switch (actionId) {
+    case "insertLeft":
+      if (runOnSelection) {
+        insertWritingStudioSelectedTableColumns(editor, "before");
+      }
+      else {
+        insertWritingStudioTableColumn(editor, cell, "before");
+      }
+      break;
+    case "insertRight":
+      if (runOnSelection) {
+        insertWritingStudioSelectedTableColumns(editor, "after");
+      }
+      else {
+        insertWritingStudioTableColumn(editor, cell, "after");
+      }
+      break;
+    case "clear":
+      if (runOnSelection) {
+        clearWritingStudioSelectedTableCellsContent(editor);
+      }
+      else {
+        clearWritingStudioTableColumnContent(editor, cell);
+      }
+      break;
+    case "delete":
+      if (runOnSelection) {
+        deleteWritingStudioSelectedTableColumns(editor);
+      }
+      else {
+        deleteWritingStudioTableColumn(editor, cell);
+      }
+      break;
+    default:
+      break;
   }
 
-  if (actionId === "insertRight") {
-    if (isColumnSelection.value) {
-      insertWritingStudioSelectedTableColumns(props.editor, "after");
-    }
-    else {
-      insertWritingStudioTableColumn(props.editor, activeCell.value, "after");
-    }
-    closeColumnMenu();
-    return;
-  }
-
-  if (actionId === "clear") {
-    if (isColumnSelection.value) {
-      clearWritingStudioSelectedTableCellsContent(props.editor);
-    }
-    else {
-      clearWritingStudioTableColumnContent(props.editor, activeCell.value);
-    }
-    closeColumnMenu();
-    return;
-  }
-
-  if (isColumnSelection.value) {
-    deleteWritingStudioSelectedTableColumns(props.editor);
-  }
-  else {
-    deleteWritingStudioTableColumn(props.editor, activeCell.value);
-  }
   closeColumnMenu();
 };
 
 const applyColumnColor = (kind: WritingStudioTableColorKind, value: WritingStudioTableCellColorValue) => {
-  if (!props.editor || !activeCell.value) {
+  const editor = props.editor;
+  const cell = activeCell.value;
+
+  if (!editor || !cell) {
     return;
   }
 
   const preset = getWritingStudioTableColorPreset(kind, value);
+  const colorInput = {
+    textColor: kind === "text" ? preset.textColor : undefined,
+    backgroundColor: kind === "background" ? preset.backgroundColor : undefined,
+  };
 
   if (isColumnSelection.value) {
-    setWritingStudioTableSelectedCellColors(props.editor, {
-      textColor: kind === "text" ? preset.textColor : undefined,
-      backgroundColor: kind === "background" ? preset.backgroundColor : undefined,
-    });
+    setWritingStudioTableSelectedCellColors(editor, colorInput);
   }
   else {
-    setWritingStudioTableColumnCellColors(props.editor, activeCell.value, {
-      textColor: kind === "text" ? preset.textColor : undefined,
-      backgroundColor: kind === "background" ? preset.backgroundColor : undefined,
-    });
+    setWritingStudioTableColumnCellColors(editor, cell, colorInput);
   }
 
   closeColorMenu();
