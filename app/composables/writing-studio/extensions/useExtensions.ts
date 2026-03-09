@@ -12,6 +12,7 @@ import { Underline } from "@tiptap/extension-underline";
 import StarterKit from "@tiptap/starter-kit";
 import { useWritingStudioCodeBlockLowlightExtension } from "./useCodeBlockLowlightExtension";
 import { useWritingStudioLinkExtension } from "./useLinkExtension";
+import { useWritingStudioMathematicsExtension } from "./useMathematicsExtension";
 import { useWritingStudioMediaExtensions } from "./useMediaExtensions";
 import { useMarkdownExtension } from "./useMarkdown";
 import { useWritingStudioTableExtensions } from "./useTableExtensions";
@@ -23,6 +24,7 @@ export const useWritingStudioExtensions = () => {
   const twitchParent = useWritingStudioTwitchParent();
   const codeBlockLowlightExtension = useWritingStudioCodeBlockLowlightExtension();
   const linkExtension = useWritingStudioLinkExtension();
+  const mathematicsExtension = useWritingStudioMathematicsExtension();
   const mediaExtensions = useWritingStudioMediaExtensions(twitchParent);
   const tableExtensions = useWritingStudioTableExtensions();
 
@@ -37,6 +39,7 @@ export const useWritingStudioExtensions = () => {
       multicolor: true,
     }),
     linkExtension,
+    mathematicsExtension,
     Subscript,
     Superscript,
     TextStyle.configure({

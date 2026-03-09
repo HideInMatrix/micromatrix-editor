@@ -95,6 +95,8 @@ const {
   insertAudio,
   insertYoutube,
   insertTwitch,
+  insertInlineMath,
+  insertBlockMath,
   insertEmoji,
   insertMention,
   insertTable,
@@ -561,6 +563,13 @@ const removeLinkFromMenu = () => {
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" class="w-60">
           <DropdownMenuLabel>{{ t("writingStudio.toolbar.labels.mediaInline") }}</DropdownMenuLabel>
+          <DropdownMenuItem @select.prevent="insertInlineMath">
+            {{ t("writingStudio.toolbar.insert.inlineMath") }}
+          </DropdownMenuItem>
+          <DropdownMenuItem @select.prevent="insertBlockMath">
+            {{ t("writingStudio.toolbar.insert.blockMath") }}
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
           <DropdownMenuItem @select.prevent="insertAudio">
             {{ t("writingStudio.toolbar.insert.audio") }}
           </DropdownMenuItem>

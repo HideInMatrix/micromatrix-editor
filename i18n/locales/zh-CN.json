@@ -102,6 +102,8 @@
       },
       "insert": {
         "imageByUrl": "图片链接",
+        "inlineMath": "行内公式",
+        "blockMath": "块级公式",
         "audio": "音频",
         "youtube": "YouTube",
         "twitch": "Twitch",
@@ -175,6 +177,8 @@
       "audio": "请输入音频地址（mp3/wav/ogg 等）",
       "youtube": "请输入 YouTube 链接",
       "twitch": "请输入 Twitch 链接",
+      "inlineMath": "请输入行内公式 LaTeX",
+      "blockMath": "请输入块级公式 LaTeX",
       "emoji": "请输入 Emoji shortcode（例如 grinning）",
       "mention": "请输入提及名称（不需要 {'@'}）"
     }

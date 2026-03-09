@@ -102,6 +102,8 @@
       },
       "insert": {
         "imageByUrl": "圖片連結",
+        "inlineMath": "行內公式",
+        "blockMath": "區塊公式",
         "audio": "音訊",
         "youtube": "YouTube",
         "twitch": "Twitch",
@@ -175,6 +177,8 @@
       "audio": "請輸入音訊網址（mp3/wav/ogg 等）",
       "youtube": "請輸入 YouTube 連結",
       "twitch": "請輸入 Twitch 連結",
+      "inlineMath": "請輸入行內公式 LaTeX",
+      "blockMath": "請輸入區塊公式 LaTeX",
       "emoji": "請輸入 Emoji shortcode（例如 grinning）",
       "mention": "請輸入提及名稱（不需要 {'@'}）"
     }

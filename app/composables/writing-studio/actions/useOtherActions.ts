@@ -372,6 +372,34 @@ export const useWritingStudioOtherActions = (editor: WritingStudioEditorRef) => 
     editor.value?.chain().focus().setTwitchVideo({ src }).run();
   };
 
+  const insertInlineMath = () => {
+    const latex = promptValue(
+      t("writingStudio.prompts.inlineMath"),
+      "E = mc^2",
+    );
+
+    if (!latex) {
+      return;
+    }
+
+    const chain = editor.value?.chain().focus() as any;
+    chain?.insertInlineMath?.({ latex }).run();
+  };
+
+  const insertBlockMath = () => {
+    const latex = promptValue(
+      t("writingStudio.prompts.blockMath"),
+      "\\sum_{i=1}^{n} x_i",
+    );
+
+    if (!latex) {
+      return;
+    }
+
+    const chain = editor.value?.chain().focus() as any;
+    chain?.insertBlockMath?.({ latex }).run();
+  };
+
   // 插入 emoji，失败时回退为 shortcode 文本
   const insertEmoji = () => {
     if (!editor.value) {
@@ -496,6 +524,8 @@ export const useWritingStudioOtherActions = (editor: WritingStudioEditorRef) => 
     insertAudio,
     insertYoutube,
     insertTwitch,
+    insertInlineMath,
+    insertBlockMath,
     insertEmoji,
     insertMention,
     insertTable,
