@@ -1,6 +1,7 @@
 import { getMarkRange } from "@tiptap/core";
 import type { Editor } from "@tiptap/vue-3";
 
+// 当前激活链接的核心信息
 export type WritingStudioActiveLinkState = {
   from: number;
   to: number;
@@ -12,6 +13,7 @@ export type WritingStudioLinkDraftState = WritingStudioActiveLinkState & {
   canRemove: boolean;
 };
 
+// 读取当前光标/选区所在链接信息
 export const getWritingStudioActiveLinkState = (editor: Editor | null | undefined) => {
   if (!editor || !editor.isActive("link")) {
     return null;
@@ -39,6 +41,7 @@ export const getWritingStudioActiveLinkState = (editor: Editor | null | undefine
   } satisfies WritingStudioActiveLinkState;
 };
 
+// 生成链接编辑草稿（优先当前链接，其次当前选区）
 export const getWritingStudioLinkDraftState = (editor: Editor | null | undefined) => {
   if (!editor) {
     return null;
@@ -71,6 +74,7 @@ type ApplyWritingStudioLinkStateInput = {
   text?: string;
 };
 
+// 解析目标链接范围：显式范围 > 当前链接范围 > 当前选区
 const resolveWritingStudioLinkRange = (
   editor: Editor,
   range?: WritingStudioLinkRange | null,
@@ -94,6 +98,7 @@ const resolveWritingStudioLinkRange = (
   } satisfies WritingStudioLinkRange;
 };
 
+// 按输入更新链接 href 与文本内容
 export const applyWritingStudioLinkState = (
   editor: Editor | null | undefined,
   input: ApplyWritingStudioLinkStateInput,
@@ -155,6 +160,7 @@ export const applyWritingStudioLinkState = (
   return true;
 };
 
+// 仅更新链接 href 的快捷方法
 export const applyWritingStudioLinkHref = (
   editor: Editor | null | undefined,
   href: string,

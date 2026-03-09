@@ -1,7 +1,9 @@
 import { Image } from "@tiptap/extension-image";
 
+// 图片对齐值
 export type ImageAlignValue = "left" | "center" | "right";
 
+// 插入图片并附带对齐属性的命令参数
 type SetImageWithAlignmentOptions = {
     src: string;
     alt?: string;
@@ -11,18 +13,22 @@ type SetImageWithAlignmentOptions = {
     align?: ImageAlignValue;
 };
 
+// 默认图片对齐方式
 const defaultImageAlign: ImageAlignValue = "left";
 
 const imageAlignValues: ImageAlignValue[] = ["left", "center", "right"];
 
+// 判断值是否为合法对齐项
 const isImageAlignValue = (value: unknown): value is ImageAlignValue => {
     return typeof value === "string" && imageAlignValues.includes(value as ImageAlignValue);
 };
 
+// 对齐值归一化
 const normalizeImageAlign = (value: unknown): ImageAlignValue => {
     return isImageAlignValue(value) ? value : defaultImageAlign;
 };
 
+// 扩展图片节点：支持 align 属性与自定义命令
 const WritingStudioImage = Image.extend({
     addAttributes() {
         return {
@@ -82,6 +88,7 @@ const WritingStudioImage = Image.extend({
     },
 });
 
+// 导出图片扩展配置
 export const useWritingStudioImageExtension = () => {
   return WritingStudioImage.configure({
     allowBase64: true,

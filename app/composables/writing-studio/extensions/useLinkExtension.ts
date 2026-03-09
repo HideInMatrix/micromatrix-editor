@@ -1,5 +1,6 @@
 import { Link } from "@tiptap/extension-link";
 
+// 链接扩展配置
 export const useWritingStudioLinkExtension = () => {
   return Link.configure({
     openOnClick: false,

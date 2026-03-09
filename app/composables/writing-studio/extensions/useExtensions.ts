@@ -17,6 +17,7 @@ import { useMarkdownExtension } from "./useMarkdown";
 import { useWritingStudioTableExtensions } from "./useTableExtensions";
 import { useWritingStudioTwitchParent } from "./useTwitchParent";
 
+// 聚合写作编辑器全部扩展
 export const useWritingStudioExtensions = () => {
   const markdown = useMarkdownExtension();
   const twitchParent = useWritingStudioTwitchParent();

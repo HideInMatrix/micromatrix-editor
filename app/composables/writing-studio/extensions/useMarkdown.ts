@@ -1,5 +1,6 @@
 import { Markdown } from '@tiptap/markdown'
 
+// Markdown 扩展配置
 export const useMarkdownExtension = () => {
     return Markdown.configure({
         markedOptions: {

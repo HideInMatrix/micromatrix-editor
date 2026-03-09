@@ -2,6 +2,7 @@ import { useI18n } from "#imports";
 import type { ImageAlignValue } from "../extensions/useImageExtension";
 import type { WritingStudioEditorRef } from "../types/editor";
 
+// 浏览器 prompt 封装（返回去空格后的字符串）
 const promptValue = (message: string, defaultValue = "") => {
   if (!import.meta.client) {
     return null;
@@ -15,8 +16,10 @@ const promptValue = (message: string, defaultValue = "") => {
   return input.trim();
 };
 
+// 上传进度回调
 export type WritingStudioImageUploadProgressHandler = (progress: number) => void;
 
+// 上传后图片结构
 export type WritingStudioUploadedImage = {
   src: string;
   alt?: string;
@@ -26,11 +29,13 @@ export type WritingStudioUploadedImage = {
   align?: ImageAlignValue;
 };
 
+// 自定义上传器函数签名
 export type WritingStudioImageUploader = (
   file: File,
   onProgress: WritingStudioImageUploadProgressHandler,
 ) => Promise<string | WritingStudioUploadedImage>;
 
+// 从文件插入图片时可选参数
 export type InsertImageFromFileOptions = {
   onProgress?: WritingStudioImageUploadProgressHandler;
   uploader?: WritingStudioImageUploader;
@@ -39,6 +44,7 @@ export type InsertImageFromFileOptions = {
   title?: string;
 };
 
+// 将图片文件读取为 data URL（无后端上传时兜底）
 const readImageAsDataUrl = (
   file: File,
   onProgress?: WritingStudioImageUploadProgressHandler,
@@ -72,9 +78,11 @@ const readImageAsDataUrl = (
     reader.readAsDataURL(file);
   });
 
+// 杂项编辑动作（文本样式、媒体、表格等）
 export const useWritingStudioOtherActions = (editor: WritingStudioEditorRef) => {
   const { t } = useI18n();
 
+  // 对齐属性写入失败时，补一层 DOM 样式兜底
   const applyImageAlignDomFallback = (imagePos: number, align: "left" | "center" | "right") => {
     if (!editor.value) {
       return;
@@ -106,6 +114,7 @@ export const useWritingStudioOtherActions = (editor: WritingStudioEditorRef) => 
     wrapper.style.marginRight = "0";
   };
 
+  // 获取当前选中的图片节点位置
   const getSelectedImagePos = () => {
     if (!editor.value) {
       return null;
@@ -119,6 +128,7 @@ export const useWritingStudioOtherActions = (editor: WritingStudioEditorRef) => 
     return null;
   };
 
+  // 设置图片对齐（含节点选中与兜底样式）
   const setImageAlign = (align: "left" | "center" | "right") => {
     const imagePos = getSelectedImagePos();
     const chain = editor.value?.chain() as any;
@@ -143,10 +153,12 @@ export const useWritingStudioOtherActions = (editor: WritingStudioEditorRef) => 
 
 
 
+  // 设置段落/标题文本对齐
   const setTextAlign = (alignment: "left" | "center" | "right" | "justify") => {
     editor.value?.chain().focus().setTextAlign(alignment).run();
   };
 
+  // 文本 mark 切换
   const toggleBold = () => {
     editor.value?.chain().focus().toggleBold().run();
   };
@@ -163,6 +175,7 @@ export const useWritingStudioOtherActions = (editor: WritingStudioEditorRef) => 
     editor.value?.chain().focus().toggleItalic().run();
   };
 
+  // 通过 prompt 设置/移除链接
   const toggleLink = () => {
     if (!editor.value) {
       return;
@@ -207,6 +220,7 @@ export const useWritingStudioOtherActions = (editor: WritingStudioEditorRef) => 
     editor.value?.chain().focus().toggleUnderline().run();
   };
 
+  // 通过 URL 插入图片
   const insertImageByUrl = (src: string) => {
     const normalizedSrc = src.trim();
     if (!normalizedSrc) {
@@ -221,6 +235,7 @@ export const useWritingStudioOtherActions = (editor: WritingStudioEditorRef) => 
     return chain.setImageWithAlignment({ src: normalizedSrc }).run();
   };
 
+  // 交互式输入 URL 后插入图片
   const insertImage = () => {
     const src = promptValue(
       t("writingStudio.prompts.image"),
@@ -234,12 +249,14 @@ export const useWritingStudioOtherActions = (editor: WritingStudioEditorRef) => 
     insertImageByUrl(src);
   };
 
+  // 插入上传占位节点
   const insertImageUpload = () => {
     editor.value?.chain().focus().insertContent({
       type: "imageUpload",
     }).run();
   };
 
+  // 从本地文件插入图片（支持自定义上传器与进度）
   const insertImageFromFile = async (
     file: File,
     options?: InsertImageFromFileOptions,
@@ -315,6 +332,7 @@ export const useWritingStudioOtherActions = (editor: WritingStudioEditorRef) => 
     }
   };
 
+  // 媒体节点插入
   const insertAudio = () => {
     const src = promptValue(
       t("writingStudio.prompts.audio"),
@@ -354,6 +372,7 @@ export const useWritingStudioOtherActions = (editor: WritingStudioEditorRef) => 
     editor.value?.chain().focus().setTwitchVideo({ src }).run();
   };
 
+  // 插入 emoji，失败时回退为 shortcode 文本
   const insertEmoji = () => {
     if (!editor.value) {
       return;
@@ -376,6 +395,7 @@ export const useWritingStudioOtherActions = (editor: WritingStudioEditorRef) => 
     }
   };
 
+  // 插入 mention 节点
   const insertMention = () => {
     if (!editor.value) {
       return;
@@ -411,6 +431,7 @@ export const useWritingStudioOtherActions = (editor: WritingStudioEditorRef) => 
     ]).run();
   };
 
+  // 表格结构操作
   const insertTable = () => {
     editor.value?.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run();
   };

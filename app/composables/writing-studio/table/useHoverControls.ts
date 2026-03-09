@@ -1,8 +1,10 @@
 import type { Editor } from "@tiptap/vue-3";
 import type { Ref } from "vue";
 
+// 悬浮控制条方向
 export type WritingStudioTableHoverAxis = "row" | "column";
 
+// 悬浮控制条位置信息
 export type WritingStudioTableHoverControl = {
   axis: WritingStudioTableHoverAxis;
   table: HTMLTableElement;
@@ -12,12 +14,14 @@ export type WritingStudioTableHoverControl = {
   height: number;
 };
 
+// 表格边缘命中与控件尺寸参数
 const TABLE_EDGE_THRESHOLD = 18;
 const TABLE_EDGE_OUTSIDE_THRESHOLD = 28;
 const TABLE_CONTROL_GAP = 0;
 const TABLE_CONTROL_SIZE = 24;
 const TABLE_CONTROL_SAFE_MARGIN = 12;
 
+// 根据事件目标定位表格 wrapper 与 table 元素
 const resolveTableElements = (target: EventTarget | null, editorRoot: HTMLElement) => {
   if (!(target instanceof HTMLElement)) {
     return null;
@@ -39,6 +43,7 @@ const resolveTableElements = (target: EventTarget | null, editorRoot: HTMLElemen
   };
 };
 
+// 按方向生成悬浮控制条几何信息
 const createTableHoverControl = (
   axis: WritingStudioTableHoverAxis,
   table: HTMLTableElement,
@@ -68,6 +73,7 @@ const createTableHoverControl = (
   } satisfies WritingStudioTableHoverControl;
 };
 
+// 根据鼠标位置判断当前悬浮的是列控制还是行控制
 const resolveTableHoverAxis = (event: MouseEvent, table: HTMLTableElement) => {
   const rect = table.getBoundingClientRect();
   const isWithinVerticalBand = event.clientY >= rect.top && event.clientY <= rect.bottom;
@@ -94,6 +100,7 @@ const resolveTableHoverAxis = (event: MouseEvent, table: HTMLTableElement) => {
   return nearRight ? "column" : "row";
 };
 
+// 判断鼠标是否仍在控件安全区域内
 const isPointerWithinControl = (
   event: MouseEvent,
   control: WritingStudioTableHoverControl | null,
@@ -117,6 +124,7 @@ const isPointerWithinControl = (
     && pointerY <= maxY;
 };
 
+// 将 DOM 单元格转换为编辑器位置
 const resolveCellSelectionPos = (
   editor: Editor,
   cell: HTMLTableCellElement,
@@ -130,13 +138,17 @@ const resolveCellSelectionPos = (
   }
 };
 
+// 表格右侧/底部悬浮新增控制逻辑
 export const useWritingStudioTableHoverControls = (
   editor: Ref<Editor | null | undefined>,
   containerRef: Ref<HTMLElement | null>,
 ) => {
+  // 当前激活的悬浮控制条
   const activeControl = ref<WritingStudioTableHoverControl | null>(null);
+  // 鼠标是否停留在控制条上
   const isControlHovered = ref(false);
 
+  // 清理控制条（鼠标仍在控件时不清理）
   const clearActiveControl = () => {
     if (isControlHovered.value) {
       return;
@@ -145,6 +157,7 @@ export const useWritingStudioTableHoverControls = (
     activeControl.value = null;
   };
 
+  // 在滚动/缩放后刷新控件位置
   const refreshActiveControl = () => {
     const container = containerRef.value;
     const control = activeControl.value;
@@ -157,6 +170,7 @@ export const useWritingStudioTableHoverControls = (
     activeControl.value = createTableHoverControl(control.axis, control.table, container);
   };
 
+  // 在表格末尾插入列
   const addColumnAtEnd = () => {
     const currentEditor = editor.value;
     const table = activeControl.value?.table;
@@ -180,6 +194,7 @@ export const useWritingStudioTableHoverControls = (
     return success;
   };
 
+  // 在表格末尾插入行
   const addRowAtEnd = () => {
     const currentEditor = editor.value;
     const table = activeControl.value?.table;
@@ -203,6 +218,7 @@ export const useWritingStudioTableHoverControls = (
     return success;
   };
 
+  // 根据当前轴向执行新增操作
   const activateCurrentControl = () => {
     if (activeControl.value?.axis === "column") {
       return addColumnAtEnd();
@@ -215,6 +231,7 @@ export const useWritingStudioTableHoverControls = (
     return false;
   };
 
+  // 控制条 hover 状态维护
   const handleControlMouseEnter = () => {
     isControlHovered.value = true;
   };
@@ -223,6 +240,7 @@ export const useWritingStudioTableHoverControls = (
     isControlHovered.value = false;
   };
 
+  // 监听鼠标、滚动、窗口尺寸变化来驱动控件显示
   watch([editor, containerRef], ([currentEditor, container], _oldValue, onCleanup) => {
     activeControl.value = null;
 

@@ -3,6 +3,7 @@ import { useWritingStudioBlockActions } from "../actions/useBlockActions";
 import { useWritingStudioListActions } from "../actions/useListActions";
 import { useWritingStudioOtherActions } from "../actions/useOtherActions";
 
+// 组合工具栏的全部操作能力
 export const useWritingStudioToolbarActions = (editor: WritingStudioEditorRef) => {
   const blockActions = useWritingStudioBlockActions(editor);
   const listActions = useWritingStudioListActions(editor);

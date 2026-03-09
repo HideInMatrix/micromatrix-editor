@@ -3,6 +3,7 @@ import { TableCell } from "@tiptap/extension-table-cell";
 import { TableHeader } from "@tiptap/extension-table-header";
 import { TableRow } from "@tiptap/extension-table-row";
 
+// 从单元格或 colgroup 里解析列宽
 const parseColWidth = (element: HTMLElement) => {
   const colwidth = element.getAttribute("colwidth");
   const parsedColwidth = colwidth
@@ -34,6 +35,7 @@ const parseColWidth = (element: HTMLElement) => {
   return Number.isFinite(normalizedWidth) ? [normalizedWidth] : null;
 };
 
+// 表格单元格共享属性（跨 header 与普通 cell）
 const createTableCellAttributes = () => {
   return {
     colspan: {
@@ -85,6 +87,7 @@ const createTableCellAttributes = () => {
   };
 };
 
+// 扩展 table：开启列宽拖拽与节点选择
 const WritingStudioTable = Table.extend({
   addOptions() {
     const parentOptions = this.parent?.();
@@ -102,10 +105,12 @@ const WritingStudioTable = Table.extend({
   },
 });
 
+// 扩展 row：允许混合普通与表头单元格
 const WritingStudioTableRow = TableRow.extend({
   content: "(tableCell | tableHeader)*",
 });
 
+// 扩展表头单元格属性
 const WritingStudioTableHeader = TableHeader.extend({
   addAttributes() {
     return {
@@ -114,6 +119,7 @@ const WritingStudioTableHeader = TableHeader.extend({
   },
 });
 
+// 扩展普通单元格属性
 const WritingStudioTableCell = TableCell.extend({
   addAttributes() {
     return {
@@ -122,6 +128,7 @@ const WritingStudioTableCell = TableCell.extend({
   },
 });
 
+// 导出表格相关扩展
 export const useWritingStudioTableExtensions = () => {
   return [
     WritingStudioTable.configure({

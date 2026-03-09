@@ -53,7 +53,9 @@ import { useWritingStudioToolbarState } from "~/composables/writing-studio/toolb
 import { useWritingStudioEditor } from "~/composables/writing-studio/editor/useEditor";
 
 const { t } = useI18n();
+// 写作编辑器实例（tiptap）
 const { editor } = useWritingStudioEditor();
+// 工具栏状态：按钮样式、激活态与可执行能力判断
 const {
   toolbarButtonClass,
   dropdownItemClass,
@@ -61,7 +63,9 @@ const {
   isNodeActive,
   canRun,
 } = useWritingStudioToolbarState(editor);
+// 段落拖拽手柄配置与拖拽开始处理
 const { dragHandleNestedOptions, handleDragHandleStart } = useWritingStudioDragHandle();
+// 工具栏动作：对编辑器命令的统一封装
 const {
   toggleBold,
   toggleCode,
@@ -106,6 +110,7 @@ const {
   deleteTable,
 } = useWritingStudioToolbarActions(editor);
 
+// 段落/标题下拉框可选值
 type ParagraphHeadingValue =
   | "paragraph"
   | "heading1"
@@ -115,16 +120,25 @@ type ParagraphHeadingValue =
   | "heading5"
   | "heading6";
 
+// 列表下拉框可选值
 type ListTypeValue = "bulletList" | "orderedList" | "taskList";
+// 文本对齐可选值
 type TextAlignValue = "left" | "center" | "right" | "justify";
 
+// 链接编辑弹窗是否打开
 const isLinkEditorOpen = ref(false);
+// 链接地址输入值
 const linkEditorHref = ref("https://");
+// 链接文本输入值
 const linkEditorText = ref("");
+// 当前链接是否允许删除
 const linkEditorCanRemove = ref(false);
+// 待提交的链接选区范围
 const pendingLinkRange = ref<Pick<WritingStudioActiveLinkState, "from" | "to"> | null>(null);
+// 编辑器容器引用（供浮层定位等能力使用）
 const editorSurfaceRef = ref<HTMLElement | null>(null);
 
+// 标题选项值到 tiptap level 的映射
 const headingLevelMap: Record<Exclude<ParagraphHeadingValue, "paragraph">, 1 | 2 | 3 | 4 | 5 | 6> = {
   heading1: 1,
   heading2: 2,
@@ -134,6 +148,7 @@ const headingLevelMap: Record<Exclude<ParagraphHeadingValue, "paragraph">, 1 | 2
   heading6: 6,
 };
 
+// 读取当前块类型，用于段落/标题下拉框回显
 const currentParagraphHeading = (): ParagraphHeadingValue => {
   if (isNodeActive("heading", { level: 1 })) {
     return "heading1";
@@ -157,6 +172,7 @@ const currentParagraphHeading = (): ParagraphHeadingValue => {
   return "paragraph";
 };
 
+// 根据下拉值切换段落或标题级别
 const handleParagraphHeadingChange = (value: unknown) => {
   if (typeof value !== "string") {
     return;
@@ -172,6 +188,7 @@ const handleParagraphHeadingChange = (value: unknown) => {
   }
 };
 
+// 读取当前列表类型，用于列表下拉框回显
 const currentListType = (): ListTypeValue | undefined => {
   if (isNodeActive("bulletList")) {
     return "bulletList";
@@ -186,6 +203,7 @@ const currentListType = (): ListTypeValue | undefined => {
   return undefined;
 };
 
+// 根据下拉值切换列表类型
 const handleListTypeChange = (value: unknown) => {
   if (value === "bulletList") {
     toggleBulletList();
@@ -200,6 +218,7 @@ const handleListTypeChange = (value: unknown) => {
   }
 };
 
+// 读取当前对齐方式（优先 heading，其次 paragraph）
 const currentTextAlign = (): TextAlignValue => {
   const paragraphAlign = editor.value?.getAttributes("paragraph").textAlign;
   const headingAlign = editor.value?.getAttributes("heading").textAlign;
@@ -217,6 +236,7 @@ const currentTextAlign = (): TextAlignValue => {
   return "left";
 };
 
+// 打开链接编辑弹窗：优先使用传入状态，否则读取当前选区
 const openLinkEditor = (linkState?: WritingStudioActiveLinkState | null) => {
   const draftState = linkState
     ? {
@@ -239,12 +259,14 @@ const openLinkEditor = (linkState?: WritingStudioActiveLinkState | null) => {
   isLinkEditorOpen.value = true;
 };
 
+// 关闭链接编辑弹窗并清理临时状态
 const closeLinkEditor = () => {
   isLinkEditorOpen.value = false;
   pendingLinkRange.value = null;
   linkEditorCanRemove.value = false;
 };
 
+// 应用链接编辑结果
 const saveLinkFromMenu = () => {
   const success = applyWritingStudioLinkState(
     editor.value,
@@ -262,6 +284,7 @@ const saveLinkFromMenu = () => {
   closeLinkEditor();
 };
 
+// 移除链接（保留文本）
 const removeLinkFromMenu = () => {
   const success = applyWritingStudioLinkState(
     editor.value,

@@ -2,6 +2,7 @@ import type { ImageAlignValue } from "./useImageExtension";
 import type { WritingStudioImageUploader } from "../actions/useOtherActions";
 import { WritingStudioImageUploadNode } from "../nodes/useImageUploadNode";
 
+// 图片上传节点可覆盖的默认配置
 type UseWritingStudioImageUploadNodeConfigOptions = {
   uploader?: WritingStudioImageUploader;
   isApiUploadEnabled?: boolean;
@@ -9,6 +10,7 @@ type UseWritingStudioImageUploadNodeConfigOptions = {
   defaultAlign?: ImageAlignValue;
 };
 
+// 返回配置后的图片上传节点扩展
 export const useWritingStudioImageUploadNodeConfig = (
   options?: UseWritingStudioImageUploadNodeConfigOptions,
 ) => {

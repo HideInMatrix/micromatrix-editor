@@ -3,9 +3,11 @@ import { CellSelection, TableMap } from "@tiptap/pm/tables";
 import type { Editor } from "@tiptap/vue-3";
 import type { Ref } from "vue";
 
+// 表格节点名常量
 const WRITING_STUDIO_TABLE_NODE_NAME = "table";
 const WRITING_STUDIO_TABLE_CELL_NODE_NAMES = new Set(["tableCell", "tableHeader"]);
 
+// 表格颜色预设值
 export type WritingStudioTableCellColorValue =
   | "default"
   | "gray"
@@ -61,12 +63,14 @@ export type SetWritingStudioTableCellColorsInput = {
   backgroundColor?: string | null;
 };
 
+// 颜色面板每项预设结构
 type TableCellColorPreset = {
   labelKey: string;
   textColor: string | null;
   backgroundColor: string | null;
 };
 
+// 文本颜色预设
 const tableTextColorPresets: Record<WritingStudioTableCellColorValue, TableCellColorPreset> = {
   default: {
     labelKey: "writingStudio.toolbar.table.columnMenu.colors.text.default",
@@ -120,6 +124,7 @@ const tableTextColorPresets: Record<WritingStudioTableCellColorValue, TableCellC
   },
 };
 
+// 背景色预设
 const tableBackgroundColorPresets: Record<WritingStudioTableCellColorValue, TableCellColorPreset> = {
   default: {
     labelKey: "writingStudio.toolbar.table.columnMenu.colors.background.default",
@@ -173,23 +178,28 @@ const tableBackgroundColorPresets: Record<WritingStudioTableCellColorValue, Tabl
   },
 };
 
+// 颜色预设索引
 const tableColorStyleMap = {
   text: tableTextColorPresets,
   background: tableBackgroundColorPresets,
 } satisfies Record<WritingStudioTableColorKind, Record<WritingStudioTableCellColorValue, TableCellColorPreset>>;
 
+// 判断是否为表格单元格节点
 const isTableCellNodeName = (name: string) => {
   return WRITING_STUDIO_TABLE_CELL_NODE_NAMES.has(name);
 };
 
+// 获取当前选区所在表格
 const resolveWritingStudioParentTable = (editor: Editor) => {
   return findParentNode(node => node.type.name === WRITING_STUDIO_TABLE_NODE_NAME)(editor.state.selection);
 };
 
+// 获取当前选区所在单元格
 const resolveWritingStudioParentTableCell = (editor: Editor) => {
   return findParentNode(node => isTableCellNodeName(node.type.name))(editor.state.selection);
 };
 
+// 组装单元格信息（位置、坐标、DOM）
 const createWritingStudioTableCellInfo = (
   editor: Editor,
   tableCell: WritingStudioResolvedTableCell,
@@ -215,6 +225,7 @@ const createWritingStudioTableCellInfo = (
   } satisfies WritingStudioTableColumnCellInfo;
 };
 
+// 优先用 ProseMirror 位置解析矩形，失败则回退到 DOM 矩形
 const resolveWritingStudioNodeRect = (
   editor: Editor,
   from: number,
@@ -230,6 +241,7 @@ const resolveWritingStudioNodeRect = (
   return fallbackElement?.getBoundingClientRect() ?? rect;
 };
 
+// 解析当前激活单元格及其表格上下文
 export const resolveWritingStudioActiveTableCell = (
   editor: Editor | null | undefined,
 ) => {
@@ -272,6 +284,7 @@ export const resolveWritingStudioActiveTableCell = (
   } satisfies WritingStudioResolvedTableCell;
 };
 
+// 若当前是 CellSelection 则返回该选择对象
 const resolveWritingStudioCellSelection = (
   editor: Editor | null | undefined,
 ) => {
@@ -289,6 +302,7 @@ export const isWritingStudioColumnSelectionActive = (
   return resolveWritingStudioCellSelection(editor)?.isColSelection() ?? false;
 };
 
+// 判断是否存在任意单元格选择
 export const isWritingStudioCellSelectionActive = (
   editor: Editor | null | undefined,
 ) => {
@@ -301,6 +315,7 @@ export const isWritingStudioRowSelectionActive = (
   return resolveWritingStudioCellSelection(editor)?.isRowSelection() ?? false;
 };
 
+// 获取当前列全部单元格信息（自动去重跨行合并单元格）
 export const resolveWritingStudioTableColumnCells = (
   editor: Editor | null | undefined,
   cell: WritingStudioResolvedTableCell | null,
@@ -335,6 +350,7 @@ export const resolveWritingStudioTableColumnCells = (
   return cells;
 };
 
+// 获取当前选择涉及的所有单元格信息
 export const resolveWritingStudioSelectedTableCells = (
   editor: Editor | null | undefined,
 ) => {
@@ -380,6 +396,7 @@ export const resolveWritingStudioSelectedTableCells = (
     .filter((cellInfo): cellInfo is WritingStudioTableColumnCellInfo => Boolean(cellInfo));
 };
 
+// 计算多个单元格的外接矩形
 const resolveWritingStudioTableCellsBoundingRect = (
   editor: Editor,
   cells: WritingStudioTableColumnCellInfo[],
@@ -418,6 +435,7 @@ const resolveWritingStudioTableCellsBoundingRect = (
   } satisfies WritingStudioTableColumnRect;
 };
 
+// 计算当前列的外接矩形
 export const resolveWritingStudioTableColumnRect = (
   editor: Editor | null | undefined,
   cell: WritingStudioResolvedTableCell | null,
@@ -432,6 +450,7 @@ export const resolveWritingStudioTableColumnRect = (
   );
 };
 
+// 计算当前表格选区遮罩信息
 export const resolveWritingStudioTableSelectionOverlay = (
   editor: Editor | null | undefined,
 ) => {
@@ -488,6 +507,7 @@ export const resolveWritingStudioTableSelectionOverlay = (
   } satisfies WritingStudioTableSelectionOverlay;
 };
 
+// 计算单个单元格矩形
 export const resolveWritingStudioTableCellRect = (
   editor: Editor | null | undefined,
   cell: WritingStudioResolvedTableCell | null,
@@ -511,6 +531,7 @@ export const resolveWritingStudioTableCellRect = (
   } satisfies WritingStudioTableColumnRect;
 };
 
+// 获取 tableWrapper DOM 元素
 export const resolveWritingStudioTableWrapperElement = (
   cell: WritingStudioResolvedTableCell | null,
 ) => {
@@ -547,6 +568,7 @@ const resolveColumnSelectionEndpoints = (
   };
 };
 
+// 选中当前单元格所在整列
 export const selectWritingStudioTableColumn = (
   editor: Editor | null | undefined,
   cell: WritingStudioResolvedTableCell | null,
@@ -568,6 +590,7 @@ export const selectWritingStudioTableColumn = (
   return true;
 };
 
+// 强制刷新 CellSelection，修正部分场景下的选择状态不同步
 export const refreshWritingStudioCellSelection = (
   editor: Editor | null | undefined,
 ) => {
@@ -589,6 +612,7 @@ export const refreshWritingStudioCellSelection = (
   return true;
 };
 
+// 对给定单元格集合批量执行事务更新
 const updateWritingStudioTableCells = (
   editor: Editor,
   cells: WritingStudioTableColumnCellInfo[],
@@ -612,6 +636,7 @@ const updateWritingStudioTableCells = (
   return true;
 };
 
+// 对当前列全部单元格执行更新
 const updateWritingStudioTableColumnCells = (
   editor: Editor,
   cell: WritingStudioResolvedTableCell,
@@ -624,6 +649,7 @@ const updateWritingStudioTableColumnCells = (
   );
 };
 
+// 对当前选区所有单元格执行更新
 const updateWritingStudioSelectedTableCells = (
   editor: Editor,
   updater: (cellInfo: WritingStudioTableColumnCellInfo, tr: any) => void,
@@ -635,6 +661,7 @@ const updateWritingStudioSelectedTableCells = (
   );
 };
 
+// 设置当前列单元格颜色
 export const setWritingStudioTableColumnCellColors = (
   editor: Editor | null | undefined,
   cell: WritingStudioResolvedTableCell | null,
@@ -658,6 +685,7 @@ export const setWritingStudioTableColumnCellColors = (
   });
 };
 
+// 设置当前选中单元格颜色
 export const setWritingStudioTableSelectedCellColors = (
   editor: Editor | null | undefined,
   input: SetWritingStudioTableCellColorsInput,
@@ -680,6 +708,7 @@ export const setWritingStudioTableSelectedCellColors = (
   });
 };
 
+// 清空当前列单元格内容（保留单元格结构）
 export const clearWritingStudioTableColumnContent = (
   editor: Editor | null | undefined,
   cell: WritingStudioResolvedTableCell | null,
@@ -705,6 +734,7 @@ export const clearWritingStudioTableColumnContent = (
   });
 };
 
+// 清空当前选区单元格内容（保留单元格结构）
 export const clearWritingStudioSelectedTableCellsContent = (
   editor: Editor | null | undefined,
 ) => {
@@ -729,6 +759,7 @@ export const clearWritingStudioSelectedTableCellsContent = (
   });
 };
 
+// 在目标列前/后插入列，并尝试保持列选择
 export const insertWritingStudioTableColumn = (
   editor: Editor | null | undefined,
   cell: WritingStudioResolvedTableCell | null,
@@ -753,6 +784,7 @@ export const insertWritingStudioTableColumn = (
   return true;
 };
 
+// 在当前选中列前/后插入列
 export const insertWritingStudioSelectedTableColumns = (
   editor: Editor | null | undefined,
   side: "before" | "after",
@@ -765,6 +797,7 @@ export const insertWritingStudioSelectedTableColumns = (
   return side === "before" ? chain.addColumnBefore().run() : chain.addColumnAfter().run();
 };
 
+// 删除指定列
 export const deleteWritingStudioTableColumn = (
   editor: Editor | null | undefined,
   cell: WritingStudioResolvedTableCell | null,
@@ -781,6 +814,7 @@ export const deleteWritingStudioTableColumn = (
   return success;
 };
 
+// 删除当前选中列
 export const deleteWritingStudioSelectedTableColumns = (
   editor: Editor | null | undefined,
 ) => {
@@ -796,6 +830,7 @@ export const deleteWritingStudioSelectedTableColumns = (
   return success;
 };
 
+// 颜色面板预设集合
 export const useWritingStudioTableColumnColors = () => {
   return {
     text: tableTextColorPresets,
@@ -803,6 +838,7 @@ export const useWritingStudioTableColumnColors = () => {
   } satisfies Record<WritingStudioTableColorKind, Record<WritingStudioTableCellColorValue, TableCellColorPreset>>;
 };
 
+// 根据种类和值读取颜色预设
 export const getWritingStudioTableColorPreset = (
   kind: WritingStudioTableColorKind,
   value: WritingStudioTableCellColorValue,
@@ -810,6 +846,7 @@ export const getWritingStudioTableColorPreset = (
   return tableColorStyleMap[kind][value];
 };
 
+// 当前选区是否可执行合并单元格
 export const canMergeWritingStudioSelectedTableCells = (
   editor: Editor | null | undefined,
 ) => {
@@ -825,6 +862,7 @@ export const canMergeWritingStudioSelectedTableCells = (
   return editor.can().mergeOrSplit();
 };
 
+// 合并（或拆分）当前选中单元格
 export const mergeWritingStudioSelectedTableCells = (
   editor: Editor | null | undefined,
 ) => {
@@ -835,9 +873,11 @@ export const mergeWritingStudioSelectedTableCells = (
   return editor.chain().focus().mergeOrSplit().run();
 };
 
+// 列菜单所需的响应式状态集合
 export const useWritingStudioTableColumnMenuState = (
   editorRef: Ref<Editor | null | undefined>,
 ) => {
+  // 编辑器交互修订号，用于触发依赖刷新
   const revision = ref(0);
 
   watch(editorRef, (editor, _previousEditor, onCleanup) => {
@@ -865,6 +905,7 @@ export const useWritingStudioTableColumnMenuState = (
     immediate: true,
   });
 
+  // 在 computed 中显式追踪 revision
   const trackRevision = <T>(resolver: () => T) => computed(() => {
     revision.value;
     return resolver();

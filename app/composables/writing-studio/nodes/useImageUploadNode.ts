@@ -4,6 +4,7 @@ import ImageUploadNodeView from "~/components/writing-studio/node-view/ImageUplo
 import type { ImageAlignValue } from "../extensions/useImageExtension";
 import type { WritingStudioImageUploader } from "../actions/useOtherActions";
 
+// 图片上传占位节点配置项
 export type WritingStudioImageUploadNodeOptions = {
   HTMLAttributes: Record<string, unknown>;
   maxFileSizeMb: number;
@@ -12,6 +13,7 @@ export type WritingStudioImageUploadNodeOptions = {
   uploader?: WritingStudioImageUploader;
 };
 
+// 图片上传占位节点（由自定义 NodeView 渲染）
 export const WritingStudioImageUploadNode = Node.create<WritingStudioImageUploadNodeOptions>({
   name: "imageUpload",
   group: "block",

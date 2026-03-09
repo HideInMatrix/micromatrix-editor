@@ -1,5 +1,6 @@
 import type { WritingStudioImageUploader } from "../actions/useOtherActions";
 
+// 兼容多种后端返回结构，提取上传后图片 URL
 const resolveUploadResponseUrl = (payload: unknown): string | null => {
   if (!payload || typeof payload !== "object") {
     return null;
@@ -25,6 +26,7 @@ const resolveUploadResponseUrl = (payload: unknown): string | null => {
   return null;
 };
 
+// 构建基于 XHR 的图片上传器（支持进度回调）
 const createImageApiUploader = (endpoint: string): WritingStudioImageUploader => {
   return (file, onProgress) =>
     new Promise((resolve, reject) => {
@@ -84,6 +86,7 @@ const createImageApiUploader = (endpoint: string): WritingStudioImageUploader =>
     });
 };
 
+// 根据运行时配置返回上传器能力
 export const useWritingStudioImageApiUploader = () => {
   const runtimeConfig = useRuntimeConfig();
   const endpointValue = (runtimeConfig.public as Record<string, unknown>).writingStudioImageUploadEndpoint;

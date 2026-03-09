@@ -5,6 +5,7 @@ import { useWritingStudioImageApiUploader } from "../image/useApiUploader";
 import { useWritingStudioImageExtension } from "./useImageExtension";
 import { useWritingStudioImageUploadNodeConfig } from "./useImageUploadNodeConfig";
 
+// 媒体相关扩展（图片/上传占位/音视频）
 export const useWritingStudioMediaExtensions = (twitchParent: string) => {
   const imageExtension = useWritingStudioImageExtension();
   const { uploader, isApiUploadEnabled } = useWritingStudioImageApiUploader();
