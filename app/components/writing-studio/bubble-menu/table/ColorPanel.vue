@@ -1,0 +1,111 @@
+<script setup lang="ts">
+import { Square, Type } from "lucide-vue-next";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Separator } from "@/components/ui/separator";
+import {
+  useWritingStudioTableColumnColors,
+  type WritingStudioTableCellColorValue,
+  type WritingStudioTableColorKind,
+} from "~/composables/writing-studio/table/useTableColumn";
+
+const props = withDefaults(defineProps<{
+  searchQuery?: string;
+  kinds?: WritingStudioTableColorKind[];
+}>(), {
+  searchQuery: "",
+  kinds: () => ["text", "background"],
+});
+
+const emit = defineEmits<{
+  select: [payload: { kind: WritingStudioTableColorKind; value: WritingStudioTableCellColorValue }];
+}>();
+
+const { t } = useI18n();
+const colorPresets = useWritingStudioTableColumnColors();
+
+const resolveFilteredColorEntries = (kind: WritingStudioTableColorKind) => {
+  const query = props.searchQuery.trim().toLowerCase();
+  const entries = Object.entries(colorPresets[kind]) as Array<
+    [WritingStudioTableCellColorValue, (typeof colorPresets)[typeof kind][WritingStudioTableCellColorValue]]
+  >;
+
+  if (!query) {
+    return entries;
+  }
+
+  return entries.filter(([, preset]) => {
+    return t(preset.labelKey).toLowerCase().includes(query);
+  });
+};
+
+const filteredTextColorEntries = computed(() => {
+  if (!props.kinds.includes("text")) {
+    return [];
+  }
+
+  return resolveFilteredColorEntries("text");
+});
+
+const filteredBackgroundColorEntries = computed(() => {
+  if (!props.kinds.includes("background")) {
+    return [];
+  }
+
+  return resolveFilteredColorEntries("background");
+});
+</script>
+
+<template>
+  <ScrollArea class="ws-table-color-scroll">
+    <div v-if="filteredTextColorEntries.length > 0" class="ws-table-color-section">
+      <div class="ws-table-color-title">
+        {{ t("writingStudio.toolbar.table.columnMenu.colors.text.title") }}
+      </div>
+
+      <button
+        v-for="[value, preset] in filteredTextColorEntries"
+        :key="`text-${value}`"
+        type="button"
+        class="ws-table-color-item"
+        @mousedown.prevent
+        @click="emit('select', { kind: 'text', value })"
+      >
+        <span
+          class="ws-table-color-swatch"
+          :style="{ color: preset.textColor ?? 'oklch(var(--foreground))' }"
+        >
+          <Type class="h-6 w-6" />
+        </span>
+        <span>{{ t(preset.labelKey) }}</span>
+      </button>
+    </div>
+
+    <Separator
+      v-if="filteredTextColorEntries.length > 0 && filteredBackgroundColorEntries.length > 0"
+      class="my-3"
+    />
+
+    <div v-if="filteredBackgroundColorEntries.length > 0" class="ws-table-color-section">
+      <div class="ws-table-color-title">
+        {{ t("writingStudio.toolbar.table.columnMenu.colors.background.title") }}
+      </div>
+
+      <button
+        v-for="[value, preset] in filteredBackgroundColorEntries"
+        :key="`background-${value}`"
+        type="button"
+        class="ws-table-color-item"
+        @mousedown.prevent
+        @click="emit('select', { kind: 'background', value })"
+      >
+        <span
+          class="ws-table-color-swatch"
+          :style="{ color: preset.backgroundColor ?? 'oklch(var(--muted-foreground))' }"
+        >
+          <Square class="h-6 w-6 fill-current" />
+        </span>
+        <span>{{ t(preset.labelKey) }}</span>
+      </button>
+    </div>
+  </ScrollArea>
+</template>

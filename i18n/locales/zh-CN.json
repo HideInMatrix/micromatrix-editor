@@ -162,6 +162,10 @@
               "red": "红底"
             }
           }
+        },
+        "selectionMenu": {
+          "handle": "选择单元格操作",
+          "mergeCells": "合并单元格"
         }
       }
     },

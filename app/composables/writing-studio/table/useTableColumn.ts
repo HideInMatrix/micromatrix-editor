@@ -1,6 +1,14 @@
+import { findParentNode, posToDOMRect } from "@tiptap/core";
+import { Table } from "@tiptap/extension-table";
+import { TableCell } from "@tiptap/extension-table-cell";
+import { TableHeader } from "@tiptap/extension-table-header";
+import { TableRow } from "@tiptap/extension-table-row";
+import { CellSelection, TableMap } from "@tiptap/pm/tables";
 import type { Editor } from "@tiptap/vue-3";
 import type { Ref } from "vue";
-import { CellSelection, TableMap } from "@tiptap/pm/tables";
+
+const WRITING_STUDIO_TABLE_NODE_NAME = "table";
+const WRITING_STUDIO_TABLE_CELL_NODE_NAMES = new Set(["tableCell", "tableHeader"]);
 
 export type WritingStudioTableCellColorValue =
   | "default"
@@ -18,6 +26,7 @@ export type WritingStudioTableColorKind = "text" | "background";
 
 export type WritingStudioTableColumnCellInfo = {
   cellPos: number;
+  cellNodeSize: number;
   rowIndex: number;
   columnIndex: number;
   isHeader: boolean;
@@ -43,10 +52,175 @@ export type WritingStudioTableColumnRect = {
   height: number;
 };
 
+export type WritingStudioTableSelectionAxis = "cell" | "row" | "column" | "grid";
+
+export type WritingStudioTableSelectionOverlay = {
+  axis: WritingStudioTableSelectionAxis;
+  rect: WritingStudioTableColumnRect;
+  cellCount: number;
+};
+
+export type SetWritingStudioTableCellColorsInput = {
+  textColor?: string | null;
+  backgroundColor?: string | null;
+};
+
 type TableCellColorPreset = {
   labelKey: string;
   textColor: string | null;
   backgroundColor: string | null;
+};
+
+const parseColWidth = (element: HTMLElement) => {
+  const colwidth = element.getAttribute("colwidth");
+  const parsedColwidth = colwidth
+    ? colwidth
+        .split(",")
+        .map(width => Number.parseInt(width, 10))
+        .filter(width => Number.isFinite(width))
+    : null;
+
+  if (parsedColwidth && parsedColwidth.length > 0) {
+    return parsedColwidth;
+  }
+
+  const parentRow = element.parentElement;
+  const table = element.closest("table");
+  const cols = table?.querySelectorAll("colgroup > col");
+  const cellIndex = Array.from(parentRow?.children ?? []).indexOf(element);
+
+  if (cellIndex < 0 || !cols || !cols[cellIndex]) {
+    return null;
+  }
+
+  const targetCol = cols[cellIndex] as HTMLElement;
+  const widthAttribute = targetCol.getAttribute("width");
+  const styleWidth = targetCol.style.width || targetCol.style.minWidth;
+  const rawWidth = widthAttribute ?? styleWidth;
+  const normalizedWidth = Number.parseInt(rawWidth, 10);
+
+  return Number.isFinite(normalizedWidth) ? [normalizedWidth] : null;
+};
+
+const createTableCellAttributes = () => {
+  return {
+    colspan: {
+      default: 1,
+    },
+    rowspan: {
+      default: 1,
+    },
+    colwidth: {
+      default: null,
+      parseHTML: (element: HTMLElement) => {
+        return parseColWidth(element);
+      },
+    },
+    textColor: {
+      default: null,
+      parseHTML: (element: HTMLElement) => {
+        const value = element.style.color || element.getAttribute("data-text-color");
+        return value || null;
+      },
+      renderHTML: (attributes: Record<string, unknown>) => {
+        const textColor = typeof attributes.textColor === "string"
+          ? attributes.textColor
+          : null;
+
+        if (!textColor) {
+          return {};
+        }
+
+        return {
+          "data-text-color": textColor,
+          style: `color: ${textColor};`,
+        };
+      },
+    },
+    backgroundColor: {
+      default: null,
+      parseHTML: (element: HTMLElement) => {
+        const value = element.style.backgroundColor || element.getAttribute("data-background-color");
+        return value || null;
+      },
+      renderHTML: (attributes: Record<string, unknown>) => {
+        const backgroundColor = typeof attributes.backgroundColor === "string"
+          ? attributes.backgroundColor
+          : null;
+
+        if (!backgroundColor) {
+          return {};
+        }
+
+        return {
+          "data-background-color": backgroundColor,
+          style: `background-color: ${backgroundColor};`,
+        };
+      },
+    },
+  };
+};
+
+const WritingStudioTable = Table.extend({
+  addOptions() {
+    const parentOptions = this.parent?.();
+
+    return {
+      HTMLAttributes: parentOptions?.HTMLAttributes ?? {},
+      resizable: true,
+      renderWrapper: parentOptions?.renderWrapper ?? false,
+      handleWidth: parentOptions?.handleWidth ?? 5,
+      cellMinWidth: parentOptions?.cellMinWidth ?? 25,
+      View: parentOptions?.View ?? null,
+      lastColumnResizable: true,
+      allowTableNodeSelection: true,
+    };
+  },
+});
+
+const WritingStudioTableRow = TableRow.extend({
+  content: "(tableCell | tableHeader)*",
+});
+
+const WritingStudioTableHeader = TableHeader.extend({
+  addAttributes() {
+    return {
+      ...createTableCellAttributes(),
+    };
+  },
+});
+
+const WritingStudioTableCell = TableCell.extend({
+  addAttributes() {
+    return {
+      ...createTableCellAttributes(),
+    };
+  },
+});
+
+export const useWritingStudioTableExtensions = () => {
+  return [
+    WritingStudioTable.configure({
+      HTMLAttributes: {
+        class: "ws-table",
+      },
+    }),
+    WritingStudioTableRow.configure({
+      HTMLAttributes: {
+        class: "ws-table-row",
+      },
+    }),
+    WritingStudioTableHeader.configure({
+      HTMLAttributes: {
+        class: "ws-table-header",
+      },
+    }),
+    WritingStudioTableCell.configure({
+      HTMLAttributes: {
+        class: "ws-table-cell",
+      },
+    }),
+  ];
 };
 
 const tableTextColorPresets: Record<WritingStudioTableCellColorValue, TableCellColorPreset> = {
@@ -161,19 +335,55 @@ const tableColorStyleMap = {
 } satisfies Record<WritingStudioTableColorKind, Record<WritingStudioTableCellColorValue, TableCellColorPreset>>;
 
 const isTableCellNodeName = (name: string) => {
-  return name === "tableCell" || name === "tableHeader";
+  return WRITING_STUDIO_TABLE_CELL_NODE_NAMES.has(name);
 };
 
-const getActiveTableCellDepth = (editor: Editor) => {
-  const { $from } = editor.state.selection;
+const resolveWritingStudioParentTable = (editor: Editor) => {
+  return findParentNode(node => node.type.name === WRITING_STUDIO_TABLE_NODE_NAME)(editor.state.selection);
+};
 
-  for (let depth = $from.depth; depth >= 0; depth -= 1) {
-    if (isTableCellNodeName($from.node(depth).type.name)) {
-      return depth;
-    }
+const resolveWritingStudioParentTableCell = (editor: Editor) => {
+  return findParentNode(node => isTableCellNodeName(node.type.name))(editor.state.selection);
+};
+
+const createWritingStudioTableCellInfo = (
+  editor: Editor,
+  tableCell: WritingStudioResolvedTableCell,
+  cellRelativePos: number,
+  rowIndex: number,
+  columnIndex: number,
+) => {
+  const cellPos = tableCell.tableStart + cellRelativePos;
+  const cellNode = tableCell.tableNode.nodeAt(cellRelativePos);
+  const dom = editor.view.nodeDOM(cellPos) as HTMLElement | null;
+
+  if (!cellNode || !dom) {
+    return null;
   }
 
-  return -1;
+  return {
+    cellPos,
+    cellNodeSize: cellNode.nodeSize,
+    rowIndex,
+    columnIndex,
+    isHeader: cellNode.type.name === "tableHeader",
+    dom,
+  } satisfies WritingStudioTableColumnCellInfo;
+};
+
+const resolveWritingStudioNodeRect = (
+  editor: Editor,
+  from: number,
+  to: number,
+  fallbackElement?: HTMLElement | null,
+) => {
+  const rect = posToDOMRect(editor.view, from, to);
+
+  if (Number.isFinite(rect.width) && Number.isFinite(rect.height) && (rect.width > 0 || rect.height > 0)) {
+    return rect;
+  }
+
+  return fallbackElement?.getBoundingClientRect() ?? rect;
 };
 
 export const resolveWritingStudioActiveTableCell = (
@@ -183,37 +393,25 @@ export const resolveWritingStudioActiveTableCell = (
     return null;
   }
 
-  const { $from } = editor.state.selection;
-  const cellDepth = getActiveTableCellDepth(editor);
+  const tableParent = resolveWritingStudioParentTable(editor);
+  const cellParent = resolveWritingStudioParentTableCell(editor);
 
-  if (cellDepth < 0) {
+  if (!tableParent || !cellParent) {
     return null;
   }
 
-  let tableDepth = -1;
-  for (let depth = cellDepth - 1; depth >= 0; depth -= 1) {
-    if ($from.node(depth).type.name === "table") {
-      tableDepth = depth;
-      break;
-    }
-  }
-
-  if (tableDepth < 0) {
-    return null;
-  }
-
-  const cellNode = $from.node(cellDepth);
-  const tableNode = $from.node(tableDepth);
-  const cellPos = $from.before(cellDepth);
-  const tablePos = $from.before(tableDepth);
+  const tableNode = tableParent.node;
+  const cellNode = cellParent.node;
+  const tablePos = tableParent.pos;
+  const cellPos = cellParent.pos;
   const tableStart = tablePos + 1;
   const cellRelativePos = cellPos - tableStart;
   const tableMap = TableMap.get(tableNode);
   const rect = tableMap.findCell(cellRelativePos);
-  const cellDom = editor.view.nodeDOM(cellPos) as HTMLElement | null;
   const tableDom = editor.view.nodeDOM(tablePos) as HTMLTableElement | null;
+  const cellDom = editor.view.nodeDOM(cellPos) as HTMLElement | null;
 
-  if (!cellDom || !tableDom) {
+  if (!tableDom || !cellDom) {
     return null;
   }
 
@@ -241,6 +439,27 @@ export const isWritingStudioColumnSelectionActive = (
   return selection instanceof CellSelection && selection.isColSelection();
 };
 
+export const isWritingStudioCellSelectionActive = (
+  editor: Editor | null | undefined,
+) => {
+  if (!editor) {
+    return false;
+  }
+
+  return editor.state.selection instanceof CellSelection;
+};
+
+export const isWritingStudioRowSelectionActive = (
+  editor: Editor | null | undefined,
+) => {
+  if (!editor) {
+    return false;
+  }
+
+  const selection = editor.state.selection;
+  return selection instanceof CellSelection && selection.isRowSelection();
+};
+
 export const resolveWritingStudioTableColumnCells = (
   editor: Editor | null | undefined,
   cell: WritingStudioResolvedTableCell | null,
@@ -264,24 +483,61 @@ export const resolveWritingStudioTableColumnCells = (
       continue;
     }
 
-    const cellPos = cell.tableStart + cellRelativePos;
-    const cellNode = cell.tableNode.nodeAt(cellRelativePos);
-    const dom = editor.view.nodeDOM(cellPos) as HTMLElement | null;
-
-    if (!cellNode || !dom) {
+    const cellInfo = createWritingStudioTableCellInfo(editor, cell, cellRelativePos, rowIndex, cell.columnIndex);
+    if (!cellInfo) {
       continue;
     }
 
-    cells.push({
-      cellPos,
-      rowIndex,
-      columnIndex: cell.columnIndex,
-      isHeader: cellNode.type.name === "tableHeader",
-      dom,
-    });
+    cells.push(cellInfo);
   }
 
   return cells;
+};
+
+export const resolveWritingStudioSelectedTableCells = (
+  editor: Editor | null | undefined,
+) => {
+  if (!editor) {
+    return [];
+  }
+
+  const activeCell = resolveWritingStudioActiveTableCell(editor);
+  if (!activeCell) {
+    return [];
+  }
+
+  const { selection } = editor.state;
+
+  if (!(selection instanceof CellSelection)) {
+    return [{
+      cellPos: activeCell.cellPos,
+      cellNodeSize: activeCell.cellNode.nodeSize,
+      rowIndex: activeCell.rowIndex,
+      columnIndex: activeCell.columnIndex,
+      isHeader: activeCell.cellNode.type.name === "tableHeader",
+      dom: activeCell.cellDom,
+    } satisfies WritingStudioTableColumnCellInfo];
+  }
+
+  const tableMap = TableMap.get(activeCell.tableNode);
+  const anchorRelativePos = selection.$anchorCell.pos - activeCell.tableStart;
+  const headRelativePos = selection.$headCell.pos - activeCell.tableStart;
+  const selectionRect = tableMap.rectBetween(anchorRelativePos, headRelativePos);
+  const relativePositions = Array.from(new Set(tableMap.cellsInRect(selectionRect)));
+
+  return relativePositions
+    .map((cellRelativePos) => {
+      const cellRect = tableMap.findCell(cellRelativePos);
+
+      return createWritingStudioTableCellInfo(
+        editor,
+        activeCell,
+        cellRelativePos,
+        cellRect.top,
+        cellRect.left,
+      );
+    })
+    .filter((cellInfo): cellInfo is WritingStudioTableColumnCellInfo => Boolean(cellInfo));
 };
 
 export const resolveWritingStudioTableColumnRect = (
@@ -289,7 +545,7 @@ export const resolveWritingStudioTableColumnRect = (
   cell: WritingStudioResolvedTableCell | null,
 ) => {
   const cells = resolveWritingStudioTableColumnCells(editor, cell);
-  if (cells.length === 0) {
+  if (!editor || cells.length === 0) {
     return null;
   }
 
@@ -298,8 +554,8 @@ export const resolveWritingStudioTableColumnRect = (
   let right = Number.NEGATIVE_INFINITY;
   let bottom = Number.NEGATIVE_INFINITY;
 
-  cells.forEach(({ dom }) => {
-    const rect = dom.getBoundingClientRect();
+  cells.forEach(({ cellPos, cellNodeSize, dom }) => {
+    const rect = resolveWritingStudioNodeRect(editor, cellPos, cellPos + cellNodeSize, dom);
     top = Math.min(top, rect.top);
     left = Math.min(left, rect.left);
     right = Math.max(right, rect.right);
@@ -314,20 +570,115 @@ export const resolveWritingStudioTableColumnRect = (
   } satisfies WritingStudioTableColumnRect;
 };
 
-export const resolveWritingStudioTableCellRect = (
-  cell: WritingStudioResolvedTableCell | null,
+export const resolveWritingStudioTableSelectionOverlay = (
+  editor: Editor | null | undefined,
 ) => {
-  if (!cell) {
+  if (!editor) {
     return null;
   }
 
-  const rect = cell.cellDom.getBoundingClientRect();
+  const { selection } = editor.state;
+  if (!(selection instanceof CellSelection)) {
+    return null;
+  }
+
+  const activeCell = resolveWritingStudioActiveTableCell(editor);
+  if (!activeCell) {
+    return null;
+  }
+
+  const tableMap = TableMap.get(activeCell.tableNode);
+  const anchorRelativePos = selection.$anchorCell.pos - activeCell.tableStart;
+  const headRelativePos = selection.$headCell.pos - activeCell.tableStart;
+  const selectionRect = tableMap.rectBetween(anchorRelativePos, headRelativePos);
+  const selectedCells = resolveWritingStudioSelectedTableCells(editor);
+  const isColumnSelection = selection.isColSelection();
+  const isRowSelection = selection.isRowSelection();
+
+  if (selectedCells.length === 0) {
+    return null;
+  }
+
+  if (!isColumnSelection && !isRowSelection && selectedCells.length <= 1) {
+    return null;
+  }
+
+  let top = Number.POSITIVE_INFINITY;
+  let left = Number.POSITIVE_INFINITY;
+  let right = Number.NEGATIVE_INFINITY;
+  let bottom = Number.NEGATIVE_INFINITY;
+
+  selectedCells.forEach((cellInfo) => {
+    const rect = resolveWritingStudioNodeRect(
+      editor,
+      cellInfo.cellPos,
+      cellInfo.cellPos + cellInfo.cellNodeSize,
+      cellInfo.dom,
+    );
+    top = Math.min(top, rect.top);
+    left = Math.min(left, rect.left);
+    right = Math.max(right, rect.right);
+    bottom = Math.max(bottom, rect.bottom);
+  });
+
+  if (!Number.isFinite(top) || !Number.isFinite(left) || !Number.isFinite(right) || !Number.isFinite(bottom)) {
+    return null;
+  }
+
+  const columnSpan = selectionRect.right - selectionRect.left;
+  const rowSpan = selectionRect.bottom - selectionRect.top;
+
+  const axis: WritingStudioTableSelectionAxis = isColumnSelection
+    ? "column"
+    : isRowSelection
+      ? "row"
+      : (columnSpan > 1 || rowSpan > 1)
+        ? "grid"
+        : "cell";
+
+  return {
+    axis,
+    cellCount: selectedCells.length,
+    rect: {
+      top,
+      left,
+      width: right - left,
+      height: bottom - top,
+    },
+  } satisfies WritingStudioTableSelectionOverlay;
+};
+
+export const resolveWritingStudioTableCellRect = (
+  editor: Editor | null | undefined,
+  cell: WritingStudioResolvedTableCell | null,
+) => {
+  if (!editor || !cell) {
+    return null;
+  }
+
+  const rect = resolveWritingStudioNodeRect(
+    editor,
+    cell.cellPos,
+    cell.cellPos + cell.cellNode.nodeSize,
+    cell.cellDom,
+  );
+
   return {
     top: rect.top,
     left: rect.left,
     width: rect.width,
     height: rect.height,
   } satisfies WritingStudioTableColumnRect;
+};
+
+export const resolveWritingStudioTableWrapperElement = (
+  cell: WritingStudioResolvedTableCell | null,
+) => {
+  if (!cell) {
+    return null;
+  }
+
+  return cell.tableDom.closest(".tableWrapper") as HTMLElement | null;
 };
 
 const resolveColumnSelectionEndpoints = (
@@ -377,17 +728,11 @@ export const selectWritingStudioTableColumn = (
   return true;
 };
 
-type SetTableColumnCellColorsInput = {
-  textColor?: string | null;
-  backgroundColor?: string | null;
-};
-
-const updateWritingStudioTableColumnCells = (
+const updateWritingStudioTableCells = (
   editor: Editor,
-  cell: WritingStudioResolvedTableCell,
+  cells: WritingStudioTableColumnCellInfo[],
   updater: (cellInfo: WritingStudioTableColumnCellInfo, tr: any) => void,
 ) => {
-  const cells = resolveWritingStudioTableColumnCells(editor, cell);
   if (cells.length === 0) {
     return false;
   }
@@ -406,16 +751,61 @@ const updateWritingStudioTableColumnCells = (
   return true;
 };
 
+const updateWritingStudioTableColumnCells = (
+  editor: Editor,
+  cell: WritingStudioResolvedTableCell,
+  updater: (cellInfo: WritingStudioTableColumnCellInfo, tr: any) => void,
+) => {
+  return updateWritingStudioTableCells(
+    editor,
+    resolveWritingStudioTableColumnCells(editor, cell),
+    updater,
+  );
+};
+
+const updateWritingStudioSelectedTableCells = (
+  editor: Editor,
+  updater: (cellInfo: WritingStudioTableColumnCellInfo, tr: any) => void,
+) => {
+  return updateWritingStudioTableCells(
+    editor,
+    resolveWritingStudioSelectedTableCells(editor),
+    updater,
+  );
+};
+
 export const setWritingStudioTableColumnCellColors = (
   editor: Editor | null | undefined,
   cell: WritingStudioResolvedTableCell | null,
-  input: SetTableColumnCellColorsInput,
+  input: SetWritingStudioTableCellColorsInput,
 ) => {
   if (!editor || !cell) {
     return false;
   }
 
   return updateWritingStudioTableColumnCells(editor, cell, (cellInfo, tr) => {
+    const node = tr.doc.nodeAt(cellInfo.cellPos);
+    if (!node) {
+      return;
+    }
+
+    tr.setNodeMarkup(cellInfo.cellPos, undefined, {
+      ...node.attrs,
+      textColor: input.textColor ?? null,
+      backgroundColor: input.backgroundColor ?? null,
+    });
+  });
+};
+
+export const setWritingStudioTableSelectedCellColors = (
+  editor: Editor | null | undefined,
+  input: SetWritingStudioTableCellColorsInput,
+) => {
+  if (!editor) {
+    return false;
+  }
+
+  return updateWritingStudioSelectedTableCells(editor, (cellInfo, tr) => {
     const node = tr.doc.nodeAt(cellInfo.cellPos);
     if (!node) {
       return;
@@ -569,12 +959,37 @@ export const getWritingStudioTableColorPreset = (
   return tableColorStyleMap[kind][value];
 };
 
+export const canMergeWritingStudioSelectedTableCells = (
+  editor: Editor | null | undefined,
+) => {
+  if (!editor) {
+    return false;
+  }
+
+  const selectedCells = resolveWritingStudioSelectedTableCells(editor);
+  if (selectedCells.length <= 1) {
+    return false;
+  }
+
+  return editor.can().mergeOrSplit();
+};
+
+export const mergeWritingStudioSelectedTableCells = (
+  editor: Editor | null | undefined,
+) => {
+  if (!editor || !canMergeWritingStudioSelectedTableCells(editor)) {
+    return false;
+  }
+
+  return editor.chain().focus().mergeOrSplit().run();
+};
+
 export const useWritingStudioTableColumnMenuState = (
   editorRef: Ref<Editor | null | undefined>,
 ) => {
   const revision = ref(0);
 
-  watch(editorRef, (editor, previousEditor, onCleanup) => {
+  watch(editorRef, (editor, _previousEditor, onCleanup) => {
     if (!editor) {
       revision.value += 1;
       return;
@@ -604,14 +1019,44 @@ export const useWritingStudioTableColumnMenuState = (
     return resolveWritingStudioActiveTableCell(editorRef.value);
   });
 
+  const isCellSelection = computed(() => {
+    revision.value;
+    return isWritingStudioCellSelectionActive(editorRef.value);
+  });
+
   const isColumnSelection = computed(() => {
     revision.value;
     return isWritingStudioColumnSelectionActive(editorRef.value);
   });
 
+  const isRowSelection = computed(() => {
+    revision.value;
+    return isWritingStudioRowSelectionActive(editorRef.value);
+  });
+
+  const selectionOverlay = computed(() => {
+    revision.value;
+    return resolveWritingStudioTableSelectionOverlay(editorRef.value);
+  });
+
+  const selectedCellCount = computed(() => {
+    revision.value;
+    return resolveWritingStudioSelectedTableCells(editorRef.value).length;
+  });
+
+  const canMergeSelectedCells = computed(() => {
+    revision.value;
+    return canMergeWritingStudioSelectedTableCells(editorRef.value);
+  });
+
   return {
     revision,
     activeCell,
+    isCellSelection,
     isColumnSelection,
+    isRowSelection,
+    selectionOverlay,
+    selectedCellCount,
+    canMergeSelectedCells,
   };
 };

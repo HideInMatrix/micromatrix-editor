@@ -162,6 +162,10 @@
               "red": "紅底"
             }
           }
+        },
+        "selectionMenu": {
+          "handle": "選取儲存格操作",
+          "mergeCells": "合併儲存格"
         }
       }
     },

@@ -162,6 +162,10 @@
               "red": "Red background"
             }
           }
+        },
+        "selectionMenu": {
+          "handle": "Cell actions",
+          "mergeCells": "Merge cells"
         }
       }
     },

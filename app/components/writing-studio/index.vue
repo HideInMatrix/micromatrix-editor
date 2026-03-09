@@ -23,6 +23,7 @@ import ImageGroup from "@/components/writing-studio/image/Group.vue";
 import ImageNodeBubbleMenu from "@/components/writing-studio/bubble-menu/ImageNode.vue";
 import LinkBubbleMenu from "@/components/writing-studio/bubble-menu/Link.vue";
 import TableColumnBubbleMenu from "@/components/writing-studio/bubble-menu/TableColumn.vue";
+import TableSelectionBubbleMenu from "@/components/writing-studio/bubble-menu/TableSelection.vue";
 import TableHoverControls from "@/components/writing-studio/table/HoverControls.vue";
 import { Button } from "@/components/ui/button";
 import {
@@ -678,6 +679,7 @@ const removeLinkFromMenu = () => {
     <div ref="editorSurfaceRef" class="relative rounded-lg border bg-background px-4 py-3 shadow-sm max-w-6xl mx-auto">
       <TableHoverControls :editor="editor" :container="editorSurfaceRef" />
       <TableColumnBubbleMenu :editor="editor" :container="editorSurfaceRef" />
+      <TableSelectionBubbleMenu :editor="editor" :container="editorSurfaceRef" />
       <EditorContent :editor="editor" class="writing-editor" />
     </div>
   </section>
