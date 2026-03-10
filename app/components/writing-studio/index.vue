@@ -1,7 +1,22 @@
 <script lang="ts" setup>
 import { EditorContent } from "@tiptap/vue-3";
 import { DragHandle } from "@tiptap/extension-drag-handle-vue-3";
-import { AlignCenter, AlignJustify, AlignLeft, AlignRight, Bold, Highlighter, Italic, Link2, GripVertical, Strikethrough, Subscript as SubscriptIcon, Superscript as SuperscriptIcon, Type, Underline as UnderlineIcon } from "lucide-vue-next";
+import {
+  AlignCenter,
+  AlignJustify,
+  AlignLeft,
+  AlignRight,
+  Bold,
+  Highlighter,
+  Italic,
+  Link2,
+  GripVertical,
+  Strikethrough,
+  Subscript as SubscriptIcon,
+  Superscript as SuperscriptIcon,
+  Type,
+  Underline as UnderlineIcon,
+} from "lucide-vue-next";
 import CodeToolbar from "@/components/writing-studio/toolbar/Code.vue";
 import CodeBlockBubbleMenu from "@/components/writing-studio/bubble-menu/CodeBlock.vue";
 import ImageGroup from "@/components/writing-studio/image/Group.vue";
@@ -12,11 +27,28 @@ import TableColumnBubbleMenu from "@/components/writing-studio/bubble-menu/Table
 import TableSelectionBubbleMenu from "@/components/writing-studio/bubble-menu/TableSelection.vue";
 import TableHoverControls from "@/components/writing-studio/table/HoverControls.vue";
 import { Button } from "@/components/ui/button";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Separator } from "@/components/ui/separator";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useWritingStudioDragHandle } from "~/composables/writing-studio/drag-handle/useDragHandle";
-import { applyWritingStudioLinkState, getWritingStudioLinkDraftState, type WritingStudioActiveLinkState } from "~/composables/writing-studio/link/useLinkState";
+import {
+  applyWritingStudioLinkState,
+  getWritingStudioLinkDraftState,
+  type WritingStudioActiveLinkState,
+} from "~/composables/writing-studio/link/useLinkState";
 import { useWritingStudioToolbarActions } from "~/composables/writing-studio/toolbar/useActions";
 import { useWritingStudioToolbarState } from "~/composables/writing-studio/toolbar/useState";
 import { useWritingStudioEditor } from "~/composables/writing-studio/editor/useEditor";
@@ -25,7 +57,13 @@ const { t } = useI18n();
 // 写作编辑器实例（tiptap）
 const { editor } = useWritingStudioEditor();
 // 工具栏状态：按钮样式、激活态与可执行能力判断
-const { toolbarButtonClass, dropdownItemClass, isMarkActive, isNodeActive, canRun } = useWritingStudioToolbarState(editor);
+const {
+  toolbarButtonClass,
+  dropdownItemClass,
+  isMarkActive,
+  isNodeActive,
+  canRun,
+} = useWritingStudioToolbarState(editor);
 // 段落拖拽手柄配置与拖拽开始处理
 const { dragHandleNestedOptions, handleDragHandleStart } = useWritingStudioDragHandle();
 // 工具栏动作：对编辑器命令的统一封装
@@ -76,7 +114,14 @@ const {
 } = useWritingStudioToolbarActions(editor);
 
 // 段落/标题下拉框可选值
-type ParagraphHeadingValue = "paragraph" | "heading1" | "heading2" | "heading3" | "heading4" | "heading5" | "heading6";
+type ParagraphHeadingValue =
+  | "paragraph"
+  | "heading1"
+  | "heading2"
+  | "heading3"
+  | "heading4"
+  | "heading5"
+  | "heading6";
 
 // 列表下拉框可选值
 type ListTypeValue = "bulletList" | "orderedList" | "taskList";
@@ -182,7 +227,12 @@ const currentTextAlign = (): TextAlignValue => {
   const headingAlign = editor.value?.getAttributes("heading").textAlign;
   const alignment = headingAlign ?? paragraphAlign;
 
-  if (alignment === "left" || alignment === "center" || alignment === "right" || alignment === "justify") {
+  if (
+    alignment === "left"
+    || alignment === "center"
+    || alignment === "right"
+    || alignment === "justify"
+  ) {
     return alignment;
   }
 
@@ -254,12 +304,17 @@ const removeLinkFromMenu = () => {
 
   closeLinkEditor();
 };
+
 </script>
 
 <template>
   <section class="space-y-3 h-dvh">
     <div class="flex flex-wrap items-center gap-1 rounded-lg border bg-card p-2 shadow-sm">
-      <Select :model-value="currentParagraphHeading()" :disabled="!editor" @update:model-value="handleParagraphHeadingChange">
+      <Select
+        :model-value="currentParagraphHeading()"
+        :disabled="!editor"
+        @update:model-value="handleParagraphHeadingChange"
+      >
         <SelectTrigger class="h-8 w-[6rem] px-2 text-xs">
           <SelectValue :placeholder="t('writingStudio.toolbar.groups.paragraphHeading')" />
         </SelectTrigger>
@@ -288,7 +343,11 @@ const removeLinkFromMenu = () => {
         </SelectContent>
       </Select>
 
-      <Select :model-value="currentListType()" :disabled="!editor" @update:model-value="handleListTypeChange">
+      <Select
+        :model-value="currentListType()"
+        :disabled="!editor"
+        @update:model-value="handleListTypeChange"
+      >
         <SelectTrigger class="h-8 w-[6rem] px-2 text-xs">
           <SelectValue :placeholder="t('writingStudio.toolbar.groups.listNodes')" />
         </SelectTrigger>
@@ -307,75 +366,160 @@ const removeLinkFromMenu = () => {
 
       <Separator orientation="vertical" class="mx-1 h-6" />
 
-      <Button variant="ghost" size="sm" :disabled="!editor || !canRun((current) => current.can().setTextAlign('left'))" :class="toolbarButtonClass(currentTextAlign() === 'left')" @click="setTextAlign('left')">
+      <Button
+        variant="ghost"
+        size="sm"
+        :disabled="!editor || !canRun((current) => current.can().setTextAlign('left'))"
+        :class="toolbarButtonClass(currentTextAlign() === 'left')"
+        @click="setTextAlign('left')"
+      >
         <AlignLeft />
         {{ t("writingStudio.toolbar.align.left") }}
       </Button>
 
-      <Button variant="ghost" size="sm" :disabled="!editor || !canRun((current) => current.can().setTextAlign('center'))" :class="toolbarButtonClass(currentTextAlign() === 'center')" @click="setTextAlign('center')">
+      <Button
+        variant="ghost"
+        size="sm"
+        :disabled="!editor || !canRun((current) => current.can().setTextAlign('center'))"
+        :class="toolbarButtonClass(currentTextAlign() === 'center')"
+        @click="setTextAlign('center')"
+      >
         <AlignCenter />
         {{ t("writingStudio.toolbar.align.center") }}
       </Button>
 
-      <Button variant="ghost" size="sm" :disabled="!editor || !canRun((current) => current.can().setTextAlign('right'))" :class="toolbarButtonClass(currentTextAlign() === 'right')" @click="setTextAlign('right')">
+      <Button
+        variant="ghost"
+        size="sm"
+        :disabled="!editor || !canRun((current) => current.can().setTextAlign('right'))"
+        :class="toolbarButtonClass(currentTextAlign() === 'right')"
+        @click="setTextAlign('right')"
+      >
         <AlignRight />
         {{ t("writingStudio.toolbar.align.right") }}
       </Button>
 
-      <Button variant="ghost" size="sm" :disabled="!editor || !canRun((current) => current.can().setTextAlign('justify'))" :class="toolbarButtonClass(currentTextAlign() === 'justify')" @click="setTextAlign('justify')">
+      <Button
+        variant="ghost"
+        size="sm"
+        :disabled="!editor || !canRun((current) => current.can().setTextAlign('justify'))"
+        :class="toolbarButtonClass(currentTextAlign() === 'justify')"
+        @click="setTextAlign('justify')"
+      >
         <AlignJustify />
         {{ t("writingStudio.toolbar.align.justify") }}
       </Button>
 
       <Separator orientation="vertical" class="mx-1 h-6" />
 
-      <Button variant="ghost" size="sm" :disabled="!editor" :class="toolbarButtonClass(isMarkActive('bold'))" @click="toggleBold">
+      <Button
+        variant="ghost"
+        size="sm"
+        :disabled="!editor"
+        :class="toolbarButtonClass(isMarkActive('bold'))"
+        @click="toggleBold"
+      >
         <Bold />
         {{ t("writingStudio.toolbar.marks.bold") }}
       </Button>
 
-      <Button variant="ghost" size="sm" :disabled="!editor" :class="toolbarButtonClass(isMarkActive('highlight'))" @click="toggleHighlight">
+      <Button
+        variant="ghost"
+        size="sm"
+        :disabled="!editor"
+        :class="toolbarButtonClass(isMarkActive('highlight'))"
+        @click="toggleHighlight"
+      >
         <Highlighter />
         {{ t("writingStudio.toolbar.marks.highlight") }}
       </Button>
 
-      <Button variant="ghost" size="sm" :disabled="!editor" :class="toolbarButtonClass(isMarkActive('italic'))" @click="toggleItalic">
+      <Button
+        variant="ghost"
+        size="sm"
+        :disabled="!editor"
+        :class="toolbarButtonClass(isMarkActive('italic'))"
+        @click="toggleItalic"
+      >
         <Italic />
         {{ t("writingStudio.toolbar.marks.italic") }}
       </Button>
 
-      <Button variant="ghost" size="sm" :disabled="!editor" :class="toolbarButtonClass(isMarkActive('strike'))" @click="toggleStrike">
+      <Button
+        variant="ghost"
+        size="sm"
+        :disabled="!editor"
+        :class="toolbarButtonClass(isMarkActive('strike'))"
+        @click="toggleStrike"
+      >
         <Strikethrough />
         {{ t("writingStudio.toolbar.marks.strike") }}
       </Button>
 
       <Separator orientation="vertical" class="mx-1 h-6" />
 
-      <CodeToolbar :disabled="!editor" :is-code-active="isMarkActive('code')" :is-code-block-active="isNodeActive('codeBlock')" :dropdown-item-class="dropdownItemClass" @toggle-code="toggleCode" @toggle-code-block="toggleCodeBlock" />
+      <CodeToolbar
+        :disabled="!editor"
+        :is-code-active="isMarkActive('code')"
+        :is-code-block-active="isNodeActive('codeBlock')"
+        :dropdown-item-class="dropdownItemClass"
+        @toggle-code="toggleCode"
+        @toggle-code-block="toggleCodeBlock"
+      />
 
-      <Button variant="ghost" size="sm" :disabled="!editor" :class="toolbarButtonClass(isMarkActive('link'))" @click="openLinkEditor()">
+      <Button
+        variant="ghost"
+        size="sm"
+        :disabled="!editor"
+        :class="toolbarButtonClass(isMarkActive('link'))"
+        @click="openLinkEditor()"
+      >
         <Link2 />
         {{ t("writingStudio.toolbar.marks.link") }}
       </Button>
 
       <Separator orientation="vertical" class="mx-1 h-6" />
 
-      <Button variant="ghost" size="sm" :disabled="!editor" :class="toolbarButtonClass(isMarkActive('subscript'))" @click="toggleSubscript">
+      <Button
+        variant="ghost"
+        size="sm"
+        :disabled="!editor"
+        :class="toolbarButtonClass(isMarkActive('subscript'))"
+        @click="toggleSubscript"
+      >
         <SubscriptIcon />
         {{ t("writingStudio.toolbar.marks.subscript") }}
       </Button>
 
-      <Button variant="ghost" size="sm" :disabled="!editor" :class="toolbarButtonClass(isMarkActive('superscript'))" @click="toggleSuperscript">
+      <Button
+        variant="ghost"
+        size="sm"
+        :disabled="!editor"
+        :class="toolbarButtonClass(isMarkActive('superscript'))"
+        @click="toggleSuperscript"
+      >
         <SuperscriptIcon />
         {{ t("writingStudio.toolbar.marks.superscript") }}
       </Button>
 
-      <Button variant="ghost" size="sm" :disabled="!editor" :class="toolbarButtonClass(isMarkActive('textStyle'))" @click="toggleTextStyle">
+      <Button
+        variant="ghost"
+        size="sm"
+        :disabled="!editor"
+        :class="toolbarButtonClass(isMarkActive('textStyle'))"
+        @click="toggleTextStyle"
+      >
         <Type />
         {{ t("writingStudio.toolbar.marks.textStyle") }}
       </Button>
 
-      <Button variant="ghost" size="sm" :disabled="!editor" :class="toolbarButtonClass(isMarkActive('underline'))" @click="toggleUnderline">
+      <Button
+        variant="ghost"
+        size="sm"
+        :disabled="!editor"
+        :class="toolbarButtonClass(isMarkActive('underline'))"
+        @click="toggleUnderline"
+      >
         <UnderlineIcon />
         {{ t("writingStudio.toolbar.marks.underline") }}
       </Button>
@@ -390,10 +534,16 @@ const removeLinkFromMenu = () => {
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" class="w-60">
           <DropdownMenuLabel>{{ t("writingStudio.toolbar.labels.nodeBlocks") }}</DropdownMenuLabel>
-          <DropdownMenuItem :class="dropdownItemClass(isNodeActive('blockquote'))" @select.prevent="toggleBlockquote">
+          <DropdownMenuItem
+            :class="dropdownItemClass(isNodeActive('blockquote'))"
+            @select.prevent="toggleBlockquote"
+          >
             {{ t("writingStudio.toolbar.block.blockquote") }}
           </DropdownMenuItem>
-          <DropdownMenuItem :class="dropdownItemClass(isNodeActive('details'))" @select.prevent="toggleDetails">
+          <DropdownMenuItem
+            :class="dropdownItemClass(isNodeActive('details'))"
+            @select.prevent="toggleDetails"
+          >
             {{ t("writingStudio.toolbar.block.details") }}
           </DropdownMenuItem>
           <DropdownMenuSeparator />
@@ -451,7 +601,11 @@ const removeLinkFromMenu = () => {
         </DropdownMenuContent>
       </DropdownMenu>
 
-      <ImageGroup :disabled="!editor" @insert-upload="insertImageUpload" @insert-link="insertImageByUrl" />
+      <ImageGroup
+        :disabled="!editor"
+        @insert-upload="insertImageUpload"
+        @insert-link="insertImageByUrl"
+      />
 
       <DropdownMenu>
         <DropdownMenuTrigger as-child>
@@ -465,49 +619,78 @@ const removeLinkFromMenu = () => {
             {{ t("writingStudio.toolbar.table.insert3x3") }}
           </DropdownMenuItem>
           <DropdownMenuSeparator />
-          <DropdownMenuItem :disabled="!canRun((current) => current.can().addColumnBefore())" @select.prevent="addColumnBefore">
+          <DropdownMenuItem
+            :disabled="!canRun((current) => current.can().addColumnBefore())"
+            @select.prevent="addColumnBefore"
+          >
             {{ t("writingStudio.toolbar.table.addColumnBefore") }}
           </DropdownMenuItem>
-          <DropdownMenuItem :disabled="!canRun((current) => current.can().addColumnAfter())" @select.prevent="addColumnAfter">
+          <DropdownMenuItem
+            :disabled="!canRun((current) => current.can().addColumnAfter())"
+            @select.prevent="addColumnAfter"
+          >
             {{ t("writingStudio.toolbar.table.addColumnAfter") }}
           </DropdownMenuItem>
-          <DropdownMenuItem :disabled="!canRun((current) => current.can().deleteColumn())" @select.prevent="deleteColumn">
+          <DropdownMenuItem
+            :disabled="!canRun((current) => current.can().deleteColumn())"
+            @select.prevent="deleteColumn"
+          >
             {{ t("writingStudio.toolbar.table.deleteColumn") }}
           </DropdownMenuItem>
           <DropdownMenuSeparator />
-          <DropdownMenuItem :disabled="!canRun((current) => current.can().addRowBefore())" @select.prevent="addRowBefore">
+          <DropdownMenuItem
+            :disabled="!canRun((current) => current.can().addRowBefore())"
+            @select.prevent="addRowBefore"
+          >
             {{ t("writingStudio.toolbar.table.addRowBefore") }}
           </DropdownMenuItem>
-          <DropdownMenuItem :disabled="!canRun((current) => current.can().addRowAfter())" @select.prevent="addRowAfter">
+          <DropdownMenuItem
+            :disabled="!canRun((current) => current.can().addRowAfter())"
+            @select.prevent="addRowAfter"
+          >
             {{ t("writingStudio.toolbar.table.addRowAfter") }}
           </DropdownMenuItem>
-          <DropdownMenuItem :disabled="!canRun((current) => current.can().deleteRow())" @select.prevent="deleteRow">
+          <DropdownMenuItem
+            :disabled="!canRun((current) => current.can().deleteRow())"
+            @select.prevent="deleteRow"
+          >
             {{ t("writingStudio.toolbar.table.deleteRow") }}
           </DropdownMenuItem>
           <DropdownMenuSeparator />
-          <DropdownMenuItem :disabled="!canRun((current) => current.can().toggleHeaderRow())" @select.prevent="toggleHeaderRow">
+          <DropdownMenuItem
+            :disabled="!canRun((current) => current.can().toggleHeaderRow())"
+            @select.prevent="toggleHeaderRow"
+          >
             {{ t("writingStudio.toolbar.table.toggleHeaderRow") }}
           </DropdownMenuItem>
-          <DropdownMenuItem :disabled="!canRun((current) => current.can().toggleHeaderColumn())" @select.prevent="toggleHeaderColumn">
+          <DropdownMenuItem
+            :disabled="!canRun((current) => current.can().toggleHeaderColumn())"
+            @select.prevent="toggleHeaderColumn"
+          >
             {{ t("writingStudio.toolbar.table.toggleHeaderColumn") }}
           </DropdownMenuItem>
-          <DropdownMenuItem :disabled="!canRun((current) => current.can().mergeOrSplit())" @select.prevent="mergeOrSplitCells">
+          <DropdownMenuItem
+            :disabled="!canRun((current) => current.can().mergeOrSplit())"
+            @select.prevent="mergeOrSplitCells"
+          >
             {{ t("writingStudio.toolbar.table.mergeSplitCells") }}
           </DropdownMenuItem>
           <DropdownMenuSeparator />
-          <DropdownMenuItem :disabled="!canRun((current) => current.can().deleteTable())" @select.prevent="deleteTable">
+          <DropdownMenuItem
+            :disabled="!canRun((current) => current.can().deleteTable())"
+            @select.prevent="deleteTable"
+          >
             {{ t("writingStudio.toolbar.table.deleteTable") }}
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
     </div>
-    <div ref="editorSurfaceRef" class="relative rounded-lg border bg-background px-4 py-3 shadow-sm max-w-6xl mx-auto">
-      <TableHoverControls :editor="editor" :container="editorSurfaceRef" />
-      <TableColumnBubbleMenu :editor="editor" :container="editorSurfaceRef" />
-      <TableSelectionBubbleMenu :editor="editor" :container="editorSurfaceRef" />
-      <EditorContent :editor="editor" class="writing-editor" />
-    </div>
-    <ImageNodeBubbleMenu :editor="editor" :toolbar-button-class="toolbarButtonClass" :set-image-align="setImageAlign" />
+
+    <ImageNodeBubbleMenu
+      :editor="editor"
+      :toolbar-button-class="toolbarButtonClass"
+      :set-image-align="setImageAlign"
+    />
     <LinkBubbleMenu
       :editor="editor"
       :is-editing="isLinkEditorOpen"
@@ -519,13 +702,30 @@ const removeLinkFromMenu = () => {
       @update:text="linkEditorText = $event"
       @save-link="saveLinkFromMenu"
       @cancel-link-edit="closeLinkEditor"
-      @remove-link="removeLinkFromMenu" />
-    <CodeBlockBubbleMenu :editor="editor" :set-code-block-language="setCodeBlockLanguage" :set-code-block-wrap="setCodeBlockWrap" />
+      @remove-link="removeLinkFromMenu"
+    />
+    <CodeBlockBubbleMenu
+      :editor="editor"
+      :set-code-block-language="setCodeBlockLanguage"
+      :set-code-block-wrap="setCodeBlockWrap"
+    />
     <MathEditor />
 
+    <div ref="editorSurfaceRef" class="relative rounded-lg border bg-background px-4 py-3 shadow-sm max-w-6xl mx-auto">
+      <TableHoverControls :editor="editor" :container="editorSurfaceRef" />
+      <TableColumnBubbleMenu :editor="editor" :container="editorSurfaceRef" />
+      <TableSelectionBubbleMenu :editor="editor" :container="editorSurfaceRef" />
+      <EditorContent :editor="editor" class="writing-editor" />
+    </div>
 
-
-    <DragHandle v-if="editor" :editor="editor" class="ws-drag-handle" :nested="dragHandleNestedOptions" :compute-position-config="{ placement: 'left-start' }" :on-element-drag-start="handleDragHandleStart">
+    <DragHandle
+      v-if="editor"
+      :editor="editor"
+      class="ws-drag-handle"
+      :nested="dragHandleNestedOptions"
+      :compute-position-config="{ placement: 'left-start' }"
+      :on-element-drag-start="handleDragHandleStart"
+    >
       <GripVertical class="ws-drag-handle-icon" :size="16" :stroke-width="2.5" aria-hidden="true" />
     </DragHandle>
   </section>
