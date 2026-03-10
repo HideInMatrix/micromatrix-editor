@@ -2,12 +2,7 @@
 import { NodeViewWrapper } from "@tiptap/vue-3";
 import type { NodeViewProps } from "@tiptap/vue-3";
 import { Button } from "@/components/ui/button";
-import {
-  CloudUpload,
-  FileImage,
-  LoaderCircle,
-  X,
-} from "lucide-vue-next";
+import { CloudUpload, FileImage, LoaderCircle, X } from "lucide-vue-next";
 import type { WritingStudioImageUploader } from "~/composables/writing-studio/actions/useOtherActions";
 
 type UploadStatus = "idle" | "uploading" | "error";
@@ -95,10 +90,13 @@ const replaceWithImage = (attrs: Record<string, unknown>) => {
   return props.editor
     .chain()
     .focus()
-    .insertContentAt({ from: pos, to: pos + props.node.nodeSize }, {
-      type: "image",
-      attrs,
-    })
+    .insertContentAt(
+      { from: pos, to: pos + props.node.nodeSize },
+      {
+        type: "image",
+        attrs,
+      },
+    )
     .run();
 };
 
@@ -216,24 +214,10 @@ const removeNode = () => {
 
 <template>
   <NodeViewWrapper as="div" class="ws-image-upload-node-view" data-drag-handle>
-    <input
-      ref="inputRef"
-      type="file"
-      class="hidden"
-      accept="image/png,image/jpeg,image/webp,image/gif,image/svg+xml,image/avif"
-      @change="handleFileSelect"
-    >
+    <input ref="inputRef" type="file" class="hidden" accept="image/png,image/jpeg,image/webp,image/gif,image/svg+xml,image/avif" @change="handleFileSelect" />
 
     <template v-if="uploadStatus === 'idle'">
-      <button
-        type="button"
-        class="ws-image-upload-node-dropzone"
-        :class="{ 'is-dragging': isDragging }"
-        @click="openPicker"
-        @dragover="handleDragOver"
-        @dragleave="handleDragLeave"
-        @drop="handleDrop"
-      >
+      <button type="button" class="ws-image-upload-node-dropzone" :class="{ 'is-dragging': isDragging }" @click="openPicker" @dragover="handleDragOver" @dragleave="handleDragLeave" @drop="handleDrop">
         <FileImage class="ws-image-upload-node-dropzone-icon" />
         <span class="ws-image-upload-node-dropzone-title">
           {{ t("writingStudio.toolbar.image.uploadAreaTitle") }}
@@ -256,32 +240,17 @@ const removeNode = () => {
             <div class="ws-image-upload-node-item-meta">
               <span>{{ formatFileSize(fileSize) }}</span>
               <span class="ws-image-upload-node-item-status">
-                <LoaderCircle
-                  v-if="uploadStatus === 'uploading'"
-                  :size="12"
-                  class="animate-spin"
-                />
+                <LoaderCircle v-if="uploadStatus === 'uploading'" :size="12" class="animate-spin" />
                 <X v-if="uploadStatus === 'error'" :size="12" />
                 {{ uploadStatus === "error" ? errorMessage : `${uploadProgress}%` }}
               </span>
             </div>
             <div class="ws-image-upload-node-item-progress-track">
-              <div
-                class="ws-image-upload-node-item-progress-fill"
-                :class="{ 'is-error': uploadStatus === 'error' }"
-                :style="{ width: `${uploadProgress}%` }"
-              />
+              <div class="ws-image-upload-node-item-progress-fill" :class="{ 'is-error': uploadStatus === 'error' }" :style="{ width: `${uploadProgress}%` }" />
             </div>
           </div>
 
-          <Button
-            variant="ghost"
-            size="icon"
-            class="h-8 w-8"
-            :title="t('writingStudio.toolbar.image.uploadCancel')"
-            :aria-label="t('writingStudio.toolbar.image.uploadCancel')"
-            @click="removeNode"
-          >
+          <Button variant="ghost" size="icon" class="h-8 w-8" :title="t('writingStudio.toolbar.image.uploadCancel')" :aria-label="t('writingStudio.toolbar.image.uploadCancel')" @click="removeNode">
             <X :size="14" />
           </Button>
         </div>
@@ -298,11 +267,7 @@ const removeNode = () => {
     </template>
 
     <p class="ws-image-upload-node-mode">
-      {{
-        isApiUploadEnabled
-          ? t("writingStudio.toolbar.image.uploadModeApi")
-          : t("writingStudio.toolbar.image.uploadModeLocal")
-      }}
+      {{ isApiUploadEnabled ? t("writingStudio.toolbar.image.uploadModeApi") : t("writingStudio.toolbar.image.uploadModeLocal") }}
     </p>
   </NodeViewWrapper>
 </template>

@@ -63,6 +63,7 @@
         "imageNodes": "圖片",
         "listNodes": "列表",
         "blockNodes": "區塊節點",
+        "mathNodes": "數學公式",
         "insertNodes": "插入節點",
         "tableNodes": "表格節點"
       },
@@ -70,8 +71,18 @@
         "nodeBlocks": "區塊節點",
         "codeActions": "程式碼命令",
         "imageActions": "圖片載入方式",
+        "mathActions": "公式節點",
         "mediaInline": "媒體與行內",
         "tableActions": "表格操作"
+      },
+      "mathEditor": {
+        "editInline": "新增 TeX 公式",
+        "editBlock": "新增 TeX 公式",
+        "defaultInline": "編輯公式",
+        "defaultBlock": "使用 LaTeX 語法輸入公式",
+        "hint": "使用 LaTeX 語法輸入公式，點擊完成後更新公式",
+        "placeholder": "請輸入使用 LaTeX 語法的公式，例如：\\frac{a}{b} 或 \\int_a^b x^2 \\, dx",
+        "done": "完成"
       },
       "code": {
         "language": "程式碼語言",
@@ -177,8 +188,8 @@
       "audio": "請輸入音訊網址（mp3/wav/ogg 等）",
       "youtube": "請輸入 YouTube 連結",
       "twitch": "請輸入 Twitch 連結",
-      "inlineMath": "請輸入行內公式 LaTeX",
-      "blockMath": "請輸入區塊公式 LaTeX",
+      "inlineMath": "請輸入使用 LaTeX 語法的行內公式",
+      "blockMath": "請輸入使用 LaTeX 語法的區塊公式",
       "emoji": "請輸入 Emoji shortcode（例如 grinning）",
       "mention": "請輸入提及名稱（不需要 {'@'}）"
     }

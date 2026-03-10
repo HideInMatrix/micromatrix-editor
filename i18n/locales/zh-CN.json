@@ -63,6 +63,7 @@
         "imageNodes": "图片",
         "listNodes": "列表",
         "blockNodes": "块节点",
+        "mathNodes": "数学公式",
         "insertNodes": "插入节点",
         "tableNodes": "表格节点"
       },
@@ -70,8 +71,18 @@
         "nodeBlocks": "块级节点",
         "codeActions": "代码命令",
         "imageActions": "图片载入方式",
+        "mathActions": "公式节点",
         "mediaInline": "媒体与行内",
         "tableActions": "表格操作"
+      },
+      "mathEditor": {
+        "editInline": "添加 TeX 公式",
+        "editBlock": "添加 TeX 公式",
+        "defaultInline": "编辑公式",
+        "defaultBlock": "使用 LaTeX 语法输入公式",
+        "hint": "使用 LaTeX 语法输入公式，点击完成后更新公式",
+        "placeholder": "请输入使用 LaTeX 语法的公式，例如：\\frac{a}{b} 或 \\int_a^b x^2 \\, dx",
+        "done": "完成"
       },
       "code": {
         "language": "代码语言",
@@ -177,8 +188,8 @@
       "audio": "请输入音频地址（mp3/wav/ogg 等）",
       "youtube": "请输入 YouTube 链接",
       "twitch": "请输入 Twitch 链接",
-      "inlineMath": "请输入行内公式 LaTeX",
-      "blockMath": "请输入块级公式 LaTeX",
+      "inlineMath": "请输入使用 LaTeX 语法的行内公式",
+      "blockMath": "请输入使用 LaTeX 语法的块级公式",
       "emoji": "请输入 Emoji shortcode（例如 grinning）",
       "mention": "请输入提及名称（不需要 {'@'}）"
     }

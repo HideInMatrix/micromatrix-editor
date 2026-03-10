@@ -2,7 +2,7 @@
 import type { Editor } from "@tiptap/vue-3";
 import type { Component } from "vue";
 import { BubbleMenu } from "@tiptap/vue-3/menus";
-import { ArrowLeft, ArrowRight, ChevronRight, CircleX, GripHorizontal, PaintRoller, Trash2 } from "lucide-vue-next";
+import { ArrowLeft, ArrowRight, ChevronRight, CircleX, GripHorizontal, PaintBucket, Trash2, Type } from "lucide-vue-next";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import ColorPanel from "@/components/writing-studio/bubble-menu/table/ColorPanel.vue";
@@ -36,10 +36,11 @@ const props = defineProps<{
   container: HTMLElement | null;
 }>();
 
-type TableColumnActionId = "color" | "insertLeft" | "insertRight" | "clear" | "delete";
+type TableColumnColorActionId = "textColor" | "backgroundColor";
+type TableColumnActionKey = TableColumnColorActionId | "insertLeft" | "insertRight" | "clear" | "delete";
 
 type TableColumnActionItem = {
-  id: TableColumnActionId;
+  id: TableColumnActionKey;
   icon: Component;
   label: string;
   keyword: string;
@@ -51,7 +52,7 @@ const { t } = useI18n();
 const editorRef = computed(() => props.editor);
 const handleAnchorRef = ref<HTMLElement | null>(null);
 const isMenuOpen = ref(false);
-const isColorMenuOpen = ref(false);
+const activeColorMenuKind = ref<WritingStudioTableColorKind | null>(null);
 const searchQuery = ref("");
 const { activeCell, isColumnSelection, selectionOverlay } = useWritingStudioTableColumnMenuState(editorRef);
 const colorPresets = useWritingStudioTableColumnColors();
@@ -61,19 +62,19 @@ const TABLE_COLUMN_HANDLE_WIDTH_REM = 2.5;
 const TABLE_COLUMN_HANDLE_HEIGHT_REM = 1.5;
 const TABLE_COLUMN_HANDLE_TOP_OFFSET_PX = 1;
 
-const openColorMenu = () => {
-  isColorMenuOpen.value = true;
+const closeColorMenu = () => {
+  activeColorMenuKind.value = null;
   requestColumnMenuPositionUpdate();
 };
 
-const closeColorMenu = () => {
-  isColorMenuOpen.value = false;
+const openColorMenu = (kind: WritingStudioTableColorKind) => {
+  activeColorMenuKind.value = kind;
   requestColumnMenuPositionUpdate();
 };
 
 const closeColumnMenu = () => {
   isMenuOpen.value = false;
-  isColorMenuOpen.value = false;
+  activeColorMenuKind.value = null;
   searchQuery.value = "";
 };
 
@@ -109,17 +110,19 @@ const filteredBackgroundColorEntries = computed(() => {
   return resolveFilteredColorEntries("background");
 });
 
-const hasFilteredColors = computed(() => {
-  return filteredTextColorEntries.value.length > 0 || filteredBackgroundColorEntries.value.length > 0;
-});
-
 const tableColumnActions = computed<TableColumnActionItem[]>(() => {
   return [
     {
-      id: "color",
-      icon: PaintRoller,
-      label: t("writingStudio.toolbar.table.columnMenu.color"),
-      keyword: "color palette text background",
+      id: "textColor",
+      icon: Type,
+      label: t("writingStudio.toolbar.table.columnMenu.colors.text.title"),
+      keyword: "text color palette font",
+    },
+    {
+      id: "backgroundColor",
+      icon: PaintBucket,
+      label: t("writingStudio.toolbar.table.columnMenu.colors.background.title"),
+      keyword: "background color palette fill",
     },
     {
       id: "insertLeft",
@@ -157,8 +160,12 @@ const filteredTableActions = computed(() => {
   }
 
   return tableColumnActions.value.filter((action) => {
-    if (action.id === "color") {
-      return action.label.toLowerCase().includes(query) || action.keyword.includes(query) || hasFilteredColors.value;
+    if (action.id === "textColor") {
+      return action.label.toLowerCase().includes(query) || action.keyword.includes(query) || filteredTextColorEntries.value.length > 0;
+    }
+
+    if (action.id === "backgroundColor") {
+      return action.label.toLowerCase().includes(query) || action.keyword.includes(query) || filteredBackgroundColorEntries.value.length > 0;
     }
 
     return action.label.toLowerCase().includes(query) || action.keyword.includes(query);
@@ -345,7 +352,7 @@ const openColumnMenu = () => {
     return;
   }
 
-  isColorMenuOpen.value = false;
+  activeColorMenuKind.value = null;
   isMenuOpen.value = true;
 
   if (!ensureColumnSelection()) {
@@ -366,17 +373,11 @@ const shouldShowColumnMenu = ({ editor }: any) => {
   );
 };
 
-const runColumnAction = (actionId: TableColumnActionId) => {
+const runColumnAction = (actionId: Exclude<TableColumnActionKey, TableColumnColorActionId>) => {
   const editor = props.editor;
   const cell = activeCell.value;
 
   if (!editor || !cell) {
-    return;
-  }
-
-  if (actionId === "color") {
-    openColorMenu();
-    requestColumnMenuPositionUpdate();
     return;
   }
 
@@ -492,64 +493,84 @@ const applyColumnColor = (kind: WritingStudioTableColorKind, value: WritingStudi
     :get-referenced-virtual-element="getColumnMenuVirtualElement"
     :options="{ placement: 'bottom-start' }">
     <div class="ws-table-column-bubble-layer">
-      <Card class="ws-table-column-menu">
-        <div class="ws-table-column-menu-main">
+      <Card class="ws-table-column-menu w-52 min-w-36 max-w-[calc(100vw-16px)] rounded-md shadow-lg">
+        <div class="ws-table-column-menu-main p-1">
           <div class="ws-table-column-menu-search-wrap" @mouseenter="closeColorMenu">
-            <Input v-model="searchQuery" class="ws-table-column-menu-search" :placeholder="t('writingStudio.toolbar.table.columnMenu.search')" />
+            <Input
+              v-model="searchQuery"
+              class="ws-table-column-menu-search h-7 rounded-md px-2 text-[11px]"
+              :placeholder="t('writingStudio.toolbar.table.columnMenu.search')"
+            />
           </div>
 
-          <div v-if="filteredTableActions.length > 0" class="ws-table-column-menu-items">
+          <div v-if="filteredTableActions.length > 0" class="ws-table-column-menu-items p-0.5">
             <template v-for="action in filteredTableActions" :key="action.id">
               <HoverCard
-                v-if="action.id === 'color'"
-                :open="isColorMenuOpen"
+                v-if="action.id === 'textColor' || action.id === 'backgroundColor'"
+                :open="activeColorMenuKind === (action.id === 'textColor' ? 'text' : 'background')"
                 :open-delay="0"
                 :close-delay="0"
 	              @update:open="
 	                  (value) => {
+                      const colorKind = action.id === 'textColor' ? 'text' : 'background';
 	                    if (value) {
-	                      openColorMenu();
+	                      openColorMenu(colorKind);
 	                      return;
 	                    }
 
-	                    if (isColorMenuOpen) {
+	                    if (activeColorMenuKind === colorKind) {
 	                      closeColorMenu();
 	                    }
 	                  }
 	                ">
                 <HoverCardTrigger as-child>
-                  <button type="button" class="ws-table-column-menu-item" :class="{ 'ws-table-column-menu-item--active': isColorMenuOpen }" @mousedown.prevent @mouseenter="openColorMenu">
-                    <component :is="action.icon" class="ws-table-column-menu-icon" />
+                  <button
+                    type="button"
+                    class="ws-table-column-menu-item min-h-8 gap-1.5 rounded-md px-2 py-1.5 text-[11px]"
+                    :class="{ 'ws-table-column-menu-item--active': activeColorMenuKind === (action.id === 'textColor' ? 'text' : 'background') }"
+                    @mousedown.prevent
+                    @mouseenter="openColorMenu(action.id === 'textColor' ? 'text' : 'background')"
+                  >
+                    <component :is="action.icon" class="ws-table-column-menu-icon h-3.5 w-3.5" />
                     <span class="flex-1 text-left">
                       {{ action.label }}
                     </span>
-                    <ChevronRight class="h-4 w-4 opacity-65" />
+                    <ChevronRight class="h-3 w-3 opacity-65" />
                   </button>
                 </HoverCardTrigger>
 
-	                <HoverCardContent side="right" align="start" :side-offset="12" class="ws-table-color-menu">
-	                  <div @pointerenter="openColorMenu">
+	                <HoverCardContent side="right" align="start" :side-offset="6" class="ws-table-color-menu w-[15rem] rounded-md p-0.5 shadow-lg">
+	                  <div @pointerenter="openColorMenu(action.id === 'textColor' ? 'text' : 'background')">
 	                    <ColorPanel
 	                      :search-query="searchQuery"
+                        :kinds="[action.id === 'textColor' ? 'text' : 'background']"
 	                      @select="({ kind, value }) => applyColumnColor(kind, value)"
 	                    />
 	                  </div>
 	                </HoverCardContent>
 	              </HoverCard>
 
-              <button v-else type="button" class="ws-table-column-menu-item" :class="{ 'ws-table-column-menu-item--danger': action.destructive }" @mousedown.prevent @mouseenter="closeColorMenu" @click="runColumnAction(action.id)">
-                <component :is="action.icon" class="ws-table-column-menu-icon" />
+              <button
+                v-else
+                type="button"
+                class="ws-table-column-menu-item min-h-8 gap-1.5 rounded-md px-2 py-1.5 text-[11px]"
+                :class="{ 'ws-table-column-menu-item--danger': action.destructive }"
+                @mousedown.prevent
+                @mouseenter="closeColorMenu"
+                @click="runColumnAction(action.id)"
+              >
+                <component :is="action.icon" class="ws-table-column-menu-icon h-3.5 w-3.5" />
                 <span class="flex-1 text-left">
                   {{ action.label }}
                 </span>
-                <span v-if="action.hint" class="ws-table-column-menu-item-hint">
+                <span v-if="action.hint" class="ws-table-column-menu-item-hint text-[10px]">
                   {{ action.hint }}
                 </span>
               </button>
             </template>
           </div>
 
-          <div v-else class="ws-table-column-menu-empty">
+          <div v-else class="ws-table-column-menu-empty px-2 py-3 text-[11px]">
             {{ t("writingStudio.toolbar.table.columnMenu.empty") }}
           </div>
         </div>

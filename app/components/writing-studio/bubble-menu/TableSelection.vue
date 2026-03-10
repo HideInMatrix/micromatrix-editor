@@ -273,8 +273,8 @@ const runSelectionAction = (actionId: TableSelectionActionId) => {
     :get-referenced-virtual-element="getSelectionMenuVirtualElement"
     :options="{ placement: 'bottom-start' }">
     <div class="ws-table-column-bubble-layer">
-      <Card class="ws-table-selection-menu">
-        <div class="ws-table-selection-menu-items">
+      <Card class="ws-table-selection-menu w-44 min-w-36 max-w-[calc(100vw-16px)] rounded-md shadow-lg">
+        <div class="ws-table-selection-menu-items p-0.5">
           <HoverCard
             :open="activeColorMenuKind === 'text'"
             :open-delay="0"
@@ -292,16 +292,22 @@ const runSelectionAction = (actionId: TableSelectionActionId) => {
               }
             ">
             <HoverCardTrigger as-child>
-              <button type="button" class="ws-table-column-menu-item" :class="{ 'ws-table-column-menu-item--active': activeColorMenuKind === 'text' }" @mousedown.prevent @mouseenter="openColorMenu('text')">
-                <Type class="ws-table-column-menu-icon" />
+              <button
+                type="button"
+                class="ws-table-column-menu-item min-h-8 gap-1.5 rounded-md px-2 py-1.5 text-[11px]"
+                :class="{ 'ws-table-column-menu-item--active': activeColorMenuKind === 'text' }"
+                @mousedown.prevent
+                @mouseenter="openColorMenu('text')"
+              >
+                <Type class="ws-table-column-menu-icon h-3.5 w-3.5" />
                 <span class="flex-1 text-left">
                   {{ t("writingStudio.toolbar.table.columnMenu.colors.text.title") }}
                 </span>
-                <ChevronRight class="h-4 w-4 opacity-65" />
+                <ChevronRight class="h-3 w-3 opacity-65" />
               </button>
             </HoverCardTrigger>
 
-            <HoverCardContent side="right" align="start" :side-offset="12" class="ws-table-color-menu">
+            <HoverCardContent side="right" align="start" :side-offset="6" class="ws-table-color-menu w-[15rem] rounded-md p-0.5 shadow-lg">
               <div @pointerenter="openColorMenu('text')">
                 <ColorPanel :kinds="['text']" @select="({ kind, value }) => applySelectionColor(kind, value)" />
               </div>
@@ -325,24 +331,37 @@ const runSelectionAction = (actionId: TableSelectionActionId) => {
               }
             ">
             <HoverCardTrigger as-child>
-              <button type="button" class="ws-table-column-menu-item" :class="{ 'ws-table-column-menu-item--active': activeColorMenuKind === 'background' }" @mousedown.prevent @mouseenter="openColorMenu('background')">
-                <PaintBucket class="ws-table-column-menu-icon" />
+              <button
+                type="button"
+                class="ws-table-column-menu-item min-h-8 gap-1.5 rounded-md px-2 py-1.5 text-[11px]"
+                :class="{ 'ws-table-column-menu-item--active': activeColorMenuKind === 'background' }"
+                @mousedown.prevent
+                @mouseenter="openColorMenu('background')"
+              >
+                <PaintBucket class="ws-table-column-menu-icon h-3.5 w-3.5" />
                 <span class="flex-1 text-left">
                   {{ t("writingStudio.toolbar.table.columnMenu.colors.background.title") }}
                 </span>
-                <ChevronRight class="h-4 w-4 opacity-65" />
+                <ChevronRight class="h-3 w-3 opacity-65" />
               </button>
             </HoverCardTrigger>
 
-            <HoverCardContent side="right" align="start" :side-offset="12" class="ws-table-color-menu">
+            <HoverCardContent side="right" align="start" :side-offset="6" class="ws-table-color-menu w-[15rem] rounded-md p-0.5 shadow-lg">
               <div @pointerenter="openColorMenu('background')">
                 <ColorPanel :kinds="['background']" @select="({ kind, value }) => applySelectionColor(kind, value)" />
               </div>
             </HoverCardContent>
           </HoverCard>
 
-          <button v-if="selectedCellCount > 1 && canMergeSelectedCells" type="button" class="ws-table-column-menu-item" @mousedown.prevent @mouseenter="closeColorMenu" @click="mergeSelectedCells">
-            <TableCellsMerge class="ws-table-column-menu-icon" />
+          <button
+            v-if="selectedCellCount > 1 && canMergeSelectedCells"
+            type="button"
+            class="ws-table-column-menu-item min-h-8 gap-1.5 rounded-md px-2 py-1.5 text-[11px]"
+            @mousedown.prevent
+            @mouseenter="closeColorMenu"
+            @click="mergeSelectedCells"
+          >
+            <TableCellsMerge class="ws-table-column-menu-icon h-3.5 w-3.5" />
             <span class="flex-1 text-left">
               {{ t("writingStudio.toolbar.table.selectionMenu.mergeCells") }}
             </span>
@@ -352,12 +371,12 @@ const runSelectionAction = (actionId: TableSelectionActionId) => {
             v-for="action in tableSelectionActions"
             :key="action.id"
             type="button"
-            class="ws-table-column-menu-item"
+            class="ws-table-column-menu-item min-h-8 gap-1.5 rounded-md px-2 py-1.5 text-[11px]"
             :class="{ 'ws-table-column-menu-item--danger': action.destructive }"
             @mousedown.prevent
             @mouseenter="closeColorMenu"
             @click="runSelectionAction(action.id)">
-            <component :is="action.icon" class="ws-table-column-menu-icon" />
+            <component :is="action.icon" class="ws-table-column-menu-icon h-3.5 w-3.5" />
             <span class="flex-1 text-left">
               {{ t(action.labelKey) }}
             </span>

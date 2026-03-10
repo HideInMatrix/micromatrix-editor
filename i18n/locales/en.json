@@ -63,6 +63,7 @@
         "imageNodes": "Images",
         "listNodes": "Lists",
         "blockNodes": "Block Nodes",
+        "mathNodes": "Math",
         "insertNodes": "Insert Nodes",
         "tableNodes": "Table Nodes"
       },
@@ -70,8 +71,18 @@
         "nodeBlocks": "Node Blocks",
         "codeActions": "Code Commands",
         "imageActions": "Image Load Methods",
+        "mathActions": "Math Nodes",
         "mediaInline": "Media & Inline",
         "tableActions": "Table Actions"
+      },
+      "mathEditor": {
+        "editInline": "Add a TeX equation",
+        "editBlock": "Add a TeX equation",
+        "defaultInline": "Edit formula",
+        "defaultBlock": "Enter a formula using LaTeX syntax",
+        "hint": "Enter a formula using LaTeX syntax, then save to update it",
+        "placeholder": "Enter a formula using LaTeX syntax, for example: \\frac{a}{b} or \\int_a^b x^2 \\, dx",
+        "done": "Done"
       },
       "code": {
         "language": "Code Language",
@@ -177,8 +188,8 @@
       "audio": "Enter audio URL (mp3/wav/ogg, etc.)",
       "youtube": "Enter YouTube URL",
       "twitch": "Enter Twitch URL",
-      "inlineMath": "Enter inline math LaTeX",
-      "blockMath": "Enter block math LaTeX",
+      "inlineMath": "Enter an inline formula using LaTeX syntax",
+      "blockMath": "Enter a block formula using LaTeX syntax",
       "emoji": "Enter emoji shortcode (for example: grinning)",
       "mention": "Enter mention value (without {'@'})"
     }

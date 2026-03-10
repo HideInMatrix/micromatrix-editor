@@ -56,9 +56,9 @@ const filteredBackgroundColorEntries = computed(() => {
 </script>
 
 <template>
-  <ScrollArea class="ws-table-color-scroll">
-    <div v-if="filteredTextColorEntries.length > 0" class="ws-table-color-section">
-      <div class="ws-table-color-title">
+  <ScrollArea class="ws-table-color-scroll h-[14rem] max-h-[60vh]">
+    <div v-if="filteredTextColorEntries.length > 0" class="ws-table-color-section gap-0.5 p-0.5">
+      <div class="ws-table-color-title px-1.5 py-0.5 text-[11px]">
         {{ t("writingStudio.toolbar.table.columnMenu.colors.text.title") }}
       </div>
 
@@ -66,15 +66,15 @@ const filteredBackgroundColorEntries = computed(() => {
         v-for="[value, preset] in filteredTextColorEntries"
         :key="`text-${value}`"
         type="button"
-        class="ws-table-color-item"
+        class="ws-table-color-item gap-1.5 rounded-md px-1.5 py-1 text-[11px]"
         @mousedown.prevent
         @click="emit('select', { kind: 'text', value })"
       >
         <span
-          class="ws-table-color-swatch"
+          class="ws-table-color-swatch h-7 w-7 rounded-md"
           :style="{ color: preset.textColor ?? 'oklch(var(--foreground))' }"
         >
-          <Type class="h-6 w-6" />
+          <Type class="h-3.5 w-3.5" />
         </span>
         <span>{{ t(preset.labelKey) }}</span>
       </button>
@@ -82,11 +82,11 @@ const filteredBackgroundColorEntries = computed(() => {
 
     <Separator
       v-if="filteredTextColorEntries.length > 0 && filteredBackgroundColorEntries.length > 0"
-      class="my-3"
+      class="my-1.5"
     />
 
-    <div v-if="filteredBackgroundColorEntries.length > 0" class="ws-table-color-section">
-      <div class="ws-table-color-title">
+    <div v-if="filteredBackgroundColorEntries.length > 0" class="ws-table-color-section gap-0.5 p-0.5">
+      <div class="ws-table-color-title px-1.5 py-0.5 text-[11px]">
         {{ t("writingStudio.toolbar.table.columnMenu.colors.background.title") }}
       </div>
 
@@ -94,15 +94,15 @@ const filteredBackgroundColorEntries = computed(() => {
         v-for="[value, preset] in filteredBackgroundColorEntries"
         :key="`background-${value}`"
         type="button"
-        class="ws-table-color-item"
+        class="ws-table-color-item gap-1.5 rounded-md px-1.5 py-1 text-[11px]"
         @mousedown.prevent
         @click="emit('select', { kind: 'background', value })"
       >
         <span
-          class="ws-table-color-swatch"
+          class="ws-table-color-swatch h-7 w-7 rounded-md"
           :style="{ color: preset.backgroundColor ?? 'oklch(var(--muted-foreground))' }"
         >
-          <Square class="h-6 w-6 fill-current" />
+          <Square class="h-3.5 w-3.5 fill-current" />
         </span>
         <span>{{ t(preset.labelKey) }}</span>
       </button>

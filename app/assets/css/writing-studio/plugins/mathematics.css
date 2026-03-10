@@ -1,0 +1,46 @@
+.writing-editor .tiptap .tiptap-mathematics-render {
+  transition: background-color 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease, transform 0.18s ease;
+}
+
+.writing-editor .tiptap .tiptap-mathematics-render--editable[data-type="inline-math"] {
+  display: inline-flex;
+  align-items: center;
+  margin: 0 0.075rem;
+  border: 1px solid transparent;
+  border-radius: 0.25rem;
+  background: oklch(var(--muted) / 0.72);
+  padding: 0.05rem 0.25rem;
+  cursor: pointer;
+}
+
+.writing-editor .tiptap .tiptap-mathematics-render--editable[data-type="inline-math"]:hover {
+  border-color: oklch(var(--border));
+  background: oklch(var(--accent) / 0.82);
+}
+
+.writing-editor .tiptap .tiptap-mathematics-render--editable[data-type="block-math"] {
+  position: relative;
+  margin: 0.5rem 0;
+  overflow-x: auto;
+  border: 1px solid oklch(var(--border) / 0.92);
+  border-radius: 0.25rem;
+  padding: 0.5rem;
+  cursor: pointer;
+}
+
+.writing-editor .tiptap .tiptap-mathematics-render--editable[data-type="block-math"]:hover {
+  background: oklch(var(--muted) / 0.9);
+}
+
+.writing-editor .tiptap .tiptap-mathematics-render .katex {
+  font-size: 0.9em;
+}
+
+.writing-editor .tiptap .tiptap-mathematics-render[data-type="block-math"] .block-math-inner {
+  min-width: max-content;
+}
+
+.writing-editor .tiptap .inline-math-error,
+.writing-editor .tiptap .block-math-error {
+  color: oklch(0.63 0.22 25);
+}

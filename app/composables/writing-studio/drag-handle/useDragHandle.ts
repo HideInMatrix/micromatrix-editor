@@ -47,6 +47,8 @@ const dragHandleNestedOptions: NestedOptions = {
 
 // 初始化拖拽数据，避免部分浏览器拖拽异常
 const handleDragHandleStart = (event: DragEvent) => {
+  console.log("拖动了");
+  
   queueMicrotask(() => {
     if (!event.dataTransfer) {
       return;

@@ -81,6 +81,7 @@ const readImageAsDataUrl = (
 // 杂项编辑动作（文本样式、媒体、表格等）
 export const useWritingStudioOtherActions = (editor: WritingStudioEditorRef) => {
   const { t } = useI18n();
+  const createDefaultMathLatex = (content: string) => `\\text{${content}}`;
 
   // 对齐属性写入失败时，补一层 DOM 样式兜底
   const applyImageAlignDomFallback = (imagePos: number, align: "left" | "center" | "right") => {
@@ -373,31 +374,17 @@ export const useWritingStudioOtherActions = (editor: WritingStudioEditorRef) => 
   };
 
   const insertInlineMath = () => {
-    const latex = promptValue(
-      t("writingStudio.prompts.inlineMath"),
-      "E = mc^2",
-    );
-
-    if (!latex) {
-      return;
-    }
-
     const chain = editor.value?.chain().focus() as any;
-    chain?.insertInlineMath?.({ latex }).run();
+    chain?.insertInlineMath?.({
+      latex: createDefaultMathLatex(t("writingStudio.toolbar.mathEditor.defaultInline")),
+    }).run();
   };
 
   const insertBlockMath = () => {
-    const latex = promptValue(
-      t("writingStudio.prompts.blockMath"),
-      "\\sum_{i=1}^{n} x_i",
-    );
-
-    if (!latex) {
-      return;
-    }
-
     const chain = editor.value?.chain().focus() as any;
-    chain?.insertBlockMath?.({ latex }).run();
+    chain?.insertBlockMath?.({
+      latex: createDefaultMathLatex(t("writingStudio.toolbar.mathEditor.defaultBlock")),
+    }).run();
   };
 
   // 插入 emoji，失败时回退为 shortcode 文本
