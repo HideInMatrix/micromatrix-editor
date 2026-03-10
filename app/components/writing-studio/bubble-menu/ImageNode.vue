@@ -7,18 +7,19 @@ import {
   AlignRight,
 } from "lucide-vue-next";
 import { Button } from "@/components/ui/button";
-
-type ImageAlignValue = "left" | "center" | "right";
+import { useWritingStudioOtherActions } from "~/composables/writing-studio/actions/useOtherActions";
+import { useWritingStudioToolbarState } from "~/composables/writing-studio/toolbar/useState";
 
 const props = defineProps<{
   editor: Editor | null | undefined;
-  toolbarButtonClass: (isActive: boolean) => string;
-  setImageAlign: (align: ImageAlignValue) => void;
 }>();
 
 const { t } = useI18n();
+const editorRef = computed(() => props.editor);
+const { toolbarButtonClass } = useWritingStudioToolbarState(editorRef);
+const { setImageAlign } = useWritingStudioOtherActions(editorRef);
 
-const currentImageAlign = (): ImageAlignValue => {
+const currentImageAlign = (): "left" | "center" | "right" => {
   const alignment = props.editor?.getAttributes("image").align;
 
   if (alignment === "left" || alignment === "center" || alignment === "right") {

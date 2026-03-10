@@ -27,15 +27,16 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useWritingStudioBlockActions } from "~/composables/writing-studio/actions/useBlockActions";
 import { useWritingStudioCodeBlockLanguages } from "~/composables/writing-studio/extensions/useCodeBlockLowlightExtension";
 
 const props = defineProps<{
   editor: Editor | null | undefined;
-  setCodeBlockLanguage: (language: string) => void;
-  setCodeBlockWrap: (wrap: boolean) => void;
 }>();
 
 const { t } = useI18n();
+const editorRef = computed(() => props.editor);
+const { setCodeBlockLanguage, setCodeBlockWrap } = useWritingStudioBlockActions(editorRef);
 const codeBlockLanguages = useWritingStudioCodeBlockLanguages();
 const isLanguageMenuOpen = ref(false);
 const isSettingsMenuOpen = ref(false);
@@ -175,7 +176,7 @@ const formatLanguageLabel = (language: string) => {
 };
 
 const selectCodeLanguage = (language: string) => {
-  props.setCodeBlockLanguage(language);
+  setCodeBlockLanguage(language);
   lastCodeBlockLanguage.value = language;
   isLanguageMenuOpen.value = false;
 };
@@ -208,7 +209,7 @@ const copyCodeBlock = async () => {
 
 const toggleCodeWrap = () => {
   const nextWrap = !currentCodeBlockWrap.value;
-  props.setCodeBlockWrap(nextWrap);
+  setCodeBlockWrap(nextWrap);
   lastCodeBlockWrap.value = nextWrap;
   isSettingsMenuOpen.value = false;
 };

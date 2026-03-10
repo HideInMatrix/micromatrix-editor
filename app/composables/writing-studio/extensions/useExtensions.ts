@@ -15,6 +15,7 @@ import { useWritingStudioLinkExtension } from "./useLinkExtension";
 import { useWritingStudioMathematicsExtension } from "./useMathematicsExtension";
 import { useWritingStudioMediaExtensions } from "./useMediaExtensions";
 import { useMarkdownExtension } from "./useMarkdown";
+import { useWritingStudioPlaceholderExtension } from "./usePlaceholderExtension";
 import { useWritingStudioTableExtensions } from "./useTableExtensions";
 import { useWritingStudioTwitchParent } from "./useTwitchParent";
 
@@ -26,6 +27,7 @@ export const useWritingStudioExtensions = () => {
   const linkExtension = useWritingStudioLinkExtension();
   const mathematicsExtension = useWritingStudioMathematicsExtension();
   const mediaExtensions = useWritingStudioMediaExtensions(twitchParent);
+  const placeholderExtension = useWritingStudioPlaceholderExtension();
   const tableExtensions = useWritingStudioTableExtensions();
 
   return [
@@ -34,6 +36,7 @@ export const useWritingStudioExtensions = () => {
       link: false,
       underline: false,
     }),
+    placeholderExtension,
     codeBlockLowlightExtension,
     Highlight.configure({
       multicolor: true,

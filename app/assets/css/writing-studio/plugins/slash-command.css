@@ -1,0 +1,18 @@
+.writing-editor .tiptap p.ws-empty-node::before {
+  color: oklch(var(--muted-foreground) / 0.7);
+  content: attr(data-placeholder);
+  float: left;
+  height: 0;
+  pointer-events: none;
+}
+
+.ws-slash-command-menu {
+  width: min(22rem, calc(100vw - 2rem));
+  z-index: 40;
+}
+
+.ws-slash-command-empty {
+  padding: 0.875rem;
+  color: oklch(var(--muted-foreground));
+  font-size: 0.75rem;
+}

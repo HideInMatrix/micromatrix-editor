@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { Editor } from "@tiptap/vue-3";
 import {
   ImagePlus,
   Link2,
@@ -21,19 +22,15 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
+import { useWritingStudioOtherActions } from "~/composables/writing-studio/actions/useOtherActions";
 
-withDefaults(defineProps<{
-  disabled?: boolean;
-}>(), {
-  disabled: false,
-});
-
-const emit = defineEmits<{
-  (event: "insert-upload"): void;
-  (event: "insert-link", url: string): void;
+const props = defineProps<{
+  editor: Editor | null | undefined;
 }>();
 
 const { t } = useI18n();
+const editorRef = computed(() => props.editor);
+const { insertImageByUrl, insertImageUpload } = useWritingStudioOtherActions(editorRef);
 const isLinkDialogOpen = ref(false);
 const imageLink = ref("https://");
 
@@ -47,11 +44,12 @@ const closeLinkDialog = () => {
 
 const submitImageLink = () => {
   const url = imageLink.value.trim();
+
   if (!url) {
     return;
   }
 
-  emit("insert-link", url);
+  insertImageByUrl(url);
   closeLinkDialog();
 };
 </script>
@@ -60,19 +58,19 @@ const submitImageLink = () => {
   <Dialog v-model:open="isLinkDialogOpen">
     <DropdownMenu>
       <DropdownMenuTrigger as-child>
-        <Button variant="outline" size="sm" :disabled="disabled" class="h-8 px-2 text-xs">
+        <Button variant="outline" size="sm" :disabled="!editor" class="h-8 px-2 text-xs">
           <ImagePlus />
           {{ t("writingStudio.toolbar.groups.imageNodes") }}
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start" class="w-56">
         <DropdownMenuLabel>{{ t("writingStudio.toolbar.labels.imageActions") }}</DropdownMenuLabel>
-        <DropdownMenuItem :disabled="disabled" @select.prevent="emit('insert-upload')">
+        <DropdownMenuItem :disabled="!editor" @select.prevent="insertImageUpload">
           <ImagePlus />
           {{ t("writingStudio.toolbar.image.upload") }}
         </DropdownMenuItem>
         <DropdownMenuSeparator />
-        <DropdownMenuItem :disabled="disabled" @select.prevent="openLinkDialog">
+        <DropdownMenuItem :disabled="!editor" @select.prevent="openLinkDialog">
           <Link2 />
           {{ t("writingStudio.toolbar.insert.imageByUrl") }}
         </DropdownMenuItem>
@@ -96,7 +94,7 @@ const submitImageLink = () => {
           <Button type="button" variant="outline" @click="closeLinkDialog">
             {{ t("writingStudio.toolbar.image.cancel") }}
           </Button>
-          <Button type="submit" :disabled="!imageLink.trim()">
+          <Button type="submit" :disabled="!editor || !imageLink.trim()">
             {{ t("writingStudio.toolbar.image.insertConfirm") }}
           </Button>
         </DialogFooter>

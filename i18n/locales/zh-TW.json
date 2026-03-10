@@ -94,6 +94,11 @@
         "enableWrap": "開啟自動換行",
         "disableWrap": "關閉自動換行"
       },
+      "slash": {
+        "title": "快速插入",
+        "placeholder": "輸入 / 開啟選單",
+        "empty": "沒有符合的命令"
+      },
       "block": {
         "paragraph": "段落",
         "heading1": "標題 1",
@@ -106,6 +111,7 @@
         "bulletList": "無序清單",
         "orderedList": "有序清單",
         "taskList": "任務清單",
+        "clearList": "取消列表",
         "codeBlock": "程式碼區塊（Lowlight）",
         "details": "摺疊詳情",
         "hardBreak": "硬換行",

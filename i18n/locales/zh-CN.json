@@ -94,6 +94,11 @@
         "enableWrap": "开启自动换行",
         "disableWrap": "关闭自动换行"
       },
+      "slash": {
+        "title": "快捷插入",
+        "placeholder": "输入 / 打开菜单",
+        "empty": "没有匹配的命令"
+      },
       "block": {
         "paragraph": "段落",
         "heading1": "一级标题",
@@ -106,6 +111,7 @@
         "bulletList": "无序列表",
         "orderedList": "有序列表",
         "taskList": "任务列表",
+        "clearList": "取消列表",
         "codeBlock": "代码块（Lowlight）",
         "details": "折叠详情",
         "hardBreak": "硬换行",

@@ -94,6 +94,11 @@
         "enableWrap": "Enable word wrap",
         "disableWrap": "Disable word wrap"
       },
+      "slash": {
+        "title": "Quick insert",
+        "placeholder": "Type / to browse options",
+        "empty": "No matching commands"
+      },
       "block": {
         "paragraph": "Paragraph",
         "heading1": "Heading 1",
@@ -106,6 +111,7 @@
         "bulletList": "Bullet List",
         "orderedList": "Ordered List",
         "taskList": "Task List",
+        "clearList": "Clear List",
         "codeBlock": "Code Block (Lowlight)",
         "details": "Details",
         "hardBreak": "Hard Break",

@@ -1,5 +1,6 @@
 @import "./plugins/editor-base.css";
 @import "./plugins/drag-handle.css";
+@import "./plugins/slash-command.css";
 @import "./plugins/heading.css";
 @import "./plugins/blockquote.css";
 @import "./plugins/code-block.css";

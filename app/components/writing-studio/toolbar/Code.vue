@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { Editor } from "@tiptap/vue-3";
 import { Code2 } from "lucide-vue-next";
 import { Button } from "@/components/ui/button";
 import {
@@ -8,28 +9,25 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useWritingStudioBlockActions } from "~/composables/writing-studio/actions/useBlockActions";
+import { useWritingStudioOtherActions } from "~/composables/writing-studio/actions/useOtherActions";
+import { useWritingStudioToolbarState } from "~/composables/writing-studio/toolbar/useState";
 
-withDefaults(defineProps<{
-  disabled?: boolean;
-  isCodeActive: boolean;
-  isCodeBlockActive: boolean;
-  dropdownItemClass: (active?: boolean) => string;
-}>(), {
-  disabled: false,
-});
-
-const emit = defineEmits<{
-  (event: "toggle-code"): void;
-  (event: "toggle-code-block"): void;
+const props = defineProps<{
+  editor: Editor | null | undefined;
 }>();
 
 const { t } = useI18n();
+const editorRef = computed(() => props.editor);
+const { dropdownItemClass, isMarkActive, isNodeActive } = useWritingStudioToolbarState(editorRef);
+const { toggleCode } = useWritingStudioOtherActions(editorRef);
+const { toggleCodeBlock } = useWritingStudioBlockActions(editorRef);
 </script>
 
 <template>
   <DropdownMenu>
     <DropdownMenuTrigger as-child>
-      <Button variant="outline" size="sm" :disabled="disabled" class="h-8 px-2 text-xs">
+      <Button variant="outline" size="sm" :disabled="!editor" class="h-8 px-2 text-xs">
         <Code2 />
         {{ t("writingStudio.toolbar.groups.codeNodes") }}
       </Button>
@@ -37,16 +35,16 @@ const { t } = useI18n();
     <DropdownMenuContent align="start" class="w-56">
       <DropdownMenuLabel>{{ t("writingStudio.toolbar.labels.codeActions") }}</DropdownMenuLabel>
       <DropdownMenuItem
-        :class="dropdownItemClass(isCodeActive)"
-        :disabled="disabled"
-        @select.prevent="emit('toggle-code')"
+        :class="dropdownItemClass(isMarkActive('code'))"
+        :disabled="!editor"
+        @select.prevent="toggleCode"
       >
         {{ t("writingStudio.toolbar.marks.code") }}
       </DropdownMenuItem>
       <DropdownMenuItem
-        :class="dropdownItemClass(isCodeBlockActive)"
-        :disabled="disabled"
-        @select.prevent="emit('toggle-code-block')"
+        :class="dropdownItemClass(isNodeActive('codeBlock'))"
+        :disabled="!editor"
+        @select.prevent="toggleCodeBlock"
       >
         {{ t("writingStudio.toolbar.block.codeBlock") }}
       </DropdownMenuItem>

@@ -1,9 +1,6 @@
 import type { Editor } from "@tiptap/vue-3";
-import type { ShallowRef } from "vue";
+import type { WritingStudioEditorRef } from "../types/editor";
 import { cn } from "@/lib/utils";
-
-// 工具栏内部使用的编辑器引用类型
-type WritingStudioEditorRef = ShallowRef<Editor | undefined>;
 
 // 提供工具栏渲染与状态判断方法
 export const useWritingStudioToolbarState = (editor: WritingStudioEditorRef) => {
