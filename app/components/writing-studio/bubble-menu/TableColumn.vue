@@ -5,9 +5,10 @@ import { BubbleMenu } from "@tiptap/vue-3/menus";
 import { ArrowLeft, ArrowRight, ChevronRight, CircleX, GripHorizontal, PaintBucket, Trash2, Type } from "lucide-vue-next";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import ColorPanel from "@/components/writing-studio/bubble-menu/table/ColorPanel.vue";
+import ColorPanel from "@/components/writing-studio/table/ColorPanel.vue";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
 import { Input } from "@/components/ui/input";
+import { useWritingStudioTableColorPanel } from "~/composables/writing-studio/table/useColorPanel";
 import {
   clearWritingStudioSelectedTableCellsContent,
   clearWritingStudioTableColumnContent,
@@ -25,7 +26,6 @@ import {
   selectWritingStudioTableColumn,
   setWritingStudioTableSelectedCellColors,
   setWritingStudioTableColumnCellColors,
-  useWritingStudioTableColumnColors,
   useWritingStudioTableColumnMenuState,
   type WritingStudioTableCellColorValue,
   type WritingStudioTableColorKind,
@@ -55,7 +55,9 @@ const isMenuOpen = ref(false);
 const activeColorMenuKind = ref<WritingStudioTableColorKind | null>(null);
 const searchQuery = ref("");
 const { activeCell, isColumnSelection, selectionOverlay } = useWritingStudioTableColumnMenuState(editorRef);
-const colorPresets = useWritingStudioTableColumnColors();
+const { hasVisibleEntries } = useWritingStudioTableColorPanel({
+  searchQuery,
+});
 
 const TABLE_COLUMN_MENU_PLUGIN_KEY = "writing-studio-table-column-menu";
 const TABLE_COLUMN_HANDLE_WIDTH_REM = 2.5;
@@ -88,27 +90,6 @@ const requestColumnMenuPositionUpdate = async () => {
     props.editor.state.tr.setMeta(TABLE_COLUMN_MENU_PLUGIN_KEY, "updatePosition"),
   );
 };
-
-const resolveFilteredColorEntries = (kind: WritingStudioTableColorKind) => {
-  const query = searchQuery.value.trim().toLowerCase();
-  const entries = Object.entries(colorPresets[kind]) as Array<[WritingStudioTableCellColorValue, (typeof colorPresets)[typeof kind][WritingStudioTableCellColorValue]]>;
-
-  if (!query) {
-    return entries;
-  }
-
-  return entries.filter(([, preset]) => {
-    return t(preset.labelKey).toLowerCase().includes(query);
-  });
-};
-
-const filteredTextColorEntries = computed(() => {
-  return resolveFilteredColorEntries("text");
-});
-
-const filteredBackgroundColorEntries = computed(() => {
-  return resolveFilteredColorEntries("background");
-});
 
 const tableColumnActions = computed<TableColumnActionItem[]>(() => {
   return [
@@ -161,11 +142,11 @@ const filteredTableActions = computed(() => {
 
   return tableColumnActions.value.filter((action) => {
     if (action.id === "textColor") {
-      return action.label.toLowerCase().includes(query) || action.keyword.includes(query) || filteredTextColorEntries.value.length > 0;
+      return action.label.toLowerCase().includes(query) || action.keyword.includes(query) || hasVisibleEntries("text");
     }
 
     if (action.id === "backgroundColor") {
-      return action.label.toLowerCase().includes(query) || action.keyword.includes(query) || filteredBackgroundColorEntries.value.length > 0;
+      return action.label.toLowerCase().includes(query) || action.keyword.includes(query) || hasVisibleEntries("background");
     }
 
     return action.label.toLowerCase().includes(query) || action.keyword.includes(query);

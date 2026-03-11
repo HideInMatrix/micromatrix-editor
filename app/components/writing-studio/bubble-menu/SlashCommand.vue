@@ -250,10 +250,6 @@ const shouldShowSlashMenu = ({ state }: { state: EditorState }) => {
       class="overflow-hidden rounded-xl border bg-popover shadow-lg"
       @mousedown.prevent
     >
-      <div class="border-b px-3 py-2 text-xs font-medium text-muted-foreground">
-        {{ t("writingStudio.toolbar.slash.title") }}
-      </div>
-
       <div v-if="visibleSlashMenuGroups.length === 0" class="ws-slash-command-empty">
         {{ t("writingStudio.toolbar.slash.empty") }}
       </div>

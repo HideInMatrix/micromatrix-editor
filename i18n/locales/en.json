@@ -95,7 +95,6 @@
         "disableWrap": "Disable word wrap"
       },
       "slash": {
-        "title": "Quick insert",
         "placeholder": "Type / to browse options",
         "empty": "No matching commands"
       },

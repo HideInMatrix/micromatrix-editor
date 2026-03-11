@@ -95,7 +95,6 @@
         "disableWrap": "关闭自动换行"
       },
       "slash": {
-        "title": "快捷插入",
         "placeholder": "输入 / 打开菜单",
         "empty": "没有匹配的命令"
       },

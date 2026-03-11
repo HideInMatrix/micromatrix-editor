@@ -6,7 +6,7 @@ import { ArrowDownToLine, ArrowUpToLine, ChevronRight, GripVertical, PaintBucket
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
-import ColorPanel from "@/components/writing-studio/bubble-menu/table/ColorPanel.vue";
+import ColorPanel from "@/components/writing-studio/table/ColorPanel.vue";
 import {
   getWritingStudioTableColorPreset,
   mergeWritingStudioSelectedTableCells,

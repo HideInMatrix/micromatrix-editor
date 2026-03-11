@@ -95,7 +95,6 @@
         "disableWrap": "關閉自動換行"
       },
       "slash": {
-        "title": "快速插入",
         "placeholder": "輸入 / 開啟選單",
         "empty": "沒有符合的命令"
       },
