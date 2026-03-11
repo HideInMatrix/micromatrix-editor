@@ -8,7 +8,7 @@
   </bubble-menu>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { BubbleMenu } from '@tiptap/vue-3/menus'
 
 const editor = inject('editor')

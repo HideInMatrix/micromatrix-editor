@@ -24,7 +24,8 @@
   </menus-button>
 </template>
 
-<script setup>
+<script setup lang="ts">
+import { t } from '@/composables/i18n'
 import nzh from 'nzh/cn'
 
 import { getSelectionText } from '@/utils/selection'
@@ -34,6 +35,7 @@ const container = inject('container')
 
 const options = [
   {
+    value: 'money-uppercase',
     label: '数字小写金额 → 中文大写金额',
     desc: '人民币伍佰肆拾叁元贰角壹分',
     fn(text) {
@@ -46,17 +48,20 @@ const options = [
     },
   },
   {
+    value: 'number-to-lowercase',
     label: '阿拉伯数字 → 中文小写',
     desc: '十万零一百一十一',
     fn: (text) => nzh.encodeS(text),
   },
   {
+    value: 'scientific-to-lowercase',
     label: '科学记数法 → 中文小写',
     desc: '1.23456789e+21',
     fn: (text) => nzh.encodeS(text),
     divider: true,
   },
   {
+    value: 'money-to-number',
     label: '中文大写金额 → 数字小写金额',
     desc: '￥54,321.00',
     fn(text) {
@@ -81,6 +86,7 @@ const options = [
     },
   },
   {
+    value: 'lowercase-to-number',
     label: '中文小写 → 阿拉伯数字',
     desc: '54321',
     fn: (text) => nzh.decodeS(text),

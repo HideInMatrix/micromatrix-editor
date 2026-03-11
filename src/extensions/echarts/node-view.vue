@@ -35,7 +35,7 @@
   </node-view-wrapper>
 </template>
 
-<script setup>
+<script setup lang="ts">
 // tiptap 组件
 import { nodeViewProps, NodeViewWrapper } from '@tiptap/vue-3'
 // 拖拽组件

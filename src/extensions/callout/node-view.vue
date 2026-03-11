@@ -47,7 +47,7 @@
   </node-view-wrapper>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { NodeViewContent, nodeViewProps, NodeViewWrapper } from '@tiptap/vue-3'
 const props = defineProps(nodeViewProps)
 const attrs = $computed(() => props.node.attrs)

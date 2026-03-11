@@ -77,13 +77,16 @@
   </div>
 </template>
 
-<script setup>
-const props = defineProps({
-  defaultColor: {
-    type: String,
-    default: '#000',
+<script setup lang="ts">
+import { t } from '@/composables/i18n'
+const props = withDefaults(
+  defineProps<{
+    defaultColor?: string
+  }>(),
+  {
+    defaultColor: '#000',
   },
-})
+)
 const emits = defineEmits(['change'])
 
 const container = inject('container')
@@ -97,7 +100,7 @@ const color = $ref(props.defaultColor)
 
 // 更多颜色
 const moreColorPicker = $ref(false)
-const colorChange = (color, ctx) => {
+const colorChange = (color, ctx?) => {
   if (ctx && ctx.trigger !== 'palette-saturation-brightness') {
     return
   }

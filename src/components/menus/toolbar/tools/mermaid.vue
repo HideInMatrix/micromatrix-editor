@@ -70,7 +70,8 @@
   </menus-button>
 </template>
 
-<script setup>
+<script setup lang="ts">
+import { t } from '@/composables/i18n'
 import { getSelectionNode } from '@/utils/selection'
 import { shortId } from '@/utils/short-id'
 import { svgToDataURL } from '@/utils/file'
@@ -101,7 +102,7 @@ const themes = [
   { label: t('tools.mermaid.themes.forest'), value: 'forest' },
   { label: t('tools.mermaid.themes.neutral'), value: 'neutral' },
 ]
-let localConfig = $ref({})
+let localConfig = $ref<any>({})
 
 const copyCode = () => {
   const { copy } = useClipboard({

@@ -31,13 +31,28 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
+import { t } from '@/composables/i18n'
 import { getShortcut } from '@/utils/shortcut'
+
+type ShortcutItem = {
+  label: string
+  keys: string[]
+  icon?: string
+  html?: string
+  tag?: string
+  className?: string
+}
+
+type ShortcutGroup = {
+  title: string
+  items: ShortcutItem[]
+}
 
 const options = inject('options')
 const $document = useState('document', options)
 
-const shortcuts = $ref([
+const shortcuts = $ref<ShortcutGroup[]>([
   {
     title: t('shortcut.commonlyUsed'),
     items: [

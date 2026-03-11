@@ -9,6 +9,7 @@
   </menus-button>
 </template>
 
-<script setup>
+<script setup lang="ts">
+import { t } from '@/composables/i18n'
 const dialogVisible = $ref(false)
 </script>

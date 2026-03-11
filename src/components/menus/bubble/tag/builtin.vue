@@ -20,7 +20,7 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 const tags = [
   {
     color: '#999',

@@ -26,7 +26,8 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
+import { t } from '@/composables/i18n'
 import { TextSelection } from '@tiptap/pm/state'
 
 const container = inject('container')
@@ -92,7 +93,9 @@ const headingActive = (value) => {
   const pageContainer = document.querySelector(
     `${container} .umo-zoomable-container`,
   )
-  const pageHeader = pageContainer?.querySelector('.umo-page-node-header')
+  const pageHeader = pageContainer?.querySelector(
+    '.umo-page-node-header',
+  ) as HTMLElement | null
   if (!nodeElement || !pageContainer || !pageHeader) {
     return
   }
@@ -138,7 +141,12 @@ const resize = (e) => {
     const minWidth = baseTocWidth / 1.5
     const maxWidth = baseTocWidth * 2
     if (newWidth >= minWidth && newWidth <= maxWidth) {
-      const tocContainer = umoPageContainer.querySelector('.umo-toc-container')
+      const tocContainer = umoPageContainer.querySelector(
+        '.umo-toc-container',
+      ) as HTMLElement | null
+      if (!tocContainer) {
+        return
+      }
       tocContainer.style.width = `${newWidth}px`
     }
   }

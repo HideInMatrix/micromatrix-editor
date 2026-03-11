@@ -20,33 +20,38 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { getSelectionNode } from '@/utils/selection'
 
 const callouts = [
   {
     type: 'default',
     icon: '💬',
+    color: 'inherit',
     backgroundColor: 'rgba(0, 0, 0, 0.05)',
   },
   {
     type: 'danger',
     icon: '🚫',
+    color: 'inherit',
     backgroundColor: 'rgb(252, 223, 220)',
   },
   {
     type: 'primary',
     icon: '📎',
+    color: 'inherit',
     backgroundColor: 'rgb(217, 231, 255)',
   },
   {
     type: 'warning',
     icon: '💡',
+    color: 'inherit',
     backgroundColor: 'rgb(255, 245, 210)',
   },
   {
     type: 'success',
     icon: '✅',
+    color: 'inherit',
     backgroundColor: 'rgb(205, 245, 235)',
   },
 ]

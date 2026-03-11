@@ -52,7 +52,8 @@
   </t-config-provider>
 </template>
 
-<script setup>
+<script setup lang="ts">
+import { l } from '@/composables/i18n'
 import {
   isBoolean,
   isNumber,
@@ -125,7 +126,7 @@ const defaultOptions = inject('defaultOptions', {})
 const options = ref(getOpitons(props, defaultOptions))
 const editor = ref(null)
 const savedAt = ref(null)
-const page = ref({})
+const page = ref<Record<string, any>>({})
 const blockMenu = ref(false)
 const imageViewer = ref({ visible: false, current: null })
 const searchReplace = ref(false)
@@ -511,7 +512,7 @@ watch(
 )
 
 // Global Locale Config
-const localeConfig = $ref({
+const localeConfig = $ref<Record<string, any>>({
   'zh-CN': cnConfig,
   'en-US': enConfig,
 })
@@ -519,7 +520,7 @@ const localeConfig = $ref({
 // Options Setup
 const setOptions = (value) => {
   try {
-    options.value = getOpitons(value)
+    options.value = getOpitons(value, defaultOptions)
     const $locale = useStorage('umo-editor:locale', options.value.locale)
     if (!$locale.value) {
       $locale.value = options.value.locale
@@ -873,7 +874,10 @@ const getVanillaHTML = async () => {
   await nextTick()
   const pageNode = document
     .querySelector(`${container} .umo-page-content`)
-    ?.cloneNode(true)
+    ?.cloneNode(true) as HTMLElement | null
+  if (!pageNode) {
+    return ''
+  }
   if (!readOnly) {
     options.value.document.readOnly = false
   }
@@ -1049,7 +1053,6 @@ const saveContent = async (showMessage = true) => {
         duration: 0, // 需要手工关闭，不会自动关闭了
         offset: [0, -20],
       },
-      getCurrentInstance(),
     )
     const _saveBack = await options.value?.onSave?.(
       {

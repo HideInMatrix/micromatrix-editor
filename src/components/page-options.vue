@@ -217,7 +217,8 @@
   </modal>
 </template>
 
-<script setup>
+<script setup lang="ts">
+import { l, t } from '@/composables/i18n'
 const props = defineProps({
   visible: {
     type: Boolean,
@@ -230,7 +231,7 @@ const container = inject('container')
 const page = inject('page')
 const options = inject('options')
 
-let pageOptions = $ref({})
+let pageOptions = $ref<any>({})
 watch(
   () => props.visible,
   (visible) => {

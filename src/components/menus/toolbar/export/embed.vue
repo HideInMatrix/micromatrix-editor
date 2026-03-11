@@ -28,7 +28,8 @@
   </modal>
 </template>
 
-<script setup>
+<script setup lang="ts">
+import { t } from '@/composables/i18n'
 const options = inject('options')
 const container = inject('container')
 let dialogVisible = $ref(false)

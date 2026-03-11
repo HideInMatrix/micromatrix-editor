@@ -71,14 +71,15 @@
   </menus-button>
 </template>
 
-<script setup>
+<script setup lang="ts">
+import { t } from '@/composables/i18n'
 const { popupVisible } = usePopup()
 const container = inject('container')
 const editor = inject('editor')
 const $toolbar = useState('toolbar', inject('options'))
 const popupContentRef = ref(null)
 
-const options = $ref([
+const options = $ref<Array<{ label: string; desc: string; value: string | number }>>([
   { label: t('base.heading.paragraph'), desc: 'text', value: 'paragraph' },
 ])
 for (const i of Array.from({ length: 6 }).keys()) {

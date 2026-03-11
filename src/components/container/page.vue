@@ -81,7 +81,7 @@
       v-model:visible="imageViewer.visible"
       v-model:index="currentImageIndex"
       :images="previewImages"
-      :trigger="() => {}"
+      :trigger="emptyImageTrigger"
       @close="imageViewer.visible = false"
     />
     <container-search-replace />
@@ -89,10 +89,11 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 const container = inject('container')
 const imageViewer = inject('imageViewer')
 const pageOptions = inject('page')
+const emptyImageTrigger = () => null
 
 // 页面大小
 const pageSize = $computed(() => {

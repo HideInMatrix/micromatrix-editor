@@ -27,7 +27,8 @@
   </menus-button>
 </template>
 
-<script setup>
+<script setup lang="ts">
+import { l, t } from '@/composables/i18n'
 const { popupVisible, togglePopup } = usePopup()
 const editor = inject('editor')
 const options = inject('options')

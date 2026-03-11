@@ -135,7 +135,8 @@
   </tooltip>
 </template>
 
-<script setup>
+<script setup lang="ts">
+import { t } from '@/composables/i18n'
 import { timeAgo } from '@/utils/time-ago'
 const emits = defineEmits(['menu-change'])
 
@@ -146,6 +147,13 @@ const options = inject('options')
 const $toolbar = useState('toolbar', options)
 let statusPopup = $ref(false)
 const online = useOnline()
+
+type ToolbarModeOption = {
+  label: string
+  value: string
+  prefixIcon: string
+  divider?: boolean
+}
 
 // 工具栏菜单
 const defaultToolbarMenus = [
@@ -181,7 +189,7 @@ watch(
 )
 
 // 切换编辑器模式
-const editorModeOptions = [
+const editorModeOptions: ToolbarModeOption[] = [
   {
     label: t('toolbar.ribbon'),
     value: 'ribbon',

@@ -214,7 +214,8 @@
   </menus-button>
 </template>
 
-<script setup>
+<script setup lang="ts">
+import { t } from '@/composables/i18n'
 import { Input } from 'tdesign-vue-next'
 
 import {
@@ -255,9 +256,9 @@ let settingChart = null
 // 基础模型下默认设置界面，0: 图形界面 1: 数据界面
 let baseModeSet = $ref(0)
 // baseConfig 可视化界面下的配置，需要保存的动态数据
-let baseConfig = $ref({ data: [], config: {} })
+let baseConfig = $ref<any>({ data: [], config: {} })
 // 基础数据，不会改变的数据
-let baseData = {}
+let baseData = $ref<any>({})
 // 弹出窗显示
 const menuClick = () => {
   if (dialogVisible) {

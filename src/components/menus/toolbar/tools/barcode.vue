@@ -211,7 +211,8 @@
   </menus-button>
 </template>
 
-<script setup>
+<script setup lang="ts">
+import { l, t } from '@/composables/i18n'
 import JsBarcode from 'jsbarcode'
 
 import { getSelectionNode } from '@/utils/selection'

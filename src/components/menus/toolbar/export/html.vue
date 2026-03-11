@@ -2,7 +2,8 @@
   <menus-button ico="html5" text="HTML" huge @menu-click="saveHtmlFile" />
 </template>
 
-<script setup>
+<script setup lang="ts">
+import { t } from '@/composables/i18n'
 import { saveAs } from 'file-saver'
 
 const editor = inject('editor')

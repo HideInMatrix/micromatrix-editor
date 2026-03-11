@@ -67,7 +67,8 @@
   </menus-button>
 </template>
 
-<script setup>
+<script setup lang="ts">
+import { t } from '@/composables/i18n'
 import SmoothSignature from 'smooth-signature'
 
 import { shortId } from '@/utils/short-id'

@@ -43,7 +43,8 @@
   </menus-button>
 </template>
 
-<script setup>
+<script setup lang="ts">
+import { t } from '@/composables/i18n'
 import { getSelectionNode } from '@/utils/selection'
 
 const { popupVisible, togglePopup } = usePopup()

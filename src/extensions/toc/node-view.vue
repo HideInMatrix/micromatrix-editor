@@ -29,7 +29,7 @@
   </node-view-wrapper>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { TextSelection } from '@tiptap/pm/state'
 import { nodeViewProps, NodeViewWrapper } from '@tiptap/vue-3'
 

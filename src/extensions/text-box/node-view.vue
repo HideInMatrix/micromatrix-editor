@@ -48,7 +48,7 @@
   </node-view-wrapper>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { NodeViewContent, nodeViewProps, NodeViewWrapper } from '@tiptap/vue-3'
 import Drager from 'es-drager'
 

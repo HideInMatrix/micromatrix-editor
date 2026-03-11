@@ -9,7 +9,8 @@
   />
 </template>
 
-<script setup>
+<script setup lang="ts">
+import { t } from '@/composables/i18n'
 import domtoimage from 'dom-to-image-more'
 import { saveAs } from 'file-saver'
 

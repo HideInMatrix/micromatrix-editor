@@ -39,7 +39,8 @@
   </menus-button>
 </template>
 
-<script setup>
+<script setup lang="ts">
+import { l, t } from '@/composables/i18n'
 import { isString } from '@tool-belt/type-predicates'
 
 const editor = inject('editor')
@@ -48,7 +49,17 @@ const $toolbar = useState('toolbar', options)
 const $recent = useState('recent', options)
 const typeWriterIsRunning = inject('typeWriterIsRunning')
 
-const usedFonts = $ref([])
+type FontOption = {
+  label: any
+  value: string
+}
+
+type FontGroup = {
+  label: string
+  children: FontOption[]
+}
+
+const usedFonts = $ref<string[]>([])
 // https://www.cnblogs.com/gaidalou/p/8479452.html
 const fontDetect = (font) => {
   if (!font) {
@@ -93,18 +104,22 @@ const fontDetect = (font) => {
   )
 }
 
-const allFonts = computed(() => {
-  const all = [
+const allFonts = computed<FontGroup[]>(() => {
+  const all: FontGroup[] = [
     {
       label: t('base.fontFamily.all'),
-      children: options.value.dicts?.fonts,
+      children: (options.value.dicts?.fonts || []) as FontOption[],
     },
   ]
   // 通过字体值获取字体列表
-  const getFontsByValues = (values) => {
-    return values.map((item) =>
-      options.value.dicts?.fonts.find(({ value }) => value === item),
-    )
+  const getFontsByValues = (values: string[]) => {
+    return values
+      .map((item) =>
+        ((options.value.dicts?.fonts || []) as FontOption[]).find(
+          ({ value }) => value === item,
+        ),
+      )
+      .filter((item): item is FontOption => Boolean(item))
   }
   if ($recent.value.fonts.length > 0) {
     all.unshift({

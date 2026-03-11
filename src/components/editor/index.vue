@@ -34,7 +34,7 @@
   </template>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { migrateMathStrings } from '@tiptap/extension-mathematics'
 import { Editor, EditorContent } from '@tiptap/vue-3'
 
@@ -87,7 +87,7 @@ const editorInstance = new Editor({
     }
   },
   onUpdate({ editor }) {
-    addHistory(historyRecords, 'editor', editor?.state?.history$)
+    addHistory(historyRecords, 'editor', (editor?.state as any)?.history$)
     updateDebounce(editor)
   },
 })

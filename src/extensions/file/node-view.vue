@@ -82,7 +82,7 @@
   </node-view-wrapper>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { isAsyncFunction, isFunction } from '@tool-belt/type-predicates'
 import { nodeViewProps, NodeViewWrapper } from '@tiptap/vue-3'
 import prettyBytes from 'pretty-bytes'

@@ -94,6 +94,7 @@
     "@umoteam/editor-external": "10.0.0",
     "@vueuse/core": "14.2.1",
     "dom-to-image-more": "3.7.2",
+    "element-plus": "^2.13.5",
     "es-drager": "1.2.11",
     "fast-glob": "3.3.3",
     "file-saver": "2.0.5",
@@ -135,7 +136,7 @@
     "rolldown": "1.0.0-rc.5"
   },
   "lint-staged": {
-    "*.{js,vue,less}": [
+    "*.{js,ts,vue,less}": [
       "oxfmt --write src",
       "oxlint --fix src"
     ]

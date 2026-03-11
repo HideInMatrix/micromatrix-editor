@@ -1,4 +1,5 @@
 <template>
+  <!-- @vue-ignore -->
   <drag-handle
     :editor="editor"
     class="umo-block-menu-drag-handle"
@@ -25,7 +26,7 @@
   </drag-handle>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { DragHandle } from '@tiptap/extension-drag-handle-vue-3'
 
 const editor = inject('editor')

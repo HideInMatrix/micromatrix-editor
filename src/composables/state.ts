@@ -25,5 +25,5 @@ export function useState(key, editorOptions) {
   if (key === 'layout') {
     return useStorage(storageKey, 'page')
   }
-  throw new Error('[useStorage]', { cause: 'Key is not valid' })
+  throw new Error('[useStorage] Key is not valid')
 }

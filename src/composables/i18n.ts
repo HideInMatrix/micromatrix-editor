@@ -6,13 +6,16 @@ const { global } = i18n
 
 export const { t } = global
 
-export const l = (data) => {
+export const l = (data): string | undefined => {
   if (typeof data === 'string') {
     return data
   }
 
   if (isRecord(data)) {
-    return data[global.locale.value.replace('-', '_')]
+    const localized = data[global.locale.value.replace('-', '_')]
+    if (typeof localized === 'string') {
+      return localized
+    }
   }
 }
 

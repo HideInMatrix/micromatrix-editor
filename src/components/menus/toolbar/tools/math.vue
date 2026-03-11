@@ -81,7 +81,8 @@
   </menus-button>
 </template>
 
-<script setup>
+<script setup lang="ts">
+import { t } from '@/composables/i18n'
 import { loadResource } from '@/utils/load-resource'
 
 const props = defineProps({
@@ -185,7 +186,7 @@ const templates = [
 ]
 
 let dialogVisible = $ref(false)
-const containerRef = $ref()
+const containerRef = $ref<HTMLElement | null>(null)
 let latexLoaded = $ref(false)
 let latexValue = $ref('')
 
@@ -228,6 +229,9 @@ const renderMath = async (type) => {
       throwOnError: false,
       output: 'mathml',
     })
+  if (!containerRef) {
+    return
+  }
   if (type === 'templates') {
     containerRef.querySelectorAll('.umo-math-select-item').forEach((el) => {
       render(el.textContent, el)

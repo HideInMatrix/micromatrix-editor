@@ -167,7 +167,8 @@
   </template>
 </template>
 
-<script setup>
+<script setup lang="ts">
+import { t } from '@/composables/i18n'
 import { CellSelection } from '@tiptap/pm/tables'
 
 const editor = inject('editor')

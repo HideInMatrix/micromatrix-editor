@@ -9,7 +9,7 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { shortId } from '@/utils/short-id'
 
 const editorRef = $ref(null)

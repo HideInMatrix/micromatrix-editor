@@ -111,7 +111,8 @@
   </menus-button>
 </template>
 
-<script setup>
+<script setup lang="ts">
+import { t } from '@/composables/i18n'
 import { qrcode } from 'pure-svg-code'
 
 import { getSelectionNode } from '@/utils/selection'
@@ -140,6 +141,7 @@ const levels = [
   { label: t('tools.qrcode.levelQ'), value: 'Q' },
   { label: t('tools.qrcode.levelH'), value: 'H' },
 ]
+type ErrorCorrectionLevel = 'L' | 'M' | 'Q' | 'H'
 const defaultConfig = {
   content: '',
   padding: 1,
@@ -147,7 +149,7 @@ const defaultConfig = {
   height: 256,
   color: '#000000',
   background: '#ffffff',
-  ecl: 'M',
+  ecl: 'M' as ErrorCorrectionLevel,
 }
 
 let config = $ref({ ...defaultConfig })

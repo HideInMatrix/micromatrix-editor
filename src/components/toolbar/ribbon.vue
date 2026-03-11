@@ -279,17 +279,22 @@
   </div>
 </template>
 
-<script setup>
-const props = defineProps({
-  menus: {
-    type: Array,
-    default: () => [],
+<script setup lang="ts">
+type ToolbarMenu = {
+  label: string
+  value: string
+}
+
+const props = withDefaults(
+  defineProps<{
+    menus?: ToolbarMenu[]
+    currentMenu?: string
+  }>(),
+  {
+    menus: () => [],
+    currentMenu: '',
   },
-  currentMenu: {
-    type: String,
-    default: '',
-  },
-})
+)
 const emits = defineEmits(['menu-change'])
 
 const options = inject('options')

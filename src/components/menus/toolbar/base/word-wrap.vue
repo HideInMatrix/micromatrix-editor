@@ -14,7 +14,8 @@
   </menus-button>
 </template>
 
-<script setup>
+<script setup lang="ts">
+import { t } from '@/composables/i18n'
 const editor = inject('editor')
 
 const wordWraps = computed(() => [

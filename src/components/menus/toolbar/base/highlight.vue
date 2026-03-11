@@ -40,7 +40,8 @@
   </menus-button>
 </template>
 
-<script setup>
+<script setup lang="ts">
+import { t } from '@/composables/i18n'
 const editor = inject('editor')
 
 const options = [
@@ -62,7 +63,7 @@ const options = [
   },
 ]
 
-let highlight = $ref()
+let highlight = $ref<(typeof options)[number] | undefined>(undefined)
 const highlightChange = (item) => {
   if (!item) {
     highlightChange(options[0])

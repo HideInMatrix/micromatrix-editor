@@ -56,7 +56,8 @@
   </menus-button>
 </template>
 
-<script setup>
+<script setup lang="ts">
+import { l, t } from '@/composables/i18n'
 const props = defineProps({
   pageType: {
     type: Number,
@@ -79,7 +80,11 @@ const webPages = $ref([
     validate: (url) => url.startsWith('http://') || url.startsWith('https://'),
   },
 ])
-const formData = $ref({
+const formData = $ref<{
+  type: string | number
+  url: string
+  error: boolean
+}>({
   type: '',
   url: '',
   error: false,

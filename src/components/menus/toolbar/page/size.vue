@@ -34,7 +34,8 @@
   </menus-button>
 </template>
 
-<script setup>
+<script setup lang="ts">
+import { l, t } from '@/composables/i18n'
 const page = inject('page')
 const options = inject('options')
 const dialogVisible = $ref(false)

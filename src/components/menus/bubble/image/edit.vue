@@ -18,7 +18,7 @@
   />
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { getSelectionNode } from '@/utils/selection'
 
 const editor = inject('editor')

@@ -2,6 +2,6 @@
   <menus-button text="PDF" ico="pdf" huge @menu-click="exportFile.pdf = true" />
 </template>
 
-<script setup>
+<script setup lang="ts">
 const exportFile = inject('exportFile')
 </script>

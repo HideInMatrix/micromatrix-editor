@@ -9,7 +9,8 @@
   />
 </template>
 
-<script setup>
+<script setup lang="ts">
+import { t } from '@/composables/i18n'
 /* 重做*/
 const historyRecords = inject('historyRecords')
 

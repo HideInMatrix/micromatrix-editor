@@ -80,7 +80,8 @@
   </modal>
 </template>
 
-<script setup>
+<script setup lang="ts">
+import { t } from '@/composables/i18n'
 import { version } from '@/utils/copyright'
 
 const props = defineProps({

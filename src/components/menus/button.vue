@@ -320,92 +320,53 @@
   </t-tooltip>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { isString } from '@tool-belt/type-predicates'
 
 import { getShortcut } from '@/utils/shortcut'
 
+type MenuButtonProps = {
+  menuType?: string
+  huge?: boolean
+  forceHuge?: boolean
+  ico?: string
+  text?: string
+  hideText?: boolean
+  tooltip?: string | boolean
+  shortcut?: string
+  shortcutText?: string
+  selectOptions?: any[]
+  selectValue?: string | number
+  popupVisible?: boolean
+  popupHandle?: string
+  menuActive?: boolean
+  disabled?: boolean
+  forceEnabled?: boolean
+}
+
 const { selectVisible } = useSelect()
 
-const props = defineProps({
-  // 菜单类型
-  menuType: {
-    type: String,
-    default: 'button',
-  },
-  // 是否为大按钮
-  huge: {
-    type: Boolean,
-    default: false,
-  },
-  // 是否强制为大按钮，用于测试，不建议使用
-  forceHuge: {
-    type: Boolean,
-    default: false,
-  },
-  // 按钮图标
-  ico: {
-    type: String,
-    default: undefined,
-  },
-  // 按钮文字
-  text: {
-    type: String,
-    default: '',
-  },
-  hideText: {
-    type: Boolean,
-    default: false,
-  },
-  // 文字提示
-  tooltip: {
-    type: [String, Boolean],
-    default: undefined,
-  },
-  // 快捷键
-  shortcut: {
-    type: String,
-    default: undefined,
-  },
-  shortcutText: {
-    type: String,
-    default: undefined,
-  },
-  // Dropdown,Select 相关
-  selectOptions: {
-    type: Array,
-    default: undefined,
-  },
-  selectValue: {
-    type: [String, Number],
-    default: '',
-  },
-  // Popup 相关
-  popupVisible: {
-    type: Boolean,
-    default: false,
-  },
-  popupHandle: {
-    type: String,
-    default: undefined,
-  },
-  // 菜单激活状态
-  menuActive: {
-    type: Boolean,
-    default: false,
-  },
-  disabled: {
-    type: Boolean,
-    default: false,
-  },
-  forceEnabled: {
-    type: Boolean,
-    default: false,
-  },
+const props = withDefaults(defineProps<MenuButtonProps>(), {
+  menuType: 'button',
+  huge: false,
+  forceHuge: false,
+  ico: undefined,
+  text: '',
+  hideText: false,
+  tooltip: undefined,
+  shortcut: undefined,
+  shortcutText: undefined,
+  selectOptions: undefined,
+  selectValue: '',
+  popupVisible: false,
+  popupHandle: undefined,
+  menuActive: false,
+  disabled: false,
+  forceEnabled: false,
 })
 const emits = defineEmits(['toggle-popup'])
 
-const attrs = useAttrs()
+const attrs = useAttrs() as Record<string, any>
 const container = inject('container')
 const editor = inject('editor')
 const options = inject('options')

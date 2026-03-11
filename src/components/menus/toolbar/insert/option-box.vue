@@ -91,7 +91,8 @@
   </menus-button>
 </template>
 
-<script setup>
+<script setup lang="ts">
+import { t } from '@/composables/i18n'
 import { shortId } from '@/utils/short-id'
 const { popupVisible, togglePopup } = usePopup()
 const container = inject('container')
