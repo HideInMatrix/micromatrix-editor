@@ -1,8 +1,8 @@
 <template>
-  <node-view-wrapper class="umo-node-view">
+  <node-view-wrapper class="mxm-node-view">
     <t-popup
-      :attach="`${container} .umo-zoomable-container`"
-      overlay-inner-class-name="umo-editor-bubble-menu"
+      :attach="`${container} .mxm-zoomable-container`"
+      overlay-inner-class-name="mxm-editor-bubble-menu"
       trigger="click"
       :visible="
         editor?.isEditable &&
@@ -12,7 +12,7 @@
       @visible-change="(visible) => (bubbleMenu = visible)"
     >
       <div
-        class="umo-node-container hover-shadow umo-node-callout"
+        class="mxm-node-container hover-shadow mxm-node-callout"
         :style="{
           color: attrs.fontColor,
           backgroundColor: attrs.backgroundColor,
@@ -20,27 +20,27 @@
       >
         <span
           v-if="attrs.icon"
-          class="umo-node-callout-icon"
+          class="mxm-node-callout-icon"
           contenteditable="false"
           >{{ attrs.icon }}</span
         >
         <node-view-content
-          class="umo-node-callout-content"
+          class="mxm-node-callout-content"
           :class="{
-            'umo-node-callout-empty': node.content.size <= 2,
+            'mxm-node-callout-empty': node.content.size <= 2,
           }"
           :data-placeholder="t('callout.placeholder')"
         />
       </div>
       <template #content>
         <menus-bubble-callout-builtin />
-        <div class="umo-bubble-menu-divider"></div>
+        <div class="mxm-bubble-menu-divider"></div>
         <menus-toolbar-insert-emoji @select-emoji="selectEmoji" />
         <menus-bubble-callout-emoji-remove
           v-if="editor.getAttributes('callout').icon"
         />
         <menus-bubble-callout-background />
-        <div class="umo-bubble-menu-divider"></div>
+        <div class="mxm-bubble-menu-divider"></div>
         <menus-bubble-node-delete />
       </template>
     </t-popup>
@@ -64,9 +64,9 @@ const selectEmoji = (emoji) => {
 </script>
 
 <style lang="less">
-.umo-node-callout {
+.mxm-node-callout {
   padding: 8px 12px;
-  border-radius: var(--umo-radius);
+  border-radius: var(--mxm-radius);
   display: flex;
   width: 100%;
   border: 1px solid rgba(0, 0, 0, 0.2);
@@ -82,7 +82,7 @@ const selectEmoji = (emoji) => {
     text-overflow: ellipsis;
     white-space: nowrap;
 
-    &.umo-node-callout-empty {
+    &.mxm-node-callout-empty {
       display: flex;
       align-items: center;
       line-height: 1.5;

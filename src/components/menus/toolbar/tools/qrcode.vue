@@ -15,8 +15,8 @@
         <icon name="qrcode" />
         {{ content ? t('tools.qrcode.edit') : t('tools.qrcode.text') }}
       </template>
-      <div class="umo-qrcode-container">
-        <div class="umo-qrcode-toolbar">
+      <div class="mxm-qrcode-container">
+        <div class="mxm-qrcode-toolbar">
           <menus-button
             style="width: 126px"
             :text="t('tools.qrcode.level')"
@@ -76,7 +76,7 @@
             @change="(value) => (config.background = value)"
           />
         </div>
-        <div class="umo-qrcode-code">
+        <div class="mxm-qrcode-code">
           <t-textarea
             v-model="config.content"
             maxlength="200"
@@ -88,22 +88,22 @@
           </t-textarea>
           <div
             v-if="renderError && config.content !== ''"
-            class="umo-barcode-error"
+            class="mxm-barcode-error"
             v-text="t('tools.qrcode.renderError')"
           ></div>
         </div>
-        <div class="umo-qrcode-render">
+        <div class="mxm-qrcode-render">
           <div
-            class="umo-qrcode-title"
+            class="mxm-qrcode-title"
             v-text="t('tools.qrcode.preview')"
           ></div>
-          <div class="umo-qrcode-svg umo-scrollbar">
+          <div class="mxm-qrcode-svg mxm-scrollbar">
             <div
               v-if="!svgCode"
-              class="umo-qrcode-empty"
+              class="mxm-qrcode-empty"
               v-text="t('tools.qrcode.notEmpty')"
             ></div>
-            <div v-else class="umo-svg-render" v-html="svgCode"></div>
+            <div v-else class="mxm-svg-render" v-html="svgCode"></div>
           </div>
         </div>
       </div>
@@ -231,53 +231,53 @@ const setQrcode = () => {
 </script>
 
 <style lang="less" scoped>
-.umo-qrcode-container {
+.mxm-qrcode-container {
   padding: 2px;
-  .umo-qrcode-toolbar {
+  .mxm-qrcode-toolbar {
     margin-bottom: 10px;
     display: flex;
     align-items: center;
   }
-  .umo-qrcode-code {
+  .mxm-qrcode-code {
     margin-bottom: 10px;
-    :deep(.umo-textarea__inner) {
+    :deep(.mxm-textarea__inner) {
       height: 100%;
       resize: none;
     }
-    .umo-barcode-error {
+    .mxm-barcode-error {
       font-size: 12px;
-      color: var(--umo-error-color);
+      color: var(--mxm-error-color);
     }
   }
-  .umo-qrcode-render {
+  .mxm-qrcode-render {
     border: solid 1px var(--td-border-level-2-color);
-    border-radius: var(--umo-radius);
+    border-radius: var(--mxm-radius);
     position: relative;
     overflow: hidden;
     box-sizing: border-box;
-    .umo-qrcode-title {
-      background-color: var(--umo-button-hover-background);
+    .mxm-qrcode-title {
+      background-color: var(--mxm-button-hover-background);
       padding: 0 10px;
       position: absolute;
       font-size: 12px;
-      border-bottom-right-radius: var(--umo-radius);
+      border-bottom-right-radius: var(--mxm-radius);
     }
-    .umo-qrcode-empty {
-      color: var(--umo-text-color-light);
+    .mxm-qrcode-empty {
+      color: var(--mxm-text-color-light);
       font-size: 12px;
       margin: 40px;
     }
-    .umo-qrcode-svg {
+    .mxm-qrcode-svg {
       box-sizing: border-box;
       padding: 30px 10px;
       min-height: 100px;
       overflow: auto;
-      color: var(--umo-text-color);
+      color: var(--mxm-text-color);
       display: flex;
       align-items: center;
       justify-content: center;
-      > .umo-svg-render {
-        border: solid 1px var(--umo-border-color-light);
+      > .mxm-svg-render {
+        border: solid 1px var(--mxm-border-color-light);
         :deep(svg) {
           display: block;
           width: 256px;

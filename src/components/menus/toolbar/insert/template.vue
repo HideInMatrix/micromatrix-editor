@@ -5,7 +5,7 @@
     :text="t('insert.template')"
     menu-type="dropdown"
     huge
-    overlay-class-name="umo-templates-dropdown"
+    overlay-class-name="mxm-templates-dropdown"
   >
     <template #dropmenu>
       <t-dropdown-menu>
@@ -19,10 +19,10 @@
           }"
           @click="setTemplate(item)"
         >
-          <div class="umo-templates-dropdown-title">{{ item.title }}</div>
+          <div class="mxm-templates-dropdown-title">{{ item.title }}</div>
           <div
             v-if="item.description && item.description !== ''"
-            class="umo-templates-dropdown-description"
+            class="mxm-templates-dropdown-description"
           >
             {{ item.description }}
           </div>
@@ -46,8 +46,8 @@ const setTemplate = ({ content }) => {
 </script>
 
 <style lang="less">
-.umo-templates-dropdown {
-  .umo-dropdown__item-text {
+.mxm-templates-dropdown {
+  .mxm-dropdown__item-text {
     padding: 5px 5px;
     min-width: 200px;
     max-width: 320px;
@@ -58,7 +58,7 @@ const setTemplate = ({ content }) => {
     font-size: 14px;
   }
   &-description {
-    color: var(--umo-text-color-light);
+    color: var(--mxm-text-color-light);
     white-space: normal;
     line-height: 1.4;
     margin-top: 3px;

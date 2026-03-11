@@ -4,7 +4,7 @@
     :text="t('insert.image.text')"
     menu-type="dropdown"
     huge
-    overlay-class-name="umo-image-dropdown"
+    overlay-class-name="mxm-image-dropdown"
   >
     <template #dropmenu>
       <t-dropdown-menu>
@@ -14,10 +14,10 @@
           :value="item.value"
           @click="insertImage(item.value)"
         >
-          <icon :name="item.icon" class="umo-image-dropdown-icon" />
+          <icon :name="item.icon" class="mxm-image-dropdown-icon" />
           <div>
-            <div class="umo-image-dropdown-title">{{ item.title }}</div>
-            <div class="umo-image-dropdown-description">
+            <div class="mxm-image-dropdown-title">{{ item.title }}</div>
+            <div class="mxm-image-dropdown-description">
               {{ item.description }}
             </div>
           </div>
@@ -57,8 +57,8 @@ const insertImage = (type) => {
 }
 </script>
 <style lang="less">
-.umo-image-dropdown {
-  .umo-dropdown__item-text {
+.mxm-image-dropdown {
+  .mxm-dropdown__item-text {
     padding: 5px 5px;
     display: flex;
     gap: 8px;
@@ -73,7 +73,7 @@ const insertImage = (type) => {
     font-size: 14px;
   }
   &-description {
-    color: var(--umo-text-color-light);
+    color: var(--mxm-text-color-light);
     white-space: normal;
     line-height: 1.4;
     font-size: 12px;

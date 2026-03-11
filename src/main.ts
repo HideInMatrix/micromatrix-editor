@@ -1,12 +1,12 @@
 import { createApp } from 'vue'
 
 import App from './app.vue'
-import { useUmoEditor } from './components'
+import { useMxmEditor } from './components'
 
 const app = createApp(App)
 
 const options = {}
 
-app.use(useUmoEditor, options)
+app.use(useMxmEditor, options)
 
 app.mount('#app')

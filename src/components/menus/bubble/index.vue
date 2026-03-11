@@ -1,5 +1,5 @@
 <template>
-  <bubble-menu v-if="editor" class="umo-editor-bubble-menu" :editor="editor">
+  <bubble-menu v-if="editor" class="mxm-editor-bubble-menu" :editor="editor">
     <menus-bubble-menus v-if="options?.document?.enableBubbleMenu">
       <template #bubble_menu="props">
         <slot name="bubble_menu" v-bind="props" />
@@ -16,34 +16,34 @@ const options = inject('options')
 </script>
 
 <style lang="less">
-.umo-editor-bubble-menu {
+.mxm-editor-bubble-menu {
   max-width: 580px;
   z-index: 110;
-  border-radius: var(--umo-radius);
+  border-radius: var(--mxm-radius);
   display: flex;
   align-items: center;
   flex-wrap: wrap;
   padding: 8px 10px !important;
-  box-shadow: var(--umo-shadow);
-  border: 1px solid var(--umo-border-color);
-  background-color: var(--umo-color-white);
+  box-shadow: var(--mxm-shadow);
+  border: 1px solid var(--mxm-border-color);
+  background-color: var(--mxm-color-white);
 
   &:empty {
     display: none;
   }
 
-  .umo-menu-button.show-text .umo-button-content .umo-button-text {
+  .mxm-menu-button.show-text .mxm-button-content .mxm-button-text {
     display: none !important;
   }
 
-  .umo-menu-button.huge {
+  .mxm-menu-button.huge {
     height: var(--td-comp-size-xs);
     min-width: unset;
 
-    .umo-button-content {
+    .mxm-button-content {
       min-width: unset !important;
 
-      .umo-icon {
+      .mxm-icon {
         font-size: 16px;
         margin-top: 0;
       }

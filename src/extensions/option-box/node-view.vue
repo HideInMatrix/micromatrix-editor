@@ -1,12 +1,12 @@
 <template>
   <node-view-wrapper
     as="span"
-    class="umo-node-option-box"
+    class="mxm-node-option-box"
     @click.capture="editor?.commands.setNodeSelection(getPos())"
   >
     <span
       v-if="attrs.target === 'radio'"
-      class="umo-option-box-radio-container"
+      class="mxm-option-box-radio-container"
     >
       <span
         v-for="(box, index) in attrs.items"
@@ -23,7 +23,7 @@
       </span>
     </span>
 
-    <span v-else class="umo-option-box-checkbox-container">
+    <span v-else class="mxm-option-box-checkbox-container">
       <span v-if="attrs.checkAll" class="option-item">
         <t-checkbox
           key="checkallInxex"
@@ -128,17 +128,17 @@ const radioChange = (index) => {
 </script>
 
 <style lang="less">
-.umo-node-option-box {
+.mxm-node-option-box {
   margin-left: 0.25em;
   margin-right: 0.25em;
   display: inline-block;
 
-  .umo-option-box-checkbox-container {
+  .mxm-option-box-checkbox-container {
     display: flex;
     flex-wrap: wrap;
     gap: 0.5em;
 
-    .umo-checkbox {
+    .mxm-checkbox {
       font: inherit !important;
       color: inherit !important;
       transform: translateY(0.1em);
@@ -159,12 +159,12 @@ const radioChange = (index) => {
     }
   }
 
-  .umo-option-box-radio-container {
+  .mxm-option-box-radio-container {
     display: flex;
     flex-wrap: wrap;
     gap: 0.5em;
 
-    .umo-radio {
+    .mxm-radio {
       font: inherit !important;
       color: inherit !important;
       transform: translateY(-0.1em);

@@ -1,5 +1,5 @@
 {
-  "welcome": "%c感谢使用 Umo Editor%c当前版本：v{version}，更多信息请访问：{homepage}",
+  "welcome": "%c感谢使用 MxmEditor%c当前版本：v{version}，更多信息请访问：{homepage}",
   "toolbar": {
     "ribbon": "专业工具栏",
     "classic": "经典工具栏",
@@ -663,13 +663,13 @@
     "reset": "立即重置"
   },
   "about": {
-    "title": "关于 Umo Editor",
-    "poweredBy": "由 <a href=\"https://www.umodoc.com\" target=\"_blank\">Umodoc</a> 用爱发电",
+    "title": "关于 MxmEditor",
+    "poweredBy": "由 <a href=\"https://www.umodoc.com\" target=\"_blank\">Mxm</a> 用爱发电",
     "version": "当前版本",
     "openSource": "开源版",
     "documentation": "开发文档",
     "thanks": "感谢每一位贡献者",
-    "next": "了解功能更强大的 <a href=\"https://www.umodoc.com/business\" target=\"_blank\">Umo Editor Next</a>"
+    "next": "了解功能更强大的 <a href=\"https://www.umodoc.com/business\" target=\"_blank\">MxmEditor Next</a>"
   },
   "wordCount": {
     "characters": "字符",

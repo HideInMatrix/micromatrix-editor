@@ -1,11 +1,11 @@
 <template>
   <div
     v-if="$toolbar.mode !== 'classic'"
-    class="umo-toolbar-headding"
+    class="mxm-toolbar-headding"
     :class="{ unfold: popupVisible }"
     :disabled="!editor?.isEditable"
   >
-    <div class="umo-heading-container">
+    <div class="mxm-heading-container">
       <template v-for="(item, index) in options" :key="item.value">
         <div
           v-if="index < 4"
@@ -21,7 +21,7 @@
         :attach="container"
         trigger="click"
         placement="bottom-right"
-        overlay-class-name="umo-heading-container-popup"
+        overlay-class-name="mxm-heading-container-popup"
         destroy-on-close
         :visible="popupVisible"
       >
@@ -29,7 +29,7 @@
           <icon name="arrow-down" />
         </div>
         <template #content>
-          <div ref="popupContentRef" class="umo-heading-container">
+          <div ref="popupContentRef" class="mxm-heading-container">
             <template v-for="(item, index) in options" :key="item.value">
               <div
                 v-if="index >= 4"
@@ -62,7 +62,7 @@
     <t-option
       v-for="item in options"
       :key="item.value"
-      class="umo-heading-select-option"
+      class="mxm-heading-select-option"
       :value="item.value"
       :label="item.label"
     >
@@ -134,13 +134,13 @@ onClickOutside(
     popupVisible.value = false
   },
   {
-    ignore: ['.umo-popup'],
+    ignore: ['.mxm-popup'],
   },
 )
 </script>
 
 <style lang="less" scoped>
-.umo-toolbar-headding {
+.mxm-toolbar-headding {
   width: 318px;
   height: 56px;
   position: relative;
@@ -155,28 +155,28 @@ onClickOutside(
   }
   &.unfold {
     overflow: visible;
-    .umo-heading-container {
-      border-color: var(--umo-border-color-light);
+    .mxm-heading-container {
+      border-color: var(--mxm-border-color-light);
       border-bottom: none;
       border-bottom-left-radius: 0;
       border-bottom-right-radius: 0;
     }
   }
 }
-.umo-heading-container {
+.mxm-heading-container {
   display: flex;
-  background-color: var(--umo-button-hover-background);
+  background-color: var(--mxm-button-hover-background);
   padding: 2px 5px;
   flex-flow: row wrap;
   align-content: flex-start;
-  border-radius: var(--umo-radius);
+  border-radius: var(--mxm-radius);
   box-sizing: border-box;
   border: solid 1px transparent;
   white-space: nowrap;
   .card {
-    background-color: var(--umo-color-white);
-    border: solid 1px var(--umo-border-color-light);
-    border-radius: var(--umo-radius);
+    background-color: var(--mxm-color-white);
+    border: solid 1px var(--mxm-border-color-light);
+    border-radius: var(--mxm-radius);
     margin: 4px 2px;
     text-align: center;
     padding: 5px 10px;
@@ -186,7 +186,7 @@ onClickOutside(
     height: 42px;
     &:hover,
     &.active {
-      border-color: var(--umo-primary-color);
+      border-color: var(--mxm-primary-color);
     }
     .title {
       font-size: 14px;
@@ -217,7 +217,7 @@ onClickOutside(
     }
     .subtitle {
       font-size: 8px;
-      color: var(--umo-text-color-light);
+      color: var(--mxm-text-color-light);
       text-transform: capitalize;
       margin-top: 3px;
       line-height: 1;
@@ -237,15 +237,15 @@ onClickOutside(
     &:hover {
       background-color: rgba(0, 0, 0, 0.05);
     }
-    .umo-icon {
+    .mxm-icon {
       font-size: 12px;
-      color: var(--umo-text-color-light);
+      color: var(--mxm-text-color-light);
     }
   }
 }
 .unfold {
   .arrow {
-    :deep(.umo-icon) {
+    :deep(.mxm-icon) {
       transform: rotate(-180deg);
     }
   }
@@ -253,10 +253,10 @@ onClickOutside(
 </style>
 
 <style lang="less">
-.umo-heading-container-popup {
-  .umo-popup__content {
+.mxm-heading-container-popup {
+  .mxm-popup__content {
     box-shadow: none;
-    border: solid 1px var(--umo-border-color);
+    border: solid 1px var(--mxm-border-color);
     border-top: none;
     border-top-right-radius: 0;
     border-top-left-radius: 0;
@@ -269,13 +269,13 @@ onClickOutside(
     }
   }
 }
-.umo-heading-select-option {
+.mxm-heading-select-option {
   height: auto !important;
   .heading-size {
     line-height: 2em;
     font-weight: 600;
     min-width: 100px;
-    color: var(--umo-text-color);
+    color: var(--mxm-text-color);
   }
   .text {
     font-size: 12px;

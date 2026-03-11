@@ -1,5 +1,5 @@
 {
-  "welcome": "%cThanks for using Umo Editor%cCurrent version: v{version}, More info: {homepage}",
+  "welcome": "%cThanks for using MxmEditor%cCurrent version: v{version}, More info: {homepage}",
   "toolbar": {
     "ribbon": "Professional",
     "classic": "Classic",
@@ -664,13 +664,13 @@
     "reset": "Reset"
   },
   "about": {
-    "title": "About Umo Editor",
-    "poweredBy": "Powered by <a href=\"https://www.umodoc.com/en\" target=\"_blank\">Umodoc</a>",
+    "title": "About MxmEditor",
+    "poweredBy": "Powered by <a href=\"https://www.umodoc.com/en\" target=\"_blank\">Mxm</a>",
     "version": "Version",
     "openSource": "open-source edition",
     "documentation": "Documentation",
     "thanks": "Thanks to all contributors",
-    "next": "Learn more about the more powerful <a href=\"https://www.umodoc.com/business\" target=\"_blank\">Umo Editor Next</a>"
+    "next": "Learn more about the more powerful <a href=\"https://www.umodoc.com/business\" target=\"_blank\">MxmEditor Next</a>"
   },
   "layout": {
     "web": "Web View",

@@ -8,7 +8,7 @@
     @toggle-popup="togglePopup"
   >
     <template #content>
-      <div class="umo-textbox-border-dropdown">
+      <div class="mxm-textbox-border-dropdown">
         <t-popup
           v-model="colorPickerVisible"
           :attach="container"
@@ -16,7 +16,7 @@
           trigger="click"
         >
           <div
-            class="umo-textbox-border-dropdown-item"
+            class="mxm-textbox-border-dropdown-item"
             :class="{ active: colorPickerVisible }"
           >
             <span>
@@ -28,7 +28,7 @@
             </div>
           </div>
           <template #content>
-            <div class="umo-textbox-border-color-picker">
+            <div class="mxm-textbox-border-color-picker">
               <picker-color default-color="#000" @change="colorChange" />
             </div>
           </template>
@@ -39,7 +39,7 @@
           style="width: 120px"
           @click="styleChange"
         >
-          <div class="umo-textbox-border-dropdown-item">
+          <div class="mxm-textbox-border-dropdown-item">
             <span>
               <icon name="border" size="16" />
               {{ t('bubbleMenu.textBox.borderStyle') }}
@@ -55,7 +55,7 @@
               :value="item"
             >
               <div
-                class="umo-textbox-border-style-item"
+                class="mxm-textbox-border-style-item"
                 :style="{
                   'border-top': `${item.style} ${item.width}px currentColor`,
                 }"
@@ -63,7 +63,7 @@
             </t-dropdown-item>
           </t-dropdown-menu>
         </t-dropdown>
-        <div class="umo-textbox-border-dropdown-item" @click="noBorder">
+        <div class="mxm-textbox-border-dropdown-item" @click="noBorder">
           <span>
             <icon name="border-none" size="16" />
             {{ t('bubbleMenu.textBox.noBorder') }}
@@ -135,11 +135,11 @@ const noBorder = () => {
 </script>
 
 <style lang="less">
-.umo-textbox-border {
+.mxm-textbox-border {
   &-dropdown {
     &-item {
       cursor: pointer;
-      border-radius: var(--umo-radius);
+      border-radius: var(--mxm-radius);
       display: flex;
       justify-content: space-between;
       align-items: center;
@@ -150,10 +150,10 @@ const noBorder = () => {
       &:hover,
       &.active {
         background-color: var(--td-bg-color-container-hover);
-        border-radius: var(--umo-radius);
+        border-radius: var(--mxm-radius);
       }
       .arrow {
-        .umo-icon {
+        .mxm-icon {
           transform: rotate(-90deg);
         }
       }
@@ -166,7 +166,7 @@ const noBorder = () => {
         background-color: var(--td-bg-color-container-hover);
       }
       &-title {
-        color: var(--umo-text-color-light);
+        color: var(--mxm-text-color-light);
         padding: 5px 6px;
       }
     }
@@ -176,7 +176,7 @@ const noBorder = () => {
     width: 160px;
   }
 }
-.umo-textbox-border-color-picker {
+.mxm-textbox-border-color-picker {
   padding: 12px;
 }
 </style>

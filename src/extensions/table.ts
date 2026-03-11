@@ -9,7 +9,7 @@ const CustomTable = Table.extend({
     return {
       ...this.parent?.(),
       HTMLAttributes: {
-        class: 'umo-node-table',
+        class: 'mxm-node-table',
       },
       allowTableNodeSelection: true,
       resizable: true,

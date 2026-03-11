@@ -23,14 +23,14 @@
       <t-option
         v-for="item in group.children"
         :key="item.value"
-        class="umo-font-family-item"
+        class="mxm-font-family-item"
         :value="item.value"
         :label="l(item.label)"
       >
         <span :style="{ fontFamily: item.value }" v-text="l(item.label)"></span>
         <span
           v-if="!fontDetect(item.value)"
-          class="umo-font-family-unsupport"
+          class="mxm-font-family-unsupport"
           :title="t('base.fontFamily.unsupport')"
           >!</span
         >
@@ -177,15 +177,15 @@ watch(
 </script>
 
 <style lang="less">
-.umo-font-family-item {
+.mxm-font-family-item {
   > span {
     display: flex;
     align-items: center;
     justify-content: space-between;
     font-size: 14px;
     width: 100%;
-    .umo-font-family-unsupport {
-      color: var(--umo-error-color);
+    .mxm-font-family-unsupport {
+      color: var(--mxm-error-color);
       font-size: 14px;
     }
   }

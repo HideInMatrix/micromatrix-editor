@@ -2,14 +2,14 @@
   <node-view-wrapper
     :id="attrs.id"
     ref="containerRef"
-    class="umo-node-view"
+    class="mxm-node-view"
     :style="nodeStyle"
     @click.capture="editor?.commands.setNodeSelection(getPos())"
   >
     <div
-      class="umo-node-container umo-select-outline umo-node-iframe"
+      class="mxm-node-container mxm-select-outline mxm-node-iframe"
       :class="{
-        'umo-hover-shadow': !options.document?.readOnly,
+        'mxm-hover-shadow': !options.document?.readOnly,
       }"
     >
       <drager
@@ -80,12 +80,12 @@ onClickOutside(containerRef, () => {
 </script>
 
 <style lang="less">
-.umo-node-view {
-  .umo-node-iframe {
+.mxm-node-view {
+  .mxm-node-iframe {
     max-width: 100%;
     .es-drager {
       &:not(.selected) {
-        outline: solid 1px var(--umo-content-node-border);
+        outline: solid 1px var(--mxm-content-node-border);
       }
     }
     iframe {
@@ -95,7 +95,7 @@ onClickOutside(containerRef, () => {
       width: 100%;
       height: 100%;
       border: none;
-      background-color: var(--umo-color-white);
+      background-color: var(--mxm-color-white);
     }
   }
 }

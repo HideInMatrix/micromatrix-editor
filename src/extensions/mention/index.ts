@@ -5,7 +5,7 @@ export default Mention.extend({
     return {
       ...this.parent?.(),
       HTMLAttributes: {
-        class: 'umo-node-mention',
+        class: 'mxm-node-mention',
       },
     }
   },

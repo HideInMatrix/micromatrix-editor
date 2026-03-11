@@ -1,7 +1,7 @@
 {
-  "name": "@umoteam/editor",
+  "name": "@mxmteam/editor",
   "version": "10.0.3",
-  "description": "Umo Editor is open-source document editor based on Vue3 and Tiptap3. Umo Editor provides comprehensive document editing capabilities and AI creation features, supports pagination, supports Markdown syntax, offers basic rich text editing functions, allows for the insertion of various node types in multiple formats, provides a variety of practical tools, and supports setting page styles. It also supports exporting in various formats, printing and print preview, block-level document editing, adding custom extensions, multi-language settings, and a dark theme.",
+  "description": "MxmEditor is open-source document editor based on Vue3 and Tiptap3. MxmEditor provides comprehensive document editing capabilities and AI creation features, supports pagination, supports Markdown syntax, offers basic rich text editing functions, allows for the insertion of various node types in multiple formats, provides a variety of practical tools, and supports setting page styles. It also supports exporting in various formats, printing and print preview, block-level document editing, adding custom extensions, multi-language settings, and a dark theme.",
   "keywords": [
     "docs editor",
     "document editor",
@@ -11,8 +11,8 @@
     "richtext editor",
     "tiptap",
     "tiptap3",
-    "umo editor",
-    "umodoc editor",
+    "mxm editor",
+    "mxmeditor",
     "vue editor",
     "vue3 editor",
     "web editor",
@@ -41,10 +41,10 @@
   "type": "module",
   "exports": {
     ".": {
-      "import": "./dist/umo-editor.js"
+      "import": "./dist/mxm-editor.js"
     },
     "./style": {
-      "import": "./dist/umo-editor.css"
+      "import": "./dist/mxm-editor.css"
     }
   },
   "scripts": {

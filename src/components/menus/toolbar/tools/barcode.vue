@@ -15,8 +15,8 @@
         <icon name="barcode" />
         {{ t('tools.barcode.title') }}
       </template>
-      <div class="umo-barcode-container">
-        <div class="umo-barcode-toolbar">
+      <div class="mxm-barcode-container">
+        <div class="mxm-barcode-toolbar">
           <menus-button
             style="width: 126px"
             :text="t('tools.barcode.format')"
@@ -78,7 +78,7 @@
           >
             <icon name="setting" />
             <template #content>
-              <div class="umo-barcode-toolbar-more">
+              <div class="mxm-barcode-toolbar-more">
                 <t-form size="small" label-align="left">
                   <t-form-item :label="t('tools.barcode.width')">
                     <t-slider
@@ -172,7 +172,7 @@
             </template>
           </menus-button>
         </div>
-        <div class="umo-barcode-code">
+        <div class="mxm-barcode-code">
           <t-input
             v-model="config.content"
             maxlength="44"
@@ -188,19 +188,19 @@
           </t-input>
           <div
             v-if="renderError && config.content"
-            class="umo-barcode-error"
+            class="mxm-barcode-error"
             v-text="t('tools.barcode.error')"
           ></div>
         </div>
-        <div class="umo-barcode-render">
+        <div class="mxm-barcode-render">
           <div
-            class="umo-barcode-title"
+            class="mxm-barcode-title"
             v-text="t('tools.barcode.preview')"
           ></div>
-          <div class="umo-barcode-svg umo-scrollbar">
+          <div class="mxm-barcode-svg mxm-scrollbar">
             <div
               v-if="renderError"
-              class="umo-barcode-empty"
+              class="mxm-barcode-empty"
               v-text="t('tools.barcode.renderError')"
             ></div>
             <svg v-show="!renderError" id="barcode" ref="barcodeSvgRef"></svg>
@@ -367,38 +367,38 @@ const setBarcode = () => {
 </script>
 
 <style lang="less" scoped>
-.umo-barcode-container {
+.mxm-barcode-container {
   padding: 2px;
-  .umo-barcode-toolbar {
+  .mxm-barcode-toolbar {
     margin-bottom: 10px;
     display: flex;
     align-items: center;
   }
-  .umo-barcode-code {
+  .mxm-barcode-code {
     margin-bottom: 10px;
-    :deep(.umo-textarea__inner) {
+    :deep(.mxm-textarea__inner) {
       height: 100%;
       resize: none;
     }
-    .umo-barcode-error {
+    .mxm-barcode-error {
       font-size: 12px;
-      color: var(--umo-error-color);
+      color: var(--mxm-error-color);
     }
   }
-  .umo-barcode-render {
+  .mxm-barcode-render {
     border: solid 1px var(--td-border-level-2-color);
-    border-radius: var(--umo-radius);
+    border-radius: var(--mxm-radius);
     position: relative;
     overflow: hidden;
     box-sizing: border-box;
-    .umo-barcode-title {
-      background-color: var(--umo-button-hover-background);
+    .mxm-barcode-title {
+      background-color: var(--mxm-button-hover-background);
       padding: 0 10px;
       position: absolute;
       font-size: 12px;
-      border-bottom-right-radius: var(--umo-radius);
+      border-bottom-right-radius: var(--mxm-radius);
     }
-    .umo-barcode-svg {
+    .mxm-barcode-svg {
       display: flex;
       align-items: center;
       justify-content: center;
@@ -406,13 +406,13 @@ const setBarcode = () => {
       padding: 30px 10px;
       min-height: 100px;
       overflow: auto;
-      color: var(--umo-text-color);
+      color: var(--mxm-text-color);
       svg {
-        border: solid 1px var(--umo-border-color-light);
+        border: solid 1px var(--mxm-border-color-light);
       }
     }
-    .umo-barcode-empty {
-      color: var(--umo-text-color-light);
+    .mxm-barcode-empty {
+      color: var(--mxm-text-color-light);
       font-size: 12px;
       margin: 20px;
     }
@@ -424,13 +424,13 @@ const setBarcode = () => {
 .barcode-toolbar-more {
   padding: 10px 20px 10px 15px;
   width: 300px;
-  .umo-form__item {
+  .mxm-form__item {
     margin-bottom: 5px;
   }
-  .umo-form__label {
+  .mxm-form__label {
     margin-right: 20px;
   }
-  .umo-divider--horizontal {
+  .mxm-divider--horizontal {
     margin: 10px 0;
   }
 }

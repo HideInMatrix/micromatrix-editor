@@ -1,16 +1,16 @@
 <template>
   <node-view-wrapper
     :id="node.attrs.id"
-    class="umo-node-view"
+    class="mxm-node-view"
     @click.capture="editor?.commands.setNodeSelection(getPos())"
   >
     <div
-      class="umo-node-container umo-hover-shadow umo-select-outline umo-node-toc"
+      class="mxm-node-container mxm-hover-shadow mxm-select-outline mxm-node-toc"
     >
-      <p class="umo-node-toc-head" v-text="t('toc.title')"></p>
-      <div class="umo-node-toc-body">
+      <p class="mxm-node-toc-head" v-text="t('toc.title')"></p>
+      <div class="mxm-node-toc-body">
         <t-tree
-          class="umo-toc-tree"
+          class="mxm-toc-tree"
           :data="tocTreeData"
           :keys="{
             label: 'textContent',
@@ -91,9 +91,9 @@ const headingActive = (value) => {
     `[data-toc-id="${value[0]}"]`,
   )
   const pageContainer = document.querySelector(
-    `${container} .umo-zoomable-container`,
+    `${container} .mxm-zoomable-container`,
   )
-  const pageHeader = pageContainer?.querySelector('.umo-page-node-header')
+  const pageHeader = pageContainer?.querySelector('.mxm-page-node-header')
   pageContainer.scrollTo({
     top: nodeElement.offsetTop + (pageHeader?.offsetHeight || 0),
   })
@@ -106,12 +106,12 @@ const headingActive = (value) => {
 </script>
 
 <style lang="less">
-.umo-node-view {
-  .umo-node-toc {
+.mxm-node-view {
+  .mxm-node-toc {
     padding: 44px 24px 24px 10px;
     position: relative;
-    outline: solid 1px var(--umo-content-node-border);
-    border-radius: var(--umo-content-node-radius);
+    outline: solid 1px var(--mxm-content-node-border);
+    border-radius: var(--mxm-content-node-radius);
     background-color: #fff;
     width: 100%;
     &-head {
@@ -124,24 +124,24 @@ const headingActive = (value) => {
       border-bottom-left-radius: 3px;
       border-bottom-right-radius: 3px;
       background: rgba(black, 0.05);
-      color: var(--umo-primary-color);
+      color: var(--mxm-primary-color);
     }
 
     &-body {
-      .umo-tree__label {
+      .mxm-tree__label {
         margin-left: 0 !important;
         padding: 5px;
         &:hover {
-          color: var(--umo-primary-color);
+          color: var(--mxm-primary-color);
         }
       }
-      .umo-tree__empty {
+      .mxm-tree__empty {
         height: 40px;
         font-size: 12px;
         display: flex;
         align-items: center;
         justify-content: center;
-        color: var(--umo-text-color-light);
+        color: var(--mxm-text-color-light);
         margin-bottom: 15px;
       }
     }

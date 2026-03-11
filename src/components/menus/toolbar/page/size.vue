@@ -3,7 +3,7 @@
     ico="page-size"
     :text="t('page.size.text')"
     menu-type="dropdown"
-    overlay-class-name="umo-page-size-dropdown"
+    overlay-class-name="mxm-page-size-dropdown"
   >
     <template #dropmenu>
       <t-dropdown-menu>
@@ -42,17 +42,17 @@ const dialogVisible = $ref(false)
 </script>
 
 <style lang="less">
-.umo-page-size-dropdown {
-  .umo-dropdown__item {
+.mxm-page-size-dropdown {
+  .mxm-dropdown__item {
     max-width: unset !important;
     &-text {
       padding: 3px;
       .label {
         font-size: 14px;
-        color: var(--umo-text-color);
+        color: var(--mxm-text-color);
       }
       .desc {
-        color: var(--umo-text-color-light);
+        color: var(--mxm-text-color-light);
         margin-top: -3px;
         text-transform: uppercase;
         font-size: 12px;

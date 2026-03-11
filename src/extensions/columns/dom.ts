@@ -121,7 +121,7 @@ export const handleMouseUp = (view, event) => {
     div.className !== 'grid-resize-handle-icon'
   )
     return false
-  const column = div.closest('.umo-node-column')
+  const column = div.closest('.mxm-node-column')
   if (!column) return false
   const boundryPos = view.posAtDOM(column, 0)
   if (!boundryPos) return false

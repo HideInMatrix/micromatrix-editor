@@ -2,14 +2,14 @@
   <node-view-wrapper
     :id="'chartNode-' + attrs.id"
     ref="containerRef"
-    class="umo-node-view"
+    class="mxm-node-view"
     :style="nodeStyle"
     @click.capture="editor?.commands.setNodeSelection(getPos())"
   >
     <div
-      class="umo-node-container umo-node-echarts umo-select-outline"
+      class="mxm-node-container mxm-node-echarts mxm-select-outline"
       :class="{
-        'umo-hover-shadow': !options.document?.readOnly,
+        'mxm-hover-shadow': !options.document?.readOnly,
       }"
       :data-options="
         options.document?.readOnly ? JSON.stringify(chartOption) : null
@@ -29,7 +29,7 @@
         @resize="onResize"
         @focus="selected = true"
       >
-        <div :id="'chart-' + attrs.id" class="umo-node-echarts-body"></div>
+        <div :id="'chart-' + attrs.id" class="mxm-node-echarts-body"></div>
       </drager>
     </div>
   </node-view-wrapper>
@@ -192,8 +192,8 @@ watch(
 </script>
 
 <style lang="less">
-.umo-node-view {
-  .umo-node-echarts {
+.mxm-node-view {
+  .mxm-node-echarts {
     max-width: 100%;
     position: relative;
 
@@ -203,13 +203,13 @@ watch(
       transform: translateX(0px) translateY(0px) rotate(0deg) !important;
     }
 
-    .umo-node-echarts-body {
+    .mxm-node-echarts-body {
       display: block;
       min-height: 200px;
       width: 100%;
       height: 100%;
-      background-color: var(--umo-color-white);
-      outline: solid 1px var(--umo-content-node-border);
+      background-color: var(--mxm-color-white);
+      outline: solid 1px var(--mxm-content-node-border);
     }
   }
 }

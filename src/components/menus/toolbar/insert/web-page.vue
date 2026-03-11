@@ -16,8 +16,8 @@
         <icon name="web-page" />
         {{ t('insert.web.title') }}
       </template>
-      <div class="umo-web-page-container">
-        <div class="umo-web-page-tip" v-text="t('insert.web.tip')"></div>
+      <div class="mxm-web-page-container">
+        <div class="mxm-web-page-tip" v-text="t('insert.web.tip')"></div>
         <t-form :data="formData" label-align="top">
           <t-form-item :label="t('insert.web.type')" name="type">
             <t-select v-model="formData.type">
@@ -28,14 +28,14 @@
                 :value="index"
               >
                 <span
-                  class="umo-web-page-option-icon"
+                  class="mxm-web-page-option-icon"
                   v-html="item.icon"
                 ></span>
                 {{ item.label }}
               </t-option>
               <template #prefixIcon>
                 <span
-                  class="umo-web-page-select-icon"
+                  class="mxm-web-page-select-icon"
                   v-html="webPages[formData.type]?.icon"
                 ></span>
               </template>
@@ -137,17 +137,17 @@ watch(
 </script>
 
 <style lang="less" scoped>
-.umo-web-page {
+.mxm-web-page {
   &-container {
     padding: 2px;
-    :deep(.umo-form) {
+    :deep(.mxm-form) {
       &__item {
         margin-bottom: 10px;
       }
     }
   }
   &-tip {
-    color: var(--umo-text-color-light);
+    color: var(--mxm-text-color-light);
     margin-bottom: 10px;
   }
   &-select-icon {

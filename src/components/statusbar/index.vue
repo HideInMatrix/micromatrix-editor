@@ -1,9 +1,9 @@
 <template>
-  <div v-if="!page.preview?.enabled" class="umo-status-bar">
-    <div class="umo-status-bar-left">
+  <div v-if="!page.preview?.enabled" class="mxm-status-bar">
+    <div class="mxm-status-bar-left">
       <tooltip :content="page.showToc ? t('toc.hide') : t('toc.show')">
         <t-button
-          class="umo-status-bar-button"
+          class="mxm-status-bar-button"
           :class="{ active: page.showToc }"
           variant="text"
           size="small"
@@ -21,7 +21,7 @@
         "
       >
         <t-button
-          class="umo-status-bar-button"
+          class="mxm-status-bar-button"
           :class="{ active: $document.enableSpellcheck }"
           variant="text"
           size="small"
@@ -32,7 +32,7 @@
       </tooltip>
       <tooltip :content="t('shortcut.title')">
         <t-button
-          class="umo-status-bar-button"
+          class="mxm-status-bar-button"
           variant="text"
           size="small"
           @click="showShortcut = true"
@@ -42,7 +42,7 @@
       </tooltip>
       <tooltip :content="t('resetAll.title')">
         <t-button
-          class="umo-status-bar-button"
+          class="mxm-status-bar-button"
           variant="text"
           size="small"
           @click="reset(false)"
@@ -50,7 +50,7 @@
           <icon name="clear-cache" />
         </t-button>
       </tooltip>
-      <div class="umo-status-bar-split"></div>
+      <div class="mxm-status-bar-split"></div>
       <t-dropdown
         :attach="container"
         :popup-props="{
@@ -62,7 +62,7 @@
         trigger="click"
       >
         <t-button
-          class="umo-status-bar-button auto-width"
+          class="mxm-status-bar-button auto-width"
           variant="text"
           size="small"
         >
@@ -83,14 +83,14 @@
             :active="item.value === page.layout"
             @click="page.layout = item.value"
           >
-            <div class="umo-layout-dropdown-item">
+            <div class="mxm-layout-dropdown-item">
               <icon :name="`layout-${item.value}`" size="16" />
               {{ item.content }}
             </div>
           </t-dropdown-item>
         </t-dropdown-menu>
       </t-dropdown>
-      <div class="umo-status-bar-split"></div>
+      <div class="mxm-status-bar-split"></div>
       <t-popup
         v-if="editor"
         v-model="showWordCount"
@@ -98,14 +98,14 @@
         placement="top-left"
       >
         <t-button
-          class="umo-status-bar-button auto-width word-count"
+          class="mxm-status-bar-button auto-width word-count"
           variant="text"
           size="small"
         >
           <span v-if="selectionCharacters > 0">
             {{ selectionCharacters }}/
           </span>
-          <span class="umo-word-count">{{ totalCharacters }}</span>
+          <span class="mxm-word-count">{{ totalCharacters }}</span>
           {{ t('wordCount.characters') }}
           <icon
             name="arrow-down"
@@ -113,8 +113,8 @@
           />
         </t-button>
         <template #content>
-          <div v-if="showWordCount" class="umo-word-count-detail">
-            <div class="umo-word-count-title">{{ t('wordCount.title') }}</div>
+          <div v-if="showWordCount" class="mxm-word-count-detail">
+            <div class="mxm-word-count-title">{{ t('wordCount.title') }}</div>
             <ul>
               <li>
                 {{ t('wordCount.input') }}
@@ -136,23 +136,23 @@
           </div>
         </template>
       </t-popup>
-      <div class="umo-status-bar-split"></div>
+      <div class="mxm-status-bar-split"></div>
       <!-- 请遵循开源协议，勿删除或隐藏版权信息！ -->
       <t-button
-        class="umo-status-bar-button auto-width"
+        class="mxm-status-bar-button auto-width"
         variant="text"
         size="small"
         @click="about = !about"
       >
-        <icon name="copyright" /> Umodoc
+        <icon name="copyright" /> Mxm
       </t-button>
     </div>
-    <div class="umo-status-bar-right">
+    <div class="mxm-status-bar-right">
       <tooltip
         :content="`${fullscreen?.isFullscreen ? t('fullscreen.disable') : t('fullscreen.title')} (${getShortcut('Ctrl+F11')})`"
       >
         <t-button
-          class="umo-status-bar-button"
+          class="mxm-status-bar-button"
           variant="text"
           size="small"
           @click="toggleFullscreen"
@@ -166,7 +166,7 @@
         "
       >
         <t-button
-          class="umo-status-bar-button"
+          class="mxm-status-bar-button"
           :class="{ active: page.preview?.enabled }"
           variant="text"
           size="small"
@@ -175,11 +175,11 @@
           <icon name="preview" />
         </t-button>
       </tooltip>
-      <div class="umo-status-bar-split"></div>
-      <div v-if="page.layout === 'page'" class="umo-zoom-level-bar">
+      <div class="mxm-status-bar-split"></div>
+      <div v-if="page.layout === 'page'" class="mxm-zoom-level-bar">
         <tooltip :content="`${t('zoom.zoomOut')} (${getShortcut('Ctrl-')})`">
           <t-button
-            class="umo-status-bar-button"
+            class="mxm-status-bar-button"
             variant="text"
             size="small"
             :disabled="page.zoomLevel <= 20"
@@ -190,7 +190,7 @@
         </tooltip>
         <t-slider
           v-model="page.zoomLevel"
-          class="umo-zoom-level-slider"
+          class="mxm-zoom-level-slider"
           :min="20"
           :max="500"
           :step="10"
@@ -205,7 +205,7 @@
         />
         <tooltip :content="`${t('zoom.zoomIn')} (${getShortcut('Ctrl+')})`">
           <t-button
-            class="umo-status-bar-button"
+            class="mxm-status-bar-button"
             variant="text"
             size="small"
             :disabled="!!(page.zoomLevel && page.zoomLevel >= 500)"
@@ -216,7 +216,7 @@
         </tooltip>
         <tooltip :content="`${t('zoom.autoWidth')} (${getShortcut('Ctrl0')})`">
           <t-button
-            class="umo-status-bar-button umo-auto-width-button"
+            class="mxm-status-bar-button mxm-auto-width-button"
             :class="{ active: page.autoWidth }"
             variant="text"
             size="small"
@@ -227,7 +227,7 @@
         </tooltip>
         <tooltip :content="`${t('zoom.reset')} (${getShortcut('Ctrl1')})`">
           <t-button
-            class="umo-status-bar-button auto-width"
+            class="mxm-status-bar-button auto-width"
             variant="text"
             style="width: 80px"
             size="small"
@@ -245,7 +245,7 @@
         @click="changeLang"
       >
         <t-button
-          class="umo-status-bar-button auto-width umo-lang-button"
+          class="mxm-status-bar-button auto-width mxm-lang-button"
           variant="text"
           size="small"
         >
@@ -254,8 +254,8 @@
       </t-dropdown>
     </div>
   </div>
-  <div v-else class="umo-preview-bar">
-    <div v-if="countdownValue !== ''" class="umo-preview-countdown">
+  <div v-else class="mxm-preview-bar">
+    <div v-if="countdownValue !== ''" class="mxm-preview-countdown">
       {{ countdownValue }}
     </div>
     <statusbar-countdown
@@ -328,7 +328,7 @@
     show-in-attached-element
   >
     <template #header>
-      <div class="umo-shortcuts-drawer-header">
+      <div class="mxm-shortcuts-drawer-header">
         <icon name="shortcut" />
         {{ t('shortcut.title') }}
       </div>
@@ -406,7 +406,7 @@ watch(
   { immediate: true },
 )
 
-// 关于 Umo Editor
+// 关于 Mxm Editor
 const about = $ref(false)
 
 // 页面布局
@@ -444,7 +444,7 @@ const togglePreview = () => {
   page.value.preview.enabled = !page.value.preview.enabled
 
   const zoomableContainer = document.querySelector(
-    `${container} .umo-zoomable-container`,
+    `${container} .mxm-zoomable-container`,
   )
   if (zoomableContainer && page.value.preview.enabled) {
     zoomableContainer.scrollTop = 0
@@ -529,9 +529,9 @@ const autoWidth = (auto = true, padding = 50) => {
   }
   try {
     const editorEl = document.querySelector(
-      `${container} .umo-zoomable-container`,
+      `${container} .mxm-zoomable-container`,
     )
-    const pageEl = editorEl?.querySelector('.umo-page-content')
+    const pageEl = editorEl?.querySelector('.mxm-page-content')
     const editorWidth = editorEl?.clientWidth || 0
     const pageWidth = pageEl?.clientWidth || 0
     page.value.zoomLevel = Math.floor(
@@ -599,12 +599,12 @@ watch(
 </script>
 
 <style lang="less" scoped>
-.umo-status-bar {
+.mxm-status-bar {
   padding: 6px;
   display: flex;
   justify-content: space-between;
-  font-size: var(--umo-font-size-small);
-  border-top: solid 1px var(--umo-border-color);
+  font-size: var(--mxm-font-size-small);
+  border-top: solid 1px var(--mxm-border-color);
 
   @media screen and (max-width: 640px) {
     overflow-x: auto;
@@ -612,31 +612,31 @@ watch(
       display: none;
     }
   }
-  .umo-status-bar-split {
+  .mxm-status-bar-split {
     height: 16px;
     width: 1px;
-    background-color: var(--umo-border-color);
+    background-color: var(--mxm-border-color);
     margin: 0 10px;
   }
-  .umo-status-bar-button {
+  .mxm-status-bar-button {
     --td-comp-size-xs: 18px;
     --td-comp-paddingLR-l: 8px;
     --td-radius-default: 2px;
     font-size: 14px;
     margin: 0 4px;
-    color: var(--umo-text-color);
+    color: var(--mxm-text-color);
     &:not(.auto-width) {
       width: var(--td-comp-size-xs);
     }
     &.auto-width {
       --td-comp-paddingLR-s: 0;
       width: auto;
-      :deep(.umo-button__text) {
+      :deep(.mxm-button__text) {
         display: flex;
         align-items: center;
         gap: 3px;
         font-size: 12px;
-        .umo-icon {
+        .mxm-icon {
           font-size: 14px;
         }
       }
@@ -644,22 +644,22 @@ watch(
     &.word-count {
       padding-left: 2px;
       padding-right: 0;
-      :deep(.umo-button__text) {
+      :deep(.mxm-button__text) {
         display: flex;
         align-items: center;
-        .umo-icon {
+        .mxm-icon {
           margin-left: 3px;
           transform: rotate(180deg);
         }
       }
     }
-    :deep(.umo-button__text) {
+    :deep(.mxm-button__text) {
       padding: 0 5px;
     }
     &.active {
-      background-color: var(--umo-button-hover-background);
-      border-color: var(--umo-button-hover-background);
-      color: var(--umo-primary-color);
+      background-color: var(--mxm-button-hover-background);
+      border-color: var(--mxm-button-hover-background);
+      color: var(--mxm-primary-color);
     }
   }
   &-left {
@@ -670,50 +670,50 @@ watch(
   &-right {
     display: flex;
     align-items: center;
-    .umo-zoom-level-bar {
+    .mxm-zoom-level-bar {
       width: 240px;
       display: flex;
     }
     @media screen and (max-width: 720px) {
-      .umo-zoom-level-bar {
+      .mxm-zoom-level-bar {
         width: auto;
       }
-      .umo-zoom-level-slider,
-      .umo-lang-button {
+      .mxm-zoom-level-slider,
+      .mxm-lang-button {
         display: none !important;
       }
     }
   }
 }
-.umo-layout-dropdown-item {
+.mxm-layout-dropdown-item {
   display: flex;
   align-items: center;
   gap: 5px;
 }
-.umo-preview-bar {
+.mxm-preview-bar {
   position: absolute;
   left: 50%;
   transform: translateX(-50%);
   bottom: 30px;
-  border-radius: var(--umo-radius-medium);
+  border-radius: var(--mxm-radius-medium);
   padding: 8px;
   overflow: hidden;
   user-select: none;
   display: flex;
-  background: var(--umo-color-white);
+  background: var(--mxm-color-white);
   box-shadow:
     var(--td-shadow-2), var(--td-shadow-inset-top),
     var(--td-shadow-inset-right), var(--td-shadow-inset-bottom),
     var(--td-shadow-inset-left);
   gap: 5px;
-  .umo-preview-countdown {
+  .mxm-preview-countdown {
     display: flex;
     align-items: center;
     padding: 0 12px;
-    background-color: var(--umo-button-hover-background);
-    border-radius: var(--umo-radius-medium);
+    background-color: var(--mxm-button-hover-background);
+    border-radius: var(--mxm-radius-medium);
     font-size: 14px;
-    color: var(--umo-text-color-light);
+    color: var(--mxm-text-color-light);
   }
   .item {
     padding: 6px;
@@ -730,18 +730,18 @@ watch(
     display: flex;
     align-items: center;
     justify-content: center;
-    color: var(--umo-text-color-light);
-    border-radius: var(--umo-radius-medium);
+    color: var(--mxm-text-color-light);
+    border-radius: var(--mxm-radius-medium);
     cursor: pointer;
     &:hover {
-      background-color: var(--umo-button-hover-background);
-      color: var(--umo-text-color);
+      background-color: var(--mxm-button-hover-background);
+      color: var(--mxm-text-color);
     }
     &.active {
-      background-color: var(--umo-button-hover-background);
-      color: var(--umo-primary-color);
+      background-color: var(--mxm-button-hover-background);
+      color: var(--mxm-primary-color);
     }
-    :deep(.umo-icon) {
+    :deep(.mxm-icon) {
       font-size: 20px;
     }
   }
@@ -749,27 +749,27 @@ watch(
 </style>
 
 <style lang="less">
-.umo-shortcuts-drawer-header {
+.mxm-shortcuts-drawer-header {
   display: flex;
   align-items: center;
   font-weight: 400;
-  color: var(--umo-text-color);
-  .umo-icon {
+  color: var(--mxm-text-color);
+  .mxm-icon {
     font-size: 20px;
     margin-right: 6px;
   }
 }
-.umo-drawer__close-btn {
+.mxm-drawer__close-btn {
   margin-right: 3px;
 }
 
-.umo-word-count {
+.mxm-word-count {
   margin-right: 0.25em;
   &-detail {
     padding: 10px 0 8px;
     width: 160px;
     font-size: 12px;
-    color: var(--umo-text-color-light);
+    color: var(--mxm-text-color-light);
     ul {
       padding: 0;
       margin: 0;
@@ -781,7 +781,7 @@ watch(
       display: flex;
       justify-content: space-between;
       line-height: 28px;
-      color: var(--umo-text-color);
+      color: var(--mxm-text-color);
       &:hover {
         background-color: var(--td-bg-color-container-hover);
       }

@@ -1,6 +1,6 @@
 <template>
   <modal
-    class="umo-search-replace-dialog"
+    class="mxm-search-replace-dialog"
     :visible="searchReplace"
     :footer="false"
     :z-index="200"
@@ -13,8 +13,8 @@
       <icon name="search-replace" />
       {{ t('search.title') }}
     </template>
-    <div class="umo-search-replace-container">
-      <div class="umo-search-text">
+    <div class="mxm-search-replace-container">
+      <div class="mxm-search-text">
         <t-input
           v-model="searchText"
           :placeholder="t('search.searchText')"
@@ -49,19 +49,19 @@
           <icon name="arrow-down" class="icon-prev" />
         </t-button>
       </div>
-      <div class="umo-replace-text">
+      <div class="mxm-replace-text">
         <t-input
           v-model="replaceText"
           :placeholder="t('search.replaceText')"
           clearable
         />
       </div>
-      <div class="umo-advanced-options">
+      <div class="mxm-advanced-options">
         <t-checkbox v-model="caseSensitive">
           {{ t('search.caseSensitive') }}
         </t-checkbox>
       </div>
-      <div class="umo-button-actions">
+      <div class="mxm-button-actions">
         <t-button
           :disabled="resultLength === 0"
           theme="default"
@@ -189,19 +189,19 @@ watch(
 </script>
 
 <style lang="less" scoped>
-.umo-search-text {
+.mxm-search-text {
   margin-top: 5px;
   display: flex;
-  :deep(.umo-input__wrap) {
+  :deep(.mxm-input__wrap) {
     width: 300px;
     margin-right: 10px;
-    .umo-input__suffix {
+    .mxm-input__suffix {
       font-size: 12px;
       opacity: 0.6;
     }
   }
-  :deep(.umo-button) {
-    .umo-icon {
+  :deep(.mxm-button) {
+    .mxm-icon {
       font-size: 20px;
       &.icon-prev {
         transform: rotate(-180deg);
@@ -209,25 +209,25 @@ watch(
     }
   }
 }
-.umo-replace-text {
+.mxm-replace-text {
   margin-top: 12px;
 }
-.umo-advanced-options {
+.mxm-advanced-options {
   margin-top: 12px;
-  :deep(.umo-checkbox) {
+  :deep(.mxm-checkbox) {
     margin-right: 15px;
   }
 }
-.umo-button-actions {
+.mxm-button-actions {
   margin: 12px 0 -15px;
   text-align: right;
-  :deep(.umo-button) {
+  :deep(.mxm-button) {
     margin-left: 10px;
   }
 }
 </style>
 <style lang="less">
-.umo-search-replace-dialog {
+.mxm-search-replace-dialog {
   .t-dialog {
     position: absolute;
     right: 15px;
@@ -235,22 +235,22 @@ watch(
     user-select: none;
   }
 }
-.umo-editor-container.toolbar-classic {
-  .umo-search-replace-dialog {
+.mxm-editor-container.toolbar-classic {
+  .mxm-search-replace-dialog {
     .t-dialog {
       top: 65px;
     }
   }
 }
 
-.umo-editor-container.umo-skin-modern {
-  .umo-search-replace-dialog {
+.mxm-editor-container.mxm-skin-modern {
+  .mxm-search-replace-dialog {
     .t-dialog {
       top: 146px;
     }
   }
   &.toolbar-classic {
-    .umo-search-replace-dialog {
+    .mxm-search-replace-dialog {
       .t-dialog {
         top: 80px;
       }

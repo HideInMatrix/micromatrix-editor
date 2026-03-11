@@ -1,22 +1,22 @@
 import 'virtual:svg-icons-register'
 
-import UmoEditor from './index.vue'
-import UmoMenuButton from './menus/button.vue'
-import UmoDialog from './modal.vue'
-import UmoTooltip from './tooltip.vue'
+import MxmEditor from './index.vue'
+import MxmMenuButton from './menus/button.vue'
+import MxmDialog from './modal.vue'
+import MxmTooltip from './tooltip.vue'
 
-const useUmoEditor = {
+const useMxmEditor = {
   install: (app, options) => {
     app.provide('defaultOptions', options || {})
-    app.component(UmoEditor.name || 'UmoEditor', UmoEditor)
+    app.component(MxmEditor.name || 'MxmEditor', MxmEditor)
   },
 }
 
 export {
-  UmoEditor as default,
-  UmoDialog,
-  UmoEditor,
-  UmoMenuButton,
-  UmoTooltip,
-  useUmoEditor,
+  MxmEditor as default,
+  MxmDialog,
+  MxmEditor,
+  MxmMenuButton,
+  MxmTooltip,
+  useMxmEditor,
 }

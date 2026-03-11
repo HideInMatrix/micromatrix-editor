@@ -16,7 +16,7 @@ const container = inject('container')
 
 const autoWidth = () => {
   const autoWidthBtn = document.querySelector(
-    `${container} .umo-auto-width-button`,
+    `${container} .mxm-auto-width-button`,
   ) as HTMLElement | null
   if (autoWidthBtn) {
     autoWidthBtn.click()

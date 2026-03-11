@@ -35,7 +35,7 @@
           {{ t('about.documentation') }}
         </a>
         |
-        <a href="https://www.npmjs.com/package/@umoteam/editor" target="_blank">
+        <a href="https://www.npmjs.com/package/@mxmteam/editor" target="_blank">
           NPM
         </a>
       </p>
@@ -104,7 +104,7 @@ p {
   line-height: 1.5;
   a,
   :deep(a) {
-    color: var(--umo-primary-color);
+    color: var(--mxm-primary-color);
     font-weight: 500;
     text-decoration: none;
     &:hover {
@@ -112,7 +112,7 @@ p {
     }
   }
 }
-:deep(.umo-divider) {
+:deep(.mxm-divider) {
   margin: 30px 0 15px;
   font-size: 12px;
 }

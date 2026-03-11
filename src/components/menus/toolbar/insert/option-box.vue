@@ -8,8 +8,8 @@
     @toggle-popup="togglePopup"
   >
     <template #content>
-      <div class="umo-insert-option-box">
-        <div class="umo-option-box-title">{{ t('insert.option.tip') }}</div>
+      <div class="mxm-insert-option-box">
+        <div class="mxm-option-box-title">{{ t('insert.option.tip') }}</div>
         <t-select v-model="target" size="small" @change="initCalData">
           <t-option
             key="checkbox"
@@ -22,34 +22,34 @@
             value="radio"
           />
         </t-select>
-        <div class="umo-virtual-group"></div>
-        <div class="umo-option-box-title">{{ t('insert.option.content') }}</div>
-        <div class="umo-option-box-container">
-          <div class="umo-option-box-container-center">
+        <div class="mxm-virtual-group"></div>
+        <div class="mxm-option-box-title">{{ t('insert.option.content') }}</div>
+        <div class="mxm-option-box-container">
+          <div class="mxm-option-box-container-center">
             <t-button
               variant="text"
               theme="primary"
               size="small"
               @click="addOption"
             >
-              <icon class="umo-option-box-button-svg-icon" name="block-add" />
+              <icon class="mxm-option-box-button-svg-icon" name="block-add" />
               {{ t('insert.option.add') }}
             </t-button>
             <t-checkbox
               v-if="target === 'checkbox'"
               v-model="showCheckAll"
-              class="umo-option-box-button-check-all"
+              class="mxm-option-box-button-check-all"
               size="small"
               ><span style="font-size: 12px">{{
                 t('insert.option.checkall')
               }}</span></t-checkbox
             >
           </div>
-          <div class="umo-option-box-container-bottom">
+          <div class="mxm-option-box-container-bottom">
             <div
               v-for="(box, index) in items"
               :key="box.key"
-              class="umo-option-box-container-bottom-item"
+              class="mxm-option-box-container-bottom-item"
             >
               <t-checkbox v-if="target === 'checkbox'" v-model="box.checked" />
               <t-radio
@@ -59,7 +59,7 @@
               />
               <t-input
                 v-model="box.label"
-                class="umo-option-box-container-input"
+                class="mxm-option-box-container-input"
                 size="small"
                 :maxlength="30"
               />
@@ -67,15 +67,15 @@
                 shape="square"
                 variant="text"
                 size="small"
-                class="umo-option-box-container-delete"
+                class="mxm-option-box-container-delete"
                 @click="deleteItem(box)"
               >
-                <icon class="umo-option-box-svg-icon" name="close" />
+                <icon class="mxm-option-box-svg-icon" name="close" />
               </t-button>
             </div>
           </div>
         </div>
-        <div class="umo-option-box-container-button">
+        <div class="mxm-option-box-container-button">
           <t-button
             variant="outline"
             size="small"
@@ -171,7 +171,7 @@ const addOption = async () => {
   // 添加时，自动定位到末尾
   await nextTick()
   const el = document.querySelector(
-    `${container} .umo-option-box-container-bottom`,
+    `${container} .mxm-option-box-container-bottom`,
   )
   if (el) {
     el.scrollTop = el.scrollHeight
@@ -248,33 +248,33 @@ watch(
 <style lang="less" scoped>
 @import '@/assets/styles/_mixins.less';
 
-.umo-insert-option-box {
+.mxm-insert-option-box {
   user-select: none;
-  & .umo-virtual-group {
+  & .mxm-virtual-group {
     margin-top: 5px;
     margin-bottom: 10px;
     flex-shrink: 0;
   }
-  & .umo-option-box-title {
+  & .mxm-option-box-title {
     margin: -5px 0 5px;
   }
 
-  & .umo-option-box-container {
+  & .mxm-option-box-container {
     padding: 6px 10px;
     width: 220px;
     height: 260px;
     border: solid 1px var(--td-border-level-2-color);
     border-radius: 4px;
 
-    & .umo-option-box-button-svg-icon {
+    & .mxm-option-box-button-svg-icon {
       margin-top: 2px;
       margin-left: -10px;
       font-size: 16px;
     }
 
-    & .umo-option-box-svg-icon {
+    & .mxm-option-box-svg-icon {
       font-size: 16px;
-      color: var(--umo-text-color-light);
+      color: var(--mxm-text-color-light);
     }
 
     &-center {
@@ -284,7 +284,7 @@ watch(
     }
 
     &-bottom {
-      .umo-scrollbar();
+      .mxm-scrollbar();
       height: 230px;
       overflow: auto;
 
@@ -293,7 +293,7 @@ watch(
         align-items: center;
         gap: 8px;
         margin: 6px 0;
-        :deep(.umo-radio) {
+        :deep(.mxm-radio) {
           display: flex;
           &__label {
             margin-left: 3px;

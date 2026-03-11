@@ -1,10 +1,10 @@
 <template>
   <div class="examples">
     <div class="box">
-      <umo-editor ref="editorRef" v-bind="options"></umo-editor>
+      <mxm-editor ref="editorRef" v-bind="options"></mxm-editor>
     </div>
     <!-- <div class="box">
-      <umo-editor editor-key="testaaa" :toolbar="{ defaultMode: 'classic' }" />
+      <mxm-editor editor-key="testaaa" :toolbar="{ defaultMode: 'classic' }" />
     </div> -->
   </div>
 </template>
@@ -55,12 +55,12 @@ const options = $ref({
     // ],
   },
   user: {
-    id: 'umoeditor',
-    label: 'Umo Editor',
+    id: 'mxmeditor',
+    label: 'Mxm Editor',
     avatar: 'https://tdesign.gtimg.com/site/avatar.jpg',
   },
   users: [
-    { id: 'umodoc', label: 'Umo Team' },
+    { id: 'umodoc', label: 'Mxm Team' },
     { id: 'Cassielxd', label: 'Cassielxd' },
     { id: 'Goldziher', label: "Na'aman Hirschfeld" },
     { id: 'SerRashin', label: 'SerRashin' },

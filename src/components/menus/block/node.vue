@@ -1,20 +1,20 @@
 <template>
   <t-dropdown
     placement="bottom-right"
-    overlay-class-name="umo-block-menu-dropdown"
+    overlay-class-name="mxm-block-menu-dropdown"
     :max-height="320"
     trigger="click"
     :destroy-on-close="false"
     :popup-props="popupProps"
   >
     <menus-button
-      class="umo-block-menu-button"
+      class="mxm-block-menu-button"
       :menu-active="menuActive"
       ico="block-add"
       hide-text
     />
     <t-dropdown-menu>
-      <t-dropdown-item class="umo-block-menu-group-name" disabled>
+      <t-dropdown-item class="mxm-block-menu-group-name" disabled>
         {{ t('blockMenu.insert') }}
       </t-dropdown-item>
       <t-dropdown-item>
@@ -99,7 +99,7 @@
           :tooltip="false"
         />
         <t-dropdown-menu
-          overlay-class-name="umo-block-menu-dropdown"
+          overlay-class-name="mxm-block-menu-dropdown"
           placement="right"
         >
           <t-dropdown-item
@@ -109,7 +109,7 @@
             :divider="item.divider"
             @click="setTemplate(item)"
           >
-            <div class="umo-dropdown-item-label">{{ item.title }}</div>
+            <div class="mxm-dropdown-item-label">{{ item.title }}</div>
           </t-dropdown-item>
         </t-dropdown-menu>
       </t-dropdown-item>
@@ -139,7 +139,7 @@ const blockMenu = inject('blockMenu')
 
 let menuActive = $ref(false)
 const popupProps = {
-  attach: `${container} .umo-main-container`,
+  attach: `${container} .mxm-main-container`,
   popperOptions: {
     modifiers: [{ name: 'offset', options: { offset: [2, 0] } }],
   },

@@ -1,10 +1,10 @@
 <template>
-  <node-view-wrapper ref="containerRef" class="umo-node-view umo-code-block">
+  <node-view-wrapper ref="containerRef" class="mxm-node-view mxm-code-block">
     <div
-      :class="`umo-node-container hover-shadow umo-node-code-block umo-node-code-block-theme-${attrs.theme}`"
+      :class="`mxm-node-container hover-shadow mxm-node-code-block mxm-node-code-block-theme-${attrs.theme}`"
     >
-      <div class="umo-node-code-block-toolbar">
-        <div class="umo-node-code-block-toolbar-left">
+      <div class="mxm-node-code-block-toolbar">
+        <div class="mxm-node-code-block-toolbar-left">
           <template v-if="editor?.isEditable && !options.document?.readOnly">
             <menus-button
               :text="t('bubbleMenu.code.languages')"
@@ -13,7 +13,7 @@
               :select-value="attrs.language"
               :popup-props="{
                 attach: container,
-                overlayClassName: 'umo-code-block-language',
+                overlayClassName: 'mxm-code-block-language',
               }"
               filterable
               borderless
@@ -32,13 +32,13 @@
               @menu-click="(value) => updateAttribute('theme', value)"
             />
           </template>
-          <span v-else class="umo-node-code-block-language">{{
+          <span v-else class="mxm-node-code-block-language">{{
             attrs.language
           }}</span>
         </div>
-        <div class="umo-node-code-block-toolbar-right">
+        <div class="mxm-node-code-block-toolbar-right">
           <menus-button
-            class="umo-word-wrap-button"
+            class="mxm-word-wrap-button"
             :menu-active="attrs.textWrap"
             :text="t('bubbleMenu.code.wordWrap')"
             ico="code-word-wrap"
@@ -47,7 +47,7 @@
             @menu-click="updateAttribute('textWrap', !attrs.textWrap)"
           />
           <menus-button
-            class="umo-copy-button"
+            class="mxm-copy-button"
             ico="copy"
             :text="t('bubbleMenu.code.copy.text')"
             hide-text
@@ -56,7 +56,7 @@
           />
           <menus-button
             v-if="editor?.isEditable && !options.document?.readOnly"
-            class="umo-copy-button"
+            class="mxm-copy-button"
             ico="node-delete"
             :text="t('bubbleMenu.delete')"
             hide-text
@@ -65,9 +65,9 @@
         </div>
       </div>
       <pre
-        class="umo-node-code-block-content"
+        class="mxm-node-code-block-content"
         :class="{
-          'umo-node-code-block-word-wrap': attrs.textWrap,
+          'mxm-node-code-block-word-wrap': attrs.textWrap,
         }"
       ><node-view-content
         :class="`hljs language-${attrs.language}`"
@@ -120,29 +120,29 @@ const copyCode = () => {
 <style lang="less">
 @import '@/assets/styles/_mixins.less';
 
-.umo-code-block {
+.mxm-code-block {
   display: block !important;
-  .umo-node-code-block {
-    border: solid 1px var(--umo-content-node-border);
+  .mxm-node-code-block {
+    border: solid 1px var(--mxm-content-node-border);
     border-radius: 3px;
     &-toolbar {
       display: flex;
       justify-content: space-between;
       align-items: center;
       padding: 0 10px;
-      border-bottom: 1px solid var(--umo-content-node-border);
+      border-bottom: 1px solid var(--mxm-content-node-border);
       height: 36px;
       border-top-left-radius: 2px;
       border-top-right-radius: 2px;
-      background-color: var(--umo-content-node-selected-background);
-      .umo-select__wrap {
+      background-color: var(--mxm-content-node-selected-background);
+      .mxm-select__wrap {
         --td-comp-paddingLR-s: 5px;
         --td-text-color-primary: #999;
         width: auto;
-        .umo-input--auto-width {
+        .mxm-input--auto-width {
           min-width: unset;
         }
-        .umo-input__suffix {
+        .mxm-input__suffix {
           margin: 0 -3px 0 3px;
           --td-text-color-placeholder: #999;
         }
@@ -152,22 +152,22 @@ const copyCode = () => {
         align-items: center;
         display: none;
         gap: 5px;
-        .umo-menu-button-wrap {
+        .mxm-menu-button-wrap {
           margin-right: 0;
-          .active .umo-button-content {
-            color: var(--umo-primary-color);
+          .active .mxm-button-content {
+            color: var(--mxm-primary-color);
           }
         }
       }
-      .umo-button-content {
-        color: var(--umo-text-color-light);
+      .mxm-button-content {
+        color: var(--mxm-text-color-light);
         &:hover {
-          color: var(--umo-text-color);
+          color: var(--mxm-text-color);
         }
       }
     }
     &:hover {
-      .umo-node-code-block-toolbar {
+      .mxm-node-code-block-toolbar {
         &-right {
           display: flex;
         }
@@ -175,16 +175,16 @@ const copyCode = () => {
     }
     &-language {
       font-size: 12px;
-      color: var(--umo-text-color-light);
+      color: var(--mxm-text-color-light);
       padding: 0 6px;
     }
     &-theme-dark {
-      .umo-node-code-block-toolbar {
+      .mxm-node-code-block-toolbar {
         filter: invert(1);
       }
     }
     &-content {
-      font-family: var(--umo-content-code-family);
+      font-family: var(--mxm-content-code-family);
       margin: 0 !important;
       padding: 0 !important;
       overflow: hidden;
@@ -192,7 +192,7 @@ const copyCode = () => {
       border-radius: 0;
       border-bottom-left-radius: 2px;
       border-bottom-right-radius: 2px;
-      .umo-scrollbar();
+      .mxm-scrollbar();
 
       code {
         display: block;
@@ -209,21 +209,21 @@ const copyCode = () => {
       }
     }
   }
-  &.umo-node-focused {
-    .umo-node-code-block {
-      border-color: var(--umo-primary-color);
+  &.mxm-node-focused {
+    .mxm-node-code-block {
+      border-color: var(--mxm-primary-color);
     }
   }
   .tiptap-invisible-character {
     display: none;
   }
 }
-.umo-code-block-language {
-  .umo-select__list {
+.mxm-code-block-language {
+  .mxm-select__list {
     max-height: 200px;
   }
 }
-.umo-node-code-block-theme {
+.mxm-node-code-block-theme {
   &-light {
     pre {
       color: #24292e;

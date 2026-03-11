@@ -15,8 +15,8 @@
         <icon name="echarts" />
         {{ isAdd ? t('tools.echarts.add') : t('tools.echarts.edit') }}
       </template>
-      <div v-if="dialogVisible" class="umo-echarts-container">
-        <div class="umo-echarts-header">
+      <div v-if="dialogVisible" class="mxm-echarts-container">
+        <div class="mxm-echarts-header">
           <t-radio-group
             v-if="modelMode === 1"
             v-model="baseModeSet"
@@ -43,25 +43,25 @@
             }}</t-radio-button>
           </t-radio-group>
         </div>
-        <div v-if="modelMode === 0" class="umo-echarts-source-center">
+        <div v-if="modelMode === 0" class="mxm-echarts-source-center">
           <t-textarea
             v-model="sourceOptions"
-            class="umo-echarts-code"
+            class="mxm-echarts-code"
             autofocus
             :placeholder="t('tools.echarts.placeholder')"
           />
-          <div class="umo-echarts-render">
-            <div id="echartsSourceModeId" class="umo-echarts-svg"></div>
+          <div class="mxm-echarts-render">
+            <div id="echartsSourceModeId" class="mxm-echarts-svg"></div>
           </div>
         </div>
         <div
           v-if="modelMode === 1 && baseModeSet === 0"
-          class="umo-echarts-source-center"
+          class="mxm-echarts-source-center"
         >
-          <div class="umo-echarts-render">
-            <div id="echartsSettingModeId" class="umo-echarts-svg"></div>
+          <div class="mxm-echarts-render">
+            <div id="echartsSettingModeId" class="mxm-echarts-svg"></div>
           </div>
-          <div class="umo-echarts-settting">
+          <div class="mxm-echarts-settting">
             <t-form label-align="top">
               <!--图形类型-->
               <t-form-item
@@ -191,12 +191,12 @@
         </div>
         <div
           v-if="modelMode === 1 && baseModeSet === 1"
-          class="umo-echarts-source-center"
+          class="mxm-echarts-source-center"
         >
-          <div class="umo-echarts-render" style="margin-left: 2px">
+          <div class="mxm-echarts-render" style="margin-left: 2px">
             <t-table
               id="echartsSettingGridId"
-              class="umo-echarts-table"
+              class="mxm-echarts-table"
               row-key="tabkey"
               :columns="baseData.Columns"
               :data="baseConfig.data"
@@ -608,10 +608,10 @@ const editableCellState = () => {
 <style lang="less" scoped>
 @import '@/assets/styles/_mixins.less';
 
-.umo-echarts-container {
+.mxm-echarts-container {
   min-height: 300px;
 
-  .umo-echarts-header {
+  .mxm-echarts-header {
     display: flex;
     justify-content: space-between;
 
@@ -620,35 +620,35 @@ const editableCellState = () => {
     }
   }
 
-  .umo-echarts-source-center {
+  .mxm-echarts-source-center {
     display: flex;
     height: calc(100% - 30px);
     width: 100%;
     margin-top: 10px;
     overflow: visible;
 
-    .umo-echarts-code {
+    .mxm-echarts-code {
       width: 320px;
       margin-right: 10px;
 
-      :deep(.umo-textarea__inner) {
+      :deep(.mxm-textarea__inner) {
         height: 100%;
         resize: none;
       }
     }
 
-    .umo-echarts-settting {
+    .mxm-echarts-settting {
       --td-comp-margin-xxl: 10px;
       width: 360px;
       padding: 20px;
       margin-left: 10px;
-      border: solid 1px var(--umo-border-color);
-      border-radius: var(--umo-radius);
+      border: solid 1px var(--mxm-border-color);
+      border-radius: var(--mxm-radius);
       max-height: 420px;
       overflow: auto;
-      .umo-scrollbar();
+      .mxm-scrollbar();
 
-      :deep(.umo-form__controls) {
+      :deep(.mxm-form__controls) {
         &,
         &-content {
           min-height: auto;
@@ -656,15 +656,15 @@ const editableCellState = () => {
       }
     }
 
-    .umo-echarts-render {
+    .mxm-echarts-render {
       flex: 1;
-      border: solid 1px var(--umo-border-color);
-      border-radius: var(--umo-radius);
+      border: solid 1px var(--mxm-border-color);
+      border-radius: var(--mxm-radius);
       position: relative;
       overflow: hidden;
       box-sizing: border-box;
 
-      .umo-echarts-svg {
+      .mxm-echarts-svg {
         box-sizing: border-box;
         height: 420px;
         padding: 20px 15px 15px;
@@ -673,11 +673,11 @@ const editableCellState = () => {
         justify-content: center;
       }
 
-      .umo-echarts-table {
+      .mxm-echarts-table {
         --td-comp-paddingTB-s: 3px;
         --td-comp-paddingLR-s: 5px;
         --td-comp-size-m: 18px;
-        --td-component-border: var(--umo-border-color);
+        --td-component-border: var(--mxm-border-color);
         box-sizing: border-box;
         height: 420px;
         padding: 0px;
@@ -696,7 +696,7 @@ const editableCellState = () => {
           }
         }
 
-        :deep(.umo-input) {
+        :deep(.mxm-input) {
           border: none;
           box-shadow: none;
           cursor: text;

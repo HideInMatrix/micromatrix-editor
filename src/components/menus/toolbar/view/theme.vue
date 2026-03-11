@@ -15,7 +15,7 @@ const options = inject('options')
 const setTheme = inject('setTheme')
 
 const themes = computed(() => {
-  const theme = useStorage('umo-editor:theme', options.value.theme)
+  const theme = useStorage('mxm-editor:theme', options.value.theme)
   return [
     {
       content: t('view.themeLight'),

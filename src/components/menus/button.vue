@@ -9,14 +9,14 @@
     destroy-on-close
   >
     <div
-      class="umo-menu-button-wrap"
+      class="mxm-menu-button-wrap"
       @click="tooltipVisible = false"
       @mouseover="tooltipVisible = true"
       @mouseleave="tooltipVisible = false"
     >
       <template v-if="menuType === 'button'">
         <t-button
-          class="umo-menu-button"
+          class="mxm-menu-button"
           :class="{
             huge: (huge && $toolbar.mode === 'ribbon') || forceHuge,
             'show-text': !hideText,
@@ -31,19 +31,19 @@
           v-bind="attrs"
           @click="menuClick"
         >
-          <div class="umo-button-content">
+          <div class="mxm-button-content">
             <slot />
             <template v-if="ico">
               <span
                 v-if="ico?.startsWith('<')"
-                class="umo-button-icon-svg"
+                class="mxm-button-icon-svg"
                 v-html="ico"
               >
               </span>
-              <icon v-else class="umo-button-icon" :name="ico" />
+              <icon v-else class="mxm-button-icon" :name="ico" />
             </template>
-            <p class="umo-button-text">{{ text }}</p>
-            <kbd v-if="shortcutText" class="umo-button-kbd">
+            <p class="mxm-button-text">{{ text }}</p>
+            <kbd v-if="shortcutText" class="mxm-button-kbd">
               {{ getShortcut(shortcutText) }}
             </kbd>
           </div>
@@ -52,7 +52,7 @@
       <template v-else-if="menuType === 'dropdown'">
         <template v-if="popupHandle === 'arrow'">
           <t-button
-            class="umo-menu-button has-arrow"
+            class="mxm-menu-button has-arrow"
             :class="{
               huge: (huge && $toolbar.mode === 'ribbon') || forceHuge,
               'show-text': !hideText,
@@ -65,19 +65,19 @@
               !forceEnabled && (disabled || editor?.isEditable === false)
             "
           >
-            <div class="umo-button-content" @click="menuClick">
+            <div class="mxm-button-content" @click="menuClick">
               <slot />
               <template v-if="ico">
                 <span
                   v-if="ico?.startsWith('<')"
-                  class="umo-button-icon-svg"
+                  class="mxm-button-icon-svg"
                   v-html="ico"
                 >
                 </span>
-                <icon v-else class="umo-button-icon" :name="ico" />
+                <icon v-else class="mxm-button-icon" :name="ico" />
               </template>
-              <p class="umo-button-text">{{ text }}</p>
-              <kbd v-if="shortcutText" class="umo-button-kbd">
+              <p class="mxm-button-text">{{ text }}</p>
+              <kbd v-if="shortcutText" class="mxm-button-kbd">
                 {{ getShortcut(shortcutText) }}
               </kbd>
             </div>
@@ -99,7 +99,7 @@
               }"
               @click="attrs.onChange"
             >
-              <span class="umo-button-icon-arrow umo-button-handle">
+              <span class="mxm-button-icon-arrow mxm-button-handle">
                 <icon name="arrow-down" />
               </span>
               <slot v-if="!selectOptions" name="dropmenu" />
@@ -121,7 +121,7 @@
             @click="attrs.onChange"
           >
             <t-button
-              class="umo-menu-button has-arrow"
+              class="mxm-menu-button has-arrow"
               :class="{
                 huge: (huge && $toolbar.mode === 'ribbon') || forceHuge,
                 'show-text': !hideText,
@@ -134,31 +134,31 @@
                 !forceEnabled && (disabled || editor?.isEditable === false)
               "
             >
-              <div class="umo-button-content" @click="menuClick">
+              <div class="mxm-button-content" @click="menuClick">
                 <slot />
                 <template v-if="ico">
                   <span
                     v-if="ico?.startsWith('<')"
-                    class="umo-button-icon-svg"
+                    class="mxm-button-icon-svg"
                     v-html="ico"
                   >
                   </span>
-                  <icon v-else class="umo-button-icon" :name="ico" />
+                  <icon v-else class="mxm-button-icon" :name="ico" />
                 </template>
-                <p class="umo-button-text">{{ text }}</p>
-                <kbd v-if="shortcutText" class="umo-button-kbd">{{
+                <p class="mxm-button-text">{{ text }}</p>
+                <kbd v-if="shortcutText" class="mxm-button-kbd">{{
                   getShortcut(shortcutText)
                 }}</kbd>
                 <span
                   v-if="$toolbar.mode === 'ribbon'"
-                  class="umo-button-icon-arrow"
+                  class="mxm-button-icon-arrow"
                 >
                   <icon name="arrow-down" />
                 </span>
               </div>
               <span
                 v-if="$toolbar.mode === 'classic'"
-                class="umo-button-icon-arrow"
+                class="mxm-button-icon-arrow"
               >
                 <icon name="arrow-down" />
               </span>
@@ -191,7 +191,7 @@
       <template v-else-if="menuType === 'popup'">
         <template v-if="popupHandle === 'arrow'">
           <t-button
-            class="umo-menu-button has-arrow"
+            class="mxm-menu-button has-arrow"
             :class="{
               'show-text': !hideText,
               active: popupVisible,
@@ -203,19 +203,19 @@
               !forceEnabled && (disabled || editor?.isEditable === false)
             "
           >
-            <div class="umo-button-content" @click="menuClick">
+            <div class="mxm-button-content" @click="menuClick">
               <slot />
               <template v-if="ico">
                 <span
                   v-if="ico?.startsWith('<')"
-                  class="umo-button-icon-svg"
+                  class="mxm-button-icon-svg"
                   v-html="ico"
                 >
                 </span>
-                <icon v-else class="umo-button-icon" :name="ico" />
+                <icon v-else class="mxm-button-icon" :name="ico" />
               </template>
-              <p class="umo-button-text">{{ text }}</p>
-              <kbd v-if="shortcutText" class="umo-button-kbd">
+              <p class="mxm-button-text">{{ text }}</p>
+              <kbd v-if="shortcutText" class="mxm-button-kbd">
                 {{ getShortcut(shortcutText) }}
               </kbd>
             </div>
@@ -232,20 +232,20 @@
               <span
                 v-if="$toolbar.mode === 'ribbon'"
                 ref="popupHandleRef"
-                class="umo-button-icon-arrow umo-button-handle"
+                class="mxm-button-icon-arrow mxm-button-handle"
                 @click="togglePopup(!popupVisible)"
               >
                 <icon name="arrow-down" />
               </span>
               <template #content>
-                <div ref="popupContentRef" class="umo-popup-content">
+                <div ref="popupContentRef" class="mxm-popup-content">
                   <slot name="content" />
                 </div>
               </template>
               <span
                 v-if="$toolbar.mode === 'classic'"
                 ref="popupHandleRef"
-                class="umo-button-icon-arrow umo-button-handle"
+                class="mxm-button-icon-arrow mxm-button-handle"
                 @click="togglePopup(!popupVisible)"
               >
                 <icon name="arrow-down" />
@@ -262,7 +262,7 @@
           >
             <t-button
               ref="popupHandleRef"
-              class="umo-menu-button has-arrow"
+              class="mxm-menu-button has-arrow"
               :class="{
                 huge: (huge && $toolbar.mode === 'ribbon') || forceHuge,
                 'show-text': !hideText,
@@ -276,37 +276,37 @@
               "
               @click="togglePopup(!popupVisible)"
             >
-              <div class="umo-button-content">
+              <div class="mxm-button-content">
                 <slot />
                 <template v-if="ico">
                   <span
                     v-if="ico?.startsWith('<')"
-                    class="umo-button-icon-svg"
+                    class="mxm-button-icon-svg"
                     v-html="ico"
                   >
                   </span>
-                  <icon v-else class="umo-button-icon" :name="ico" />
+                  <icon v-else class="mxm-button-icon" :name="ico" />
                 </template>
-                <p class="umo-button-text">{{ text }}</p>
-                <kbd v-if="shortcutText" class="umo-button-kbd">{{
+                <p class="mxm-button-text">{{ text }}</p>
+                <kbd v-if="shortcutText" class="mxm-button-kbd">{{
                   getShortcut(shortcutText)
                 }}</kbd>
                 <span
                   v-if="$toolbar.mode === 'ribbon'"
-                  class="umo-button-icon-arrow"
+                  class="mxm-button-icon-arrow"
                 >
                   <icon name="arrow-down" />
                 </span>
               </div>
               <span
                 v-if="$toolbar.mode === 'classic'"
-                class="umo-button-icon-arrow"
+                class="mxm-button-icon-arrow"
               >
                 <icon name="arrow-down" />
               </span>
             </t-button>
             <template #content>
-              <div ref="popupContentRef" class="umo-popup-content">
+              <div ref="popupContentRef" class="mxm-popup-content">
                 <slot name="content" />
               </div>
             </template>
@@ -416,32 +416,32 @@ onClickOutside(
     emits('toggle-popup', false)
   },
   {
-    ignore: [popupHandleRef, '.umo-popup'],
+    ignore: [popupHandleRef, '.mxm-popup'],
   },
 )
 </script>
 
 <style lang="less" scoped>
-.umo-menu-button {
+.mxm-menu-button {
   --td-comp-paddingLR-s: 5px;
-  --td-radius-default: var(--umo-radius);
+  --td-radius-default: var(--mxm-radius);
   border: none;
   &.show-text {
     width: auto;
     padding-left: var(--td-comp-paddingLR-s);
     padding-right: var(--td-comp-paddingLR-s);
-    .umo-button-content .umo-button-text {
+    .mxm-button-content .mxm-button-text {
       display: block !important;
       margin-left: 3px;
     }
   }
   &[disabled] {
-    .umo-button-icon {
-      --umo-primary-color: var(--umo-text-color-disabled);
-      color: var(--umo-text-color-disabled) !important;
+    .mxm-button-icon {
+      --mxm-primary-color: var(--mxm-text-color-disabled);
+      color: var(--mxm-text-color-disabled) !important;
     }
-    .umo-button-text {
-      color: var(--umo-text-color-disabled) !important;
+    .mxm-button-text {
+      color: var(--mxm-text-color-disabled) !important;
     }
   }
   &-wrap {
@@ -451,31 +451,31 @@ onClickOutside(
     }
   }
   &.active {
-    background-color: var(--umo-button-hover-background);
-    .umo-button-icon-arrow.umo-button-handle {
+    background-color: var(--mxm-button-hover-background);
+    .mxm-button-icon-arrow.mxm-button-handle {
       background-color: rgba(0, 0, 0, 0.05);
     }
   }
-  .umo-button-content {
+  .mxm-button-content {
     display: flex;
     align-items: center;
     justify-content: center;
-    .umo-button-icon,
-    :deep(.umo-icon) {
+    .mxm-button-icon,
+    :deep(.mxm-icon) {
       font-size: 16px;
     }
-    .umo-button-icon-svg {
+    .mxm-button-icon-svg {
       display: flex;
       :deep(svg) {
         width: 16px;
         height: 16px;
       }
     }
-    .umo-button-text {
+    .mxm-button-text {
       display: none;
     }
   }
-  .umo-button-icon-arrow {
+  .mxm-button-icon-arrow {
     display: flex;
     border-top-right-radius: var(--td-radius-default);
     border-bottom-right-radius: var(--td-radius-default);
@@ -484,11 +484,11 @@ onClickOutside(
     align-items: center;
     justify-content: center;
     margin-right: -3px;
-    .umo-button-icon {
+    .mxm-button-icon {
       font-size: 10px;
-      color: var(--umo-text-color-light);
+      color: var(--mxm-text-color-light);
     }
-    &.umo-button-handle {
+    &.mxm-button-handle {
       margin: 0 -4px 0 2px;
       &:hover {
         background-color: var(--td-bg-color-container-active);
@@ -501,18 +501,18 @@ onClickOutside(
     height: 56px;
     margin-bottom: 0;
     flex-direction: column;
-    .umo-button-content {
+    .mxm-button-content {
       display: flex;
       align-items: center;
       justify-content: center;
       flex-direction: column;
       min-width: 32px;
-      .umo-button-icon {
+      .mxm-button-icon {
         display: block;
         font-size: 24px;
         margin-top: 3px;
       }
-      .umo-button-icon-svg {
+      .mxm-button-icon-svg {
         display: flex;
         margin-top: 3px;
         :deep(svg) {
@@ -520,25 +520,25 @@ onClickOutside(
           height: 24px;
         }
       }
-      .umo-button-text {
+      .mxm-button-text {
         display: block;
         font-size: 12px;
-        color: var(--umo-text-color);
+        color: var(--mxm-text-color);
       }
-      .umo-button-icon-arrow {
+      .mxm-button-icon-arrow {
         position: absolute;
         left: calc(50% + 12px);
         top: 2px;
       }
     }
     &.has-arrow {
-      .umo-button-content {
+      .mxm-button-content {
         min-width: 40px;
       }
     }
   }
 }
-:global(.umo-popup-content) {
-  padding: var(--umo-popup-content-padding);
+:global(.mxm-popup-content) {
+  padding: var(--mxm-popup-content-padding);
 }
 </style>

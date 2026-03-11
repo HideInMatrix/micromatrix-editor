@@ -1,8 +1,8 @@
 <template>
-  <node-view-wrapper as="span" class="umo-node-datetime">
+  <node-view-wrapper as="span" class="mxm-node-datetime">
     <t-popup
       v-model="popupVisible"
-      :attach="`${container} .umo-zoomable-container`"
+      :attach="`${container} .mxm-zoomable-container`"
       trigger="click"
       placement="bottom-start"
       :disabled="
@@ -11,8 +11,8 @@
         !editor?.isEditable
       "
     >
-      <span class="umo-node-datetime-text">
-        <icon name="date" class="umo-node-datetime-icon" />
+      <span class="mxm-node-datetime-text">
+        <icon name="date" class="mxm-node-datetime-icon" />
         <span>{{ attrs.text }}</span>
       </span>
       <template #content>
@@ -88,7 +88,7 @@ const datetimeChange = (value) => {
 </script>
 
 <style lang="less">
-.umo-node-datetime {
+.mxm-node-datetime {
   margin: 0 0.2em;
   background-color: transparent !important;
   vertical-align: middle;
@@ -102,11 +102,11 @@ const datetimeChange = (value) => {
     white-space: nowrap;
   }
   &-icon {
-    color: var(--umo-text-color-light);
+    color: var(--mxm-text-color-light);
     margin-right: 0.3em;
   }
   &:hover {
-    color: var(--umo-primary-color);
+    color: var(--mxm-primary-color);
   }
 }
 </style>

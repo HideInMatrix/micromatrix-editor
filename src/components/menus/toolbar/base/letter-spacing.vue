@@ -10,7 +10,7 @@
     @toggle-popup="togglePopup"
   >
     <template #content>
-      <div class="umo-letter-spacing-tile">
+      <div class="mxm-letter-spacing-tile">
         {{ t('base.letterSpacing.tip', { value: spacing }) }}
         <tooltip :content="t('base.letterSpacing.reset')">
           <t-button
@@ -23,7 +23,7 @@
           </t-button>
         </tooltip>
       </div>
-      <div class="umo-letter-spacing-menu">
+      <div class="mxm-letter-spacing-menu">
         <t-button
           variant="text"
           size="small"
@@ -87,7 +87,7 @@ const resetLetterSpacing = () => {
 </script>
 
 <style lang="less" scoped>
-.umo-letter-spacing {
+.mxm-letter-spacing {
   &-tile {
     font-size: 12px;
     margin-bottom: 5px;
@@ -99,7 +99,7 @@ const resetLetterSpacing = () => {
     align-items: center;
     gap: 8px;
     width: 200px;
-    :deep(.umo-button) {
+    :deep(.mxm-button) {
       width: 20px;
       height: 20px;
       font-size: 16px;

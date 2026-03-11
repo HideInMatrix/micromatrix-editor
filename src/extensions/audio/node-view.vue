@@ -2,12 +2,12 @@
   <node-view-wrapper
     :id="attrs.id"
     ref="containerRef"
-    class="umo-node-view"
+    class="mxm-node-view"
     :style="nodeStyle"
     @click.capture="editor?.commands.setNodeSelection(getPos())"
   >
     <div
-      class="umo-node-container umo-hover-shadow umo-select-outline umo-node-audio"
+      class="mxm-node-container mxm-hover-shadow mxm-select-outline mxm-node-audio"
     >
       <audio
         v-show="playerShow"
@@ -94,14 +94,14 @@ onClickOutside(containerRef, () => {
 </script>
 
 <style lang="less">
-.umo-node-view {
-  .umo-node-audio {
+.mxm-node-view {
+  .mxm-node-audio {
     max-width: 100%;
     width: 360px;
     position: relative;
     display: flex;
-    border-radius: var(--umo-radius);
-    outline: solid 1px var(--umo-border-color);
+    border-radius: var(--mxm-radius);
+    outline: solid 1px var(--mxm-border-color);
     audio {
       width: 100%;
       outline: none;
@@ -114,13 +114,13 @@ onClickOutside(containerRef, () => {
       background: rgba(0, 0, 0, 0.2);
       height: 2px;
       left: 0;
-      border-top-left-radius: var(--umo-radius);
-      border-top-right-radius: var(--umo-radius);
+      border-top-left-radius: var(--mxm-radius);
+      border-top-right-radius: var(--mxm-radius);
       &:after {
         content: '';
         display: block;
         height: 100%;
-        background-color: var(--umo-primary-color);
+        background-color: var(--mxm-primary-color);
         animation: progress 1s linear infinite;
       }
     }

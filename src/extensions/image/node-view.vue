@@ -1,9 +1,9 @@
 <template>
   <node-view-wrapper
     ref="containerRef"
-    class="umo-node-view"
+    class="mxm-node-view"
     :class="{
-      'umo-floating-node': attrs.draggable,
+      'mxm-floating-node': attrs.draggable,
       'is-inline-image': attrs.inline,
     }"
     :style="nodeStyle"
@@ -11,12 +11,12 @@
     @click.capture="editor?.commands.setNodeSelection(getPos())"
   >
     <div
-      class="umo-node-container umo-node-image"
+      class="mxm-node-container mxm-node-image"
       :class="{
         'is-loading': attrs.src && isLoading,
         'is-error': attrs.src && error,
-        'umo-hover-shadow': !options.document?.readOnly,
-        'umo-select-outline': !attrs.draggable,
+        'mxm-hover-shadow': !options.document?.readOnly,
+        'mxm-select-outline': !attrs.draggable,
       }"
     >
       <div
@@ -298,7 +298,7 @@ onBeforeUnmount(() => {
 </script>
 
 <style lang="less">
-.umo-node-view {
+.mxm-node-view {
   &.is-inline-image {
     display: inline-block !important;
     padding: 2px 6px;
@@ -307,7 +307,7 @@ onBeforeUnmount(() => {
       max-height: 100% !important;
     }
   }
-  .umo-node-image {
+  .mxm-node-image {
     max-width: 100%;
     width: auto;
     position: relative;
@@ -340,12 +340,12 @@ onBeforeUnmount(() => {
       display: flex;
       align-items: center;
       justify-content: center;
-      color: var(--umo-text-color-light);
+      color: var(--mxm-text-color-light);
       font-size: 12px;
       gap: 10px;
 
       .loading-icon {
-        color: var(--umo-primary-color);
+        color: var(--mxm-primary-color);
         font-size: 22px;
         animation: turn 1s linear infinite;
       }
@@ -358,7 +358,7 @@ onBeforeUnmount(() => {
       align-items: center;
       justify-content: center;
       flex-direction: column;
-      color: var(--umo-text-color-light);
+      color: var(--mxm-text-color-light);
       font-size: 12px;
       min-height: 120px;
 
@@ -392,7 +392,7 @@ onBeforeUnmount(() => {
           content: '';
           display: block;
           height: 100%;
-          background-color: var(--umo-primary-color);
+          background-color: var(--mxm-primary-color);
           animation: progress 1s linear infinite;
         }
       }

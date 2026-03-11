@@ -1,6 +1,6 @@
 <template>
-  <div class="umo-color-picker-container">
-    <div class="umo-color-picker-default-button">
+  <div class="mxm-color-picker-container">
+    <div class="mxm-color-picker-default-button">
       <t-button
         theme="default"
         variant="outline"
@@ -11,55 +11,55 @@
       >
       </t-button>
     </div>
-    <div class="umo-color-picker-group">
+    <div class="mxm-color-picker-group">
       <div
         v-for="(item, index) in options.dicts?.colors"
         :key="index"
-        class="umo-color-picker-item"
+        class="mxm-color-picker-item"
         :style="{ backgroundColor: item }"
         @click="selectColor(item)"
       ></div>
     </div>
     <div
-      class="umo-color-picker-group-title"
+      class="mxm-color-picker-group-title"
       v-text="t('colorPicker.standard')"
     ></div>
-    <div class="umo-color-picker-group">
+    <div class="mxm-color-picker-group">
       <div
         v-for="(item, index) in standardColors"
         :key="index"
-        class="umo-color-picker-item"
+        class="mxm-color-picker-item"
         :style="{ backgroundColor: item }"
         @click="selectColor(item)"
       ></div>
     </div>
     <div
       v-if="$recent.colors.length > 0"
-      class="umo-color-picker-group-title"
+      class="mxm-color-picker-group-title"
       v-text="t('colorPicker.recent')"
     ></div>
-    <div v-if="$recent.colors.length > 0" class="umo-color-picker-group">
+    <div v-if="$recent.colors.length > 0" class="mxm-color-picker-group">
       <div
         v-for="(item, index) in $recent.colors"
         :key="index"
-        class="umo-color-picker-item"
+        class="mxm-color-picker-item"
         :style="{ backgroundColor: item }"
         @click="selectColor(item)"
       ></div>
     </div>
-    <div class="umo-color-picker-divider"></div>
+    <div class="mxm-color-picker-divider"></div>
     <t-popup
       :attach="container"
       trigger="click"
       placement="right-bottom"
       @visible-change="(visible) => (moreColorPicker = visible)"
     >
-      <div class="umo-color-picker-more" :class="{ active: moreColorPicker }">
-        <div class="umo-color-picker-more-menu">
+      <div class="mxm-color-picker-more" :class="{ active: moreColorPicker }">
+        <div class="mxm-color-picker-more-menu">
           <icon name="palette-color" />
           <span v-text="t('colorPicker.more')"></span>
         </div>
-        <div class="umo-color-picker-more-arrow">
+        <div class="mxm-color-picker-more-arrow">
           <icon name="arrow-down" />
         </div>
       </div>
@@ -132,12 +132,12 @@ const selectColor = (color) => {
 </script>
 
 <style lang="less" scoped>
-.umo-color-picker {
+.mxm-color-picker {
   &-container {
     width: 236px;
   }
   &-default-button {
-    .umo-button {
+    .mxm-button {
       height: 28px;
     }
   }
@@ -147,7 +147,7 @@ const selectColor = (color) => {
     margin: 8px 0;
     gap: 4px;
     &-title {
-      color: var(--umo-text-color-light);
+      color: var(--mxm-text-color-light);
       font-size: 12px;
       margin: 5px 0 2px;
     }
@@ -169,7 +169,7 @@ const selectColor = (color) => {
   }
   &-divider {
     height: 1px;
-    background-color: var(--umo-border-color-light);
+    background-color: var(--mxm-border-color-light);
     margin: 10px 0;
   }
   &-more {
@@ -181,21 +181,21 @@ const selectColor = (color) => {
     &:hover,
     &.active {
       background-color: var(--td-bg-color-container-hover);
-      border-radius: var(--umo-radius);
+      border-radius: var(--mxm-radius);
     }
     &-menu {
       display: flex;
       align-items: center;
       font-size: 12px;
-      color: var(--umo-text-color-light);
+      color: var(--mxm-text-color-light);
       cursor: pointer;
-      .umo-icon {
+      .mxm-icon {
         margin-right: 5px;
         font-size: 18px;
       }
     }
     &-arrow {
-      .umo-icon {
+      .mxm-icon {
         transform: rotate(-90deg);
       }
     }

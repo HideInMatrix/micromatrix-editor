@@ -5,7 +5,7 @@
     :tooltip="t('tools.chineseCase.tip')"
     menu-type="dropdown"
     huge
-    overlay-class-name="umo-chinese-case-dropdown"
+    overlay-class-name="mxm-chinese-case-dropdown"
   >
     <template #dropmenu>
       <t-dropdown-menu>
@@ -118,17 +118,17 @@ const setChineseCase = (fn) => {
 </script>
 
 <style lang="less">
-.umo-chinese-case-dropdown {
-  .umo-dropdown__item {
+.mxm-chinese-case-dropdown {
+  .mxm-dropdown__item {
     max-width: unset !important;
     &-text {
       padding: 5px;
       .label {
         font-size: 14px;
-        color: var(--umo-text-color);
+        color: var(--mxm-text-color);
       }
       .desc {
-        color: var(--umo-text-color-light);
+        color: var(--mxm-text-color-light);
         margin-top: -3px;
       }
     }

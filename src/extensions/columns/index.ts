@@ -27,14 +27,14 @@ const Column = Node.create({
   parseHTML() {
     return [
       {
-        tag: 'div.umo-node-column',
+        tag: 'div.mxm-node-column',
       },
     ]
   },
   renderHTML({ HTMLAttributes }) {
     return [
       'div',
-      mergeAttributes(HTMLAttributes, { class: 'umo-node-column' }),
+      mergeAttributes(HTMLAttributes, { class: 'mxm-node-column' }),
       0,
     ]
   },
@@ -47,7 +47,7 @@ const ColumnContainer = Node.create({
   parseHTML() {
     return [
       {
-        tag: 'div.umo-node-column-container',
+        tag: 'div.mxm-node-column-container',
       },
     ]
   },
@@ -55,7 +55,7 @@ const ColumnContainer = Node.create({
     return [
       'div',
       mergeAttributes(HTMLAttributes, {
-        class: 'umo-node-column-container',
+        class: 'mxm-node-column-container',
       }),
       0,
     ]

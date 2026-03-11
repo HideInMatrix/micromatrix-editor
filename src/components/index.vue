@@ -3,28 +3,28 @@
     :key="options.editorKey"
     :global-config="{
       ...localeConfig[locale],
-      classPrefix: 'umo',
+      classPrefix: 'mxm',
     }"
   >
     <div
       :id="container.substr(1)"
-      class="umo-editor-container"
+      class="mxm-editor-container"
       :class="{
         'toolbar-classic': isRecord($toolbar) && $toolbar.mode === 'classic',
         'toolbar-ribbon': isRecord($toolbar) && $toolbar.mode === 'ribbon',
         'preview-mode': page.preview?.enabled,
         'laser-pointer': page.preview?.enabled && page.preview?.laserPointer,
-        'umo-editor-is-fullscreen': fullscreen,
-        'umo-editor-is-typerwriter-runing': typeWriterIsRunning,
-        'umo-skin-default': options.skin === 'default',
-        'umo-skin-modern': options.skin === 'modern',
+        'mxm-editor-is-fullscreen': fullscreen,
+        'mxm-editor-is-typerwriter-runing': typeWriterIsRunning,
+        'mxm-skin-default': options.skin === 'default',
+        'mxm-skin-modern': options.skin === 'modern',
       }"
       :style="{
         height: options.height,
         zIndex: fullscreen ? options.fullscreenZIndex : 'unset',
       }"
     >
-      <header class="umo-toolbar">
+      <header class="mxm-toolbar">
         <toolbar
           :key="toolbarKey"
           @menu-change="(event) => emits('changed:menu', event)"
@@ -38,14 +38,14 @@
           </template>
         </toolbar>
       </header>
-      <main class="umo-main">
+      <main class="mxm-main">
         <container-page>
           <template #bubble_menu="slotProps">
             <slot name="bubble_menu" v-bind="slotProps" />
           </template>
         </container-page>
       </main>
-      <footer class="umo-footer">
+      <footer class="mxm-footer">
         <statusbar />
       </footer>
     </div>
@@ -80,7 +80,7 @@ import { shortId } from '@/utils/short-id'
 import { getCurrentInstance } from 'vue'
 const { toBlob, toJpeg, toPng } = domToImage
 
-defineOptions({ name: 'UmoEditor' })
+defineOptions({ name: 'MxmEditor' })
 
 // Props and Emits
 const props = defineProps(propsOptions)
@@ -121,7 +121,7 @@ const historyRecords = ref({
   editorCount: 0,
 })
 
-const container = $ref(`#umo-editor-${shortId(4)}`)
+const container = $ref(`#mxm-editor-${shortId(4)}`)
 const defaultOptions = inject('defaultOptions', {})
 const options = ref(getOpitons(props, defaultOptions))
 const editor = ref(null)
@@ -212,8 +212,8 @@ watch(
 
 // Lifecycle Hooks
 onMounted(() => {
-  const theme = useStorage('umo-editor:theme', options.value.theme)
-  const skin = useStorage('umo-editor:skin', options.value.skin)
+  const theme = useStorage('mxm-editor:theme', options.value.theme)
+  const skin = useStorage('mxm-editor:skin', options.value.skin)
   setTheme(theme.value)
   setSkin(skin.value)
 })
@@ -456,7 +456,7 @@ watch(
     try {
       setTimeout(() => {
         const containerEl = document.querySelector(
-          `${container} .umo-zoomable-container`,
+          `${container} .mxm-zoomable-container`,
         )
         containerEl.scrollTop = 0
       }, 200)
@@ -488,7 +488,7 @@ watch(
 
 // i18n Setup
 const { t, locale, mergeLocaleMessage } = useI18n()
-const $locale = useStorage('umo-editor:locale', options.value.locale)
+const $locale = useStorage('mxm-editor:locale', options.value.locale)
 locale.value = $locale.value
 consoleCopyright()
 const getLocaleMessage = (lang) => {
@@ -521,7 +521,7 @@ const localeConfig = $ref<Record<string, any>>({
 const setOptions = (value) => {
   try {
     options.value = getOpitons(value, defaultOptions)
-    const $locale = useStorage('umo-editor:locale', options.value.locale)
+    const $locale = useStorage('mxm-editor:locale', options.value.locale)
     if (!$locale.value) {
       $locale.value = options.value.locale
     }
@@ -537,7 +537,7 @@ const setTheme = (theme) => {
   if (theme !== 'auto') {
     document.querySelector('html')?.setAttribute('theme-mode', theme)
 
-    const $theme = useStorage('umo-editor:theme', options.value.theme)
+    const $theme = useStorage('mxm-editor:theme', options.value.theme)
     $theme.value = theme
     emits('changed:theme', theme)
     return
@@ -555,7 +555,7 @@ const setSkin = (skin) => {
   if (!isString(skin) || !['modern', 'default'].includes(skin)) {
     throw new Error('"skin" must be one of "modern" or "default".')
   }
-  const $skin = useStorage('umo-editor:skin', options.value.skin)
+  const $skin = useStorage('mxm-editor:skin', options.value.skin)
   $skin.value = skin
   options.value.skin = skin
   emits('changed:skin', skin)
@@ -839,7 +839,7 @@ const getImage = async (format = 'blob') => {
   const { zoomLevel } = page.value
   try {
     page.value.zoomLevel = 100
-    const node = document.querySelector(`${container} .umo-page-content`)
+    const node = document.querySelector(`${container} .mxm-page-content`)
     if (format === 'blob') {
       return await toBlob(node)
     }
@@ -873,7 +873,7 @@ const getVanillaHTML = async () => {
   }
   await nextTick()
   const pageNode = document
-    .querySelector(`${container} .umo-page-content`)
+    .querySelector(`${container} .mxm-page-content`)
     ?.cloneNode(true) as HTMLElement | null
   if (!pageNode) {
     return ''
@@ -883,9 +883,9 @@ const getVanillaHTML = async () => {
   }
 
   const replaceIcons = (nodes, size = '1em') => {
-    const iconsNode = document.querySelector('#umo-icons')
+    const iconsNode = document.querySelector('#mxm-icons')
     nodes.forEach((el) => {
-      const icons = el.querySelectorAll('.umo-icon')
+      const icons = el.querySelectorAll('.mxm-icon')
       icons.forEach((svg) => {
         const iconId = svg.childNodes[0].getAttribute('xlink:href')
         svg.setAttribute('viewBox', '0 0 48 48')
@@ -905,7 +905,7 @@ const getVanillaHTML = async () => {
 
   // 如果存在视频或音频节点，则替换视频标签
   const mediaNodes = pageNode.querySelectorAll(
-    '.umo-node-video, .umo-node-audio',
+    '.mxm-node-video, .mxm-node-audio',
   )
   mediaNodes.forEach((el) => {
     const mediaNode = el.querySelector('video, audio')
@@ -913,25 +913,25 @@ const getVanillaHTML = async () => {
   })
 
   // 如果存在文件节点，替换文件节点图标
-  const fileNodes = pageNode.querySelectorAll('.umo-node-file')
+  const fileNodes = pageNode.querySelectorAll('.mxm-node-file')
   replaceIcons(fileNodes)
 
   // 代码块处理
-  const codeBlockNodes = pageNode.querySelectorAll('.umo-code-block')
+  const codeBlockNodes = pageNode.querySelectorAll('.mxm-code-block')
   codeBlockNodes.forEach((el) => {
-    const wordWrapButton = el.querySelector('.umo-word-wrap-button')
+    const wordWrapButton = el.querySelector('.mxm-word-wrap-button')
     if (wordWrapButton) {
       wordWrapButton.remove()
     }
-    const buttonNodes = el.querySelectorAll('.umo-button-text')
+    const buttonNodes = el.querySelectorAll('.mxm-button-text')
     buttonNodes.forEach((item) => item.remove())
   })
   replaceIcons(codeBlockNodes, '16px')
 
   // 图表处理
-  const chartNodes = pageNode.querySelectorAll('.umo-node-echarts')
+  const chartNodes = pageNode.querySelectorAll('.mxm-node-echarts')
   chartNodes.forEach((el) => {
-    const chartNode = el.querySelector('.umo-node-echarts-body')
+    const chartNode = el.querySelector('.mxm-node-echarts-body')
     if (chartNode) {
       chartNode.removeAttribute('_echarts_instance_')
       chartNode.innerHTML = ''
@@ -952,14 +952,14 @@ const getVanillaHTML = async () => {
     const watermarkNode = pageNode.lastElementChild
     if (
       watermarkNode &&
-      !watermarkNode?.classList?.contains('umo-page-node-footer')
+      !watermarkNode?.classList?.contains('mxm-page-node-footer')
     ) {
       watermarkNode.remove()
     }
   }
 
   // 移除菜单
-  const menuNodes = pageNode.querySelector('.umo-block-menu-drag-handle')
+  const menuNodes = pageNode.querySelector('.mxm-block-menu-drag-handle')
   if (menuNodes) {
     menuNodes.remove()
   }
@@ -1002,7 +1002,7 @@ const toggleFullscreen = (isFullscreen) => {
 const reset = (silent) => {
   const resetLocalStorage = () => {
     const keys = Object.keys(localStorage)
-    const umoEditorKeys = keys.filter((key) => key.startsWith('umo-editor:'))
+    const umoEditorKeys = keys.filter((key) => key.startsWith('mxm-editor:'))
     umoEditorKeys.forEach((key) => localStorage.removeItem(key))
     location.reload()
   }
@@ -1321,61 +1321,61 @@ defineExpose({
 <style lang="less">
 @import '@/assets/styles/index.less';
 
-.umo-editor-container {
-  --td-brand-color: var(--umo-primary-color);
-  --td-warning-color: var(--umo-warning-color);
-  --td-error-color: var(--umo-error-color);
-  --td-text-color-primary: var(--umo-text-color);
-  --td-text-color-disabled: var(--umo-text-color-disabled);
+.mxm-editor-container {
+  --td-brand-color: var(--mxm-primary-color);
+  --td-warning-color: var(--mxm-warning-color);
+  --td-error-color: var(--mxm-error-color);
+  --td-text-color-primary: var(--mxm-text-color);
+  --td-text-color-disabled: var(--mxm-text-color-disabled);
   width: 100%;
   height: 100%;
   min-height: 400px;
   display: flex;
   flex-direction: column;
-  color: var(--umo-text-color);
-  font-family: var(--umo-font-family);
+  color: var(--mxm-text-color);
+  font-family: var(--mxm-font-family);
   position: relative !important;
-  background-color: var(--umo-container-background);
-  .umo-footer {
-    background-color: var(--umo-color-white);
+  background-color: var(--mxm-container-background);
+  .mxm-footer {
+    background-color: var(--mxm-color-white);
   }
-  &.umo-skin-default {
-    .umo-toolbar {
-      border-bottom: solid 1px var(--umo-border-color);
-      background-color: var(--umo-color-white);
+  &.mxm-skin-default {
+    .mxm-toolbar {
+      border-bottom: solid 1px var(--mxm-border-color);
+      background-color: var(--mxm-color-white);
     }
   }
-  &.umo-skin-default {
-    .umo-toolbar {
-      background-color: var(--umo-color-white);
+  &.mxm-skin-default {
+    .mxm-toolbar {
+      background-color: var(--mxm-color-white);
     }
   }
-  .umo-main {
+  .mxm-main {
     flex: 1;
-    background-color: var(--umo-container-background);
+    background-color: var(--mxm-container-background);
     overflow: hidden;
   }
   &.preview-mode {
     &.laser-pointer {
-      .umo-main {
+      .mxm-main {
         cursor: url('@/assets/images/laser-pointer.svg'), auto;
       }
     }
-    .umo-toolbar {
+    .mxm-toolbar {
       display: none;
     }
-    .umo-page-container {
+    .mxm-page-container {
       padding: 45px 0;
     }
   }
-  &.umo-editor-is-fullscreen {
+  &.mxm-editor-is-fullscreen {
     position: fixed !important;
     top: 0;
     left: 0;
     right: 0;
     bottom: 0;
   }
-  &.umo-editor-is-typerwriter-runing {
+  &.mxm-editor-is-typerwriter-runing {
     pointer-events: none;
   }
 }

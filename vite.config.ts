@@ -32,8 +32,8 @@ const vuePlugins = {
   }),
   SvgIcons: createSvgIconsPlugin({
     iconDirs: [`${process.cwd()}/src/assets/icons`],
-    symbolId: 'umo-icon-[name]',
-    customDomId: 'umo-icons',
+    symbolId: 'mxm-icon-[name]',
+    customDomId: 'mxm-icons',
   }),
 }
 
@@ -43,7 +43,7 @@ const buildConfig = {
   lib: {
     entry: `${process.cwd()}/src/components/index.ts`,
     name: pkg.name,
-    fileName: 'umo-editor',
+    fileName: 'mxm-editor',
   },
   outDir: 'dist',
   copyPublicDir: false,
@@ -53,7 +53,7 @@ const buildConfig = {
     output: [
       {
         banner: copyright,
-        intro: `import './umo-editor.css'`,
+        intro: `import './mxm-editor.css'`,
         format: 'es',
       },
     ],
@@ -75,7 +75,7 @@ const buildConfig = {
 const cssConfig = {
   preprocessorOptions: {
     less: {
-      modifyVars: { '@prefix': 'umo' },
+      modifyVars: { '@prefix': 'mxm' },
       javascriptEnabled: true,
       // 添加 Less 插件来排除特定类名
       plugins: [
@@ -94,7 +94,7 @@ const cssConfig = {
 }
 
 export default defineConfig({
-  base: '/umo-editor',
+  base: '/mxm-editor',
   plugins: [ReactivityTransform(), ...Object.values(vuePlugins)],
   css: cssConfig,
   build: buildConfig,

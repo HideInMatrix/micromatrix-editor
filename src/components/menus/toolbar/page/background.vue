@@ -8,11 +8,11 @@
     @toggle-popup="togglePopup"
   >
     <template #content>
-      <div class="umo-background-container">
+      <div class="mxm-background-container">
         <div
           v-for="(item, index) in backgrounds"
           :key="index"
-          class="umo-background-item"
+          class="mxm-background-item"
           :class="{ active: page.background === item.value }"
           :style="{ backgroundColor: item.value }"
           @click="backgroundChange(item.value || '')"
@@ -26,12 +26,12 @@
         placement="right-bottom"
         @visible-change="(visible) => (moreColorPicker = visible)"
       >
-        <div class="umo-background-more" :class="{ active: moreColorPicker }">
-          <div class="umo-background-more-menu">
+        <div class="mxm-background-more" :class="{ active: moreColorPicker }">
+          <div class="mxm-background-more-menu">
             <icon name="palette-color" />
             <span v-text="t('page.bg.custom')"></span>
           </div>
-          <div class="umo-background-more-arrow">
+          <div class="mxm-background-more-arrow">
             <icon name="arrow-down" />
           </div>
         </div>
@@ -72,23 +72,23 @@ const backgroundChange = (color) => {
 </script>
 
 <style lang="less" scoped>
-.umo-background-container {
+.mxm-background-container {
   display: flex;
   flex-wrap: wrap;
   width: 234px;
   justify-content: space-between;
   gap: 9px;
   user-select: none;
-  .umo-background-item {
+  .mxm-background-item {
     width: 70px;
     height: 90px;
     border: solid 1px rgba(0, 0, 0, 0.1);
-    border-radius: var(--umo-radius);
+    border-radius: var(--mxm-radius);
     display: flex;
     align-items: center;
     justify-content: center;
     font-size: 10px;
-    color: var(--umo-text-color-light);
+    color: var(--mxm-text-color-light);
     text-align: center;
     cursor: pointer;
     white-space: pre;
@@ -98,12 +98,12 @@ const backgroundChange = (color) => {
       transform: scale(1.02);
     }
     &.active {
-      color: var(--umo-primary-color);
-      border-color: var(--umo-primary-color);
+      color: var(--mxm-primary-color);
+      border-color: var(--mxm-primary-color);
     }
   }
 }
-.umo-background-more {
+.mxm-background-more {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -113,20 +113,20 @@ const backgroundChange = (color) => {
   &:hover,
   &.active {
     background-color: var(--td-bg-color-container-hover);
-    border-radius: var(--umo-radius);
+    border-radius: var(--mxm-radius);
   }
   &-menu {
     display: flex;
     align-items: center;
     font-size: 12px;
     cursor: pointer;
-    .umo-icon {
+    .mxm-icon {
       margin-right: 5px;
       font-size: 16px;
     }
   }
   &-arrow {
-    .umo-icon {
+    .mxm-icon {
       transform: rotate(-90deg);
     }
   }

@@ -3,15 +3,15 @@
 @import 'tdesign-vue-next/esm/common/style/web/components/time-picker/_index.less';
 
 body {
-  .umo-popup {
-    --td-radius-medium: var(--umo-radius);
-    --td-warning-color: var(--umo-warning-color);
-    --td-error-color: var(--umo-error-color);
+  .mxm-popup {
+    --td-radius-medium: var(--mxm-radius);
+    --td-warning-color: var(--mxm-warning-color);
+    --td-error-color: var(--mxm-error-color);
 
-    &.umo-tooltip {
-      --td-font-size-body-medium: var(--umo-font-size-small);
+    &.mxm-tooltip {
+      --td-font-size-body-medium: var(--mxm-font-size-small);
 
-      .umo-popup__content {
+      .mxm-popup__content {
         padding: 5px 12px;
 
         &:empty {
@@ -20,38 +20,38 @@ body {
       }
     }
 
-    .umo-dropdown {
+    .mxm-dropdown {
       ul {
         margin: 0;
       }
 
       &__menu {
         padding: var(--td-pop-padding-s);
-        max-height: var(--umo-popup-max-height);
+        max-height: var(--mxm-popup-max-height);
       }
 
       &__item {
-        font-size: var(--umo-font-size-small);
+        font-size: var(--mxm-font-size-small);
         padding: 2px var(--td-comp-paddingLR-s);
         min-width: 80px !important;
       }
     }
 
-    &.umo-select__dropdown {
-      .umo-popup__content {
+    &.mxm-select__dropdown {
+      .mxm-popup__content {
         box-shadow:
           var(--td-shadow-2), var(--td-shadow-inset-top),
           var(--td-shadow-inset-right), var(--td-shadow-inset-bottom),
           var(--td-shadow-inset-left);
-        max-height: var(--umo-popup-max-height);
+        max-height: var(--mxm-popup-max-height);
       }
 
-      .umo-select-option {
+      .mxm-select-option {
         &-group__header {
-          font-size: var(--umo-font-size-small);
+          font-size: var(--mxm-font-size-small);
         }
 
-        &.umo-size-s {
+        &.mxm-size-s {
           height: 26px;
         }
       }
@@ -62,11 +62,11 @@ body {
     }
   }
 
-  .umo-toolbar {
-    .umo-input.umo-size-s {
+  .mxm-toolbar {
+    .mxm-input.mxm-size-s {
       --td-comp-paddingLR-s: 5px;
 
-      &.umo-input--suffix {
+      &.mxm-input--suffix {
         padding-right: 2px !important;
       }
 
@@ -78,46 +78,46 @@ body {
     }
   }
 
-  .umo-input--focused {
+  .mxm-input--focused {
     --td-brand-color-focus: transparent;
   }
 
-  .umo-button {
+  .mxm-button {
     user-select: none;
   }
 
-  .umo-color-picker__panel {
-    padding: var(--umo-popup-content-padding) !important;
+  .mxm-color-picker__panel {
+    padding: var(--mxm-popup-content-padding) !important;
 
-    .umo-color-picker__body {
+    .mxm-color-picker__body {
       padding: 0;
 
-      .umo-color-picker__swatches-wrap {
+      .mxm-color-picker__swatches-wrap {
         display: none;
       }
     }
   }
 
-  .umo-dialog,
+  .mxm-dialog,
   .t-dialog {
-    --td-warning-color: var(--umo-warning-color);
-    --td-error-color: var(--umo-error-color);
+    --td-warning-color: var(--mxm-warning-color);
+    --td-error-color: var(--mxm-error-color);
     box-shadow:
       var(--td-shadow-2), var(--td-shadow-inset-top),
       var(--td-shadow-inset-right), var(--td-shadow-inset-bottom),
       var(--td-shadow-inset-left);
     border: none;
-    border-radius: var(--umo-radius-medium);
-    color: var(--umo-text-color);
+    border-radius: var(--mxm-radius-medium);
+    color: var(--mxm-text-color);
 
     &__mask {
       position: absolute !important;
     }
 
     &__ctx {
-      --td-mask-active: var(--umo-mask-color);
+      --td-mask-active: var(--mxm-mask-color);
 
-      .umo-dialog__wrap,
+      .mxm-dialog__wrap,
       .t-dialog__wrap {
         position: absolute;
 
@@ -133,7 +133,7 @@ body {
 
       &--fixed {
 
-        .umo-dialog,
+        .mxm-dialog,
         .t-dialog {
           &__mask {
             backdrop-filter: blur(5px);
@@ -142,7 +142,7 @@ body {
       }
     }
 
-    &:not(.umo-dialog__fullscreen):not(.t-dialog__fullscreen) {
+    &:not(.mxm-dialog__fullscreen):not(.t-dialog__fullscreen) {
       padding: 22px 25px 25px;
     }
 
@@ -162,7 +162,7 @@ body {
         font-weight: 400;
         align-items: center;
 
-        >.umo-icon {
+        >.mxm-icon {
           margin-right: 8px;
           font-size: 24px;
         }
@@ -171,9 +171,9 @@ body {
       &--fullscreen {
         min-height: 58px;
         padding: 0 15px;
-        border-bottom: solid 1px var(--umo-border-color);
+        border-bottom: solid 1px var(--mxm-border-color);
 
-        .umo-dialog__header-content,
+        .mxm-dialog__header-content,
         .t-dialog__header-content {
           justify-content: flex-start;
         }
@@ -181,10 +181,10 @@ body {
     }
 
     &__close {
-      color: var(--umo-text-color-light);
+      color: var(--mxm-text-color-light);
 
       &:hover {
-        color: var(--umo-text-color);
+        color: var(--mxm-text-color);
       }
     }
 
@@ -200,20 +200,20 @@ body {
 
       &--fullscreen {
         padding: 15px;
-        border-top: solid 1px var(--umo-border-color);
+        border-top: solid 1px var(--mxm-border-color);
       }
     }
   }
 
-  .umo-slider {
+  .mxm-slider {
     &__button {
       --td-comp-size-xxxs: 10px;
     }
   }
 
-  .umo-drawer {
+  .mxm-drawer {
     &__mask {
-      --td-mask-active: var(--umo-mask-color);
+      --td-mask-active: var(--mxm-mask-color);
     }
 
     &__close-btn {
@@ -223,29 +223,29 @@ body {
         color: rgba(0, 0, 0, 0.6);
       }
 
-      .umo-icon {
+      .mxm-icon {
         font-size: 20px;
       }
     }
   }
 
-  .umo-radio-group--filled {
-    --td-bg-color-component: var(--umo-button-hover-background);
+  .mxm-radio-group--filled {
+    --td-bg-color-component: var(--mxm-button-hover-background);
   }
 
-  .umo-input-number.umo-is-controls-right {
+  .mxm-input-number.mxm-is-controls-right {
 
-    .umo-input-number__decrease,
-    .umo-input-number__increase {
+    .mxm-input-number__decrease,
+    .mxm-input-number__increase {
       width: 18px;
     }
 
-    .umo-input {
+    .mxm-input {
       padding-right: 26px;
     }
   }
 
-  .umo-dropdown {
+  .mxm-dropdown {
     &__menu {
       --td-pop-padding-s: 10px;
     }
@@ -254,43 +254,43 @@ body {
       max-width: 200px !important;
     }
 
-    .umo-divider--horizontal {
+    .mxm-divider--horizontal {
       margin: 6px 0;
       width: 100%;
-      background-color: var(--umo-border-color-light);
+      background-color: var(--mxm-border-color-light);
     }
   }
 
-  .umo-select {
+  .mxm-select {
     &__list {
       --td-pop-padding-s: 10px;
     }
 
-    .umo-is-disabled {
+    .mxm-is-disabled {
       background-color: transparent;
     }
   }
 
-  .umo-color-picker {
+  .mxm-color-picker {
     &__sliders-preview-inner {
-      border: solid 1px var(--umo-border-color);
+      border: solid 1px var(--mxm-border-color);
       box-sizing: border-box;
       border-radius: 3px;
     }
   }
 
-  .umo-image-viewer-preview-image {
+  .mxm-image-viewer-preview-image {
     position: absolute;
   }
 
-  .umo-image-viewer__modal {
+  .mxm-image-viewer__modal {
     &-mask {
-      background-color: var(--umo-color-white) !important;
+      background-color: var(--mxm-color-white) !important;
       opacity: 0.8 !important;
     }
 
     &-header {
-      border-bottom: solid 1px var(--umo-border-color-light);
+      border-bottom: solid 1px var(--mxm-border-color-light);
     }
 
     &-icon {
@@ -307,15 +307,15 @@ body {
     }
   }
 
-  .umo-image-viewer__utils-content {
-    box-shadow: var(--umo-shadow);
-    border: 1px solid var(--umo-border-color);
-    background-color: var(--umo-color-white);
+  .mxm-image-viewer__utils-content {
+    box-shadow: var(--mxm-shadow);
+    border: 1px solid var(--mxm-border-color);
+    background-color: var(--mxm-color-white);
   }
 
-  .umo-message,
+  .mxm-message,
   .t-message {
-    border-radius: var(--umo-radius);
+    border-radius: var(--mxm-radius);
     max-width: 360px;
 
     &__list {
@@ -323,18 +323,18 @@ body {
     }
   }
 
-  .umo-slider__container {
+  .mxm-slider__container {
     --td-comp-size-xxxs: 8px;
     --td-size-2: 3px;
     --td-brand-color: #999;
 
-    .umo-slider__button {
+    .mxm-slider__button {
       background: var(--td-brand-color);
       border: none;
       box-shadow: none;
     }
 
-    .umo-slider__track {
+    .mxm-slider__track {
       background: none;
     }
   }

@@ -2,16 +2,16 @@
   <div
     v-if="items.length > 0"
     ref="popupRef"
-    class="umo-popup umo-mention-popup"
+    class="mxm-popup mxm-mention-popup"
   >
-    <div class="umo-popup__content umo-dropdown">
-      <div class="umo-dropdown__menu" style="padding: 5px; max-height: 320px">
+    <div class="mxm-popup__content mxm-dropdown">
+      <div class="mxm-dropdown__menu" style="padding: 5px; max-height: 320px">
         <div>
           <li
             v-for="(item, index) in items"
             :key="index"
-            class="umo-dropdown__item umo-dropdown__item--theme-default umo-dropdown__item"
-            :class="{ 'umo-dropdown__item--active': index === selectedIndex }"
+            class="mxm-dropdown__item mxm-dropdown__item--theme-default mxm-dropdown__item"
+            :class="{ 'mxm-dropdown__item--active': index === selectedIndex }"
             @click="selectItem(index)"
           >
             {{ item.label }}
@@ -91,17 +91,17 @@ defineExpose({
 </script>
 
 <style lang="less">
-.umo-node-mention {
+.mxm-node-mention {
   box-decoration-break: clone;
-  color: var(--umo-primary-color);
+  color: var(--mxm-primary-color);
   padding: 0.1em 0.2em;
   margin: 0 0.1em;
   border-radius: 0.2em;
   white-space: nowrap;
   cursor: default;
 }
-.umo-mention-popup {
-  .umo-dropdown {
+.mxm-mention-popup {
+  .mxm-dropdown {
     &__item--active {
       font-weight: 600;
     }
@@ -109,7 +109,7 @@ defineExpose({
   &-empty {
     padding: 3px 5px;
     min-width: 100px;
-    color: var(--umo-text-color-light);
+    color: var(--mxm-text-color-light);
   }
 }
 </style>

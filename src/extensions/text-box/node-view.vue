@@ -2,16 +2,16 @@
   <node-view-wrapper
     :id="attrs.id"
     ref="containerRef"
-    class="umo-node-view umo-floating-node"
+    class="mxm-node-view mxm-floating-node"
     :style="{
       zIndex: 90,
-      '--umo-textbox-border-color': attrs.borderColor,
-      '--umo-textbox-border-width': attrs.borderWidth + 'px',
-      '--umo-textbox-border-style': attrs.borderStyle,
-      '--umo-textbox-background-color': attrs.backgroundColor,
+      '--mxm-textbox-border-color': attrs.borderColor,
+      '--mxm-textbox-border-width': attrs.borderWidth + 'px',
+      '--mxm-textbox-border-style': attrs.borderStyle,
+      '--mxm-textbox-background-color': attrs.backgroundColor,
     }"
   >
-    <div class="umo-node-container umo-node-text-box">
+    <div class="mxm-node-container mxm-node-text-box">
       <drager
         class="is-draggable"
         :style="{
@@ -40,7 +40,7 @@
       >
         <node-view-content
           ref="contentRef"
-          class="umo-node-text-box-content"
+          class="mxm-node-text-box-content"
           :style="{ writingMode: attrs.writingMode }"
         />
       </drager>
@@ -92,14 +92,14 @@ const editTextBox = () => {
 </script>
 
 <style lang="less">
-.umo-node-view {
-  .umo-node-text-box {
+.mxm-node-view {
+  .mxm-node-text-box {
     position: absolute;
     .es-drager {
       user-select: text !important;
       cursor: default !important;
       z-index: 90 !important;
-      background-color: var(--umo-textbox-background-color);
+      background-color: var(--mxm-textbox-background-color);
       &.dragging {
         caret-color: transparent;
       }
@@ -110,20 +110,20 @@ const editTextBox = () => {
         }
       }
       &.selected {
-        .umo-node-text-box-content {
+        .mxm-node-text-box-content {
           outline: none;
         }
       }
       &.disabled.selected {
-        .umo-node-text-box-content {
-          outline: var(--umo-textbox-border-style)
-            var(--umo-textbox-border-width) var(--umo-textbox-border-color);
+        .mxm-node-text-box-content {
+          outline: var(--mxm-textbox-border-style)
+            var(--mxm-textbox-border-width) var(--mxm-textbox-border-color);
         }
       }
     }
-    .umo-node-text-box-content {
-      outline: var(--umo-textbox-border-style) var(--umo-textbox-border-width)
-        var(--umo-textbox-border-color);
+    .mxm-node-text-box-content {
+      outline: var(--mxm-textbox-border-style) var(--mxm-textbox-border-width)
+        var(--mxm-textbox-border-color);
       width: 100%;
       height: 100%;
       padding: 5px;

@@ -6,7 +6,7 @@ export default HorizontalRule.extend({
   addOptions() {
     return {
       HTMLAttributes: {
-        class: 'umo-page-divider',
+        class: 'mxm-page-divider',
         'data-line-number': false,
       },
     }

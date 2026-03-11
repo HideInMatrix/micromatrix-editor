@@ -1,14 +1,14 @@
 <template>
-  <div class="umo-toc-container">
-    <div class="umo-toc-title">
+  <div class="mxm-toc-container">
+    <div class="mxm-toc-title">
       <icon class="icon-toc" name="toc" /> {{ t('toc.title') }}
-      <div class="umo-dialog__close" @click="$emit('close')">
+      <div class="mxm-dialog__close" @click="$emit('close')">
         <icon name="close" />
       </div>
     </div>
-    <div class="umo-toc-content umo-scrollbar">
+    <div class="mxm-toc-content mxm-scrollbar">
       <t-tree
-        class="umo-toc-tree"
+        class="mxm-toc-tree"
         :data="tocData"
         :keys="{
           label: 'textContent',
@@ -22,7 +22,7 @@
         @active="headingActive"
       />
     </div>
-    <div class="umo-toc-resize-handle" @mousedown="startResize"></div>
+    <div class="mxm-toc-resize-handle" @mousedown="startResize"></div>
   </div>
 </template>
 
@@ -91,10 +91,10 @@ const headingActive = (value) => {
     `[data-toc-id="${value[0]}"]`,
   )
   const pageContainer = document.querySelector(
-    `${container} .umo-zoomable-container`,
+    `${container} .mxm-zoomable-container`,
   )
   const pageHeader = pageContainer?.querySelector(
-    '.umo-page-node-header',
+    '.mxm-page-node-header',
   ) as HTMLElement | null
   if (!nodeElement || !pageContainer || !pageHeader) {
     return
@@ -113,7 +113,7 @@ const headingActive = (value) => {
 }
 
 const umoPageContainer = document.querySelector(
-  `${container} .umo-main-container`,
+  `${container} .mxm-main-container`,
 )
 const baseTocWidth = 320
 const isResizing = ref(false)
@@ -126,7 +126,7 @@ const startResize = (e) => {
   isResizing.value = true
   startX.value = e.clientX
   initialWidth.value = parseInt(
-    getComputedStyle(umoPageContainer?.querySelector('.umo-toc-container'))
+    getComputedStyle(umoPageContainer?.querySelector('.mxm-toc-container'))
       .width,
     10,
   )
@@ -142,7 +142,7 @@ const resize = (e) => {
     const maxWidth = baseTocWidth * 2
     if (newWidth >= minWidth && newWidth <= maxWidth) {
       const tocContainer = umoPageContainer.querySelector(
-        '.umo-toc-container',
+        '.mxm-toc-container',
       ) as HTMLElement | null
       if (!tocContainer) {
         return
@@ -160,13 +160,13 @@ const stopResize = () => {
 </script>
 
 <style lang="less">
-.umo-toc-container {
+.mxm-toc-container {
   width: 320px;
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
   position: relative;
-  .umo-toc-resize-handle {
+  .mxm-toc-resize-handle {
     position: absolute;
     top: 0;
     right: -2px;
@@ -175,16 +175,16 @@ const stopResize = () => {
     opacity: 0.5;
     background-color: transparent;
     &:hover {
-      background-color: var(--umo-primary-color);
+      background-color: var(--mxm-primary-color);
       cursor: col-resize;
     }
   }
   &:hover {
-    .umo-dialog__close {
+    .mxm-dialog__close {
       display: flex !important;
     }
   }
-  .umo-toc-title {
+  .mxm-toc-title {
     display: flex;
     align-items: center;
     position: relative;
@@ -193,7 +193,7 @@ const stopResize = () => {
       margin-right: 5px;
       font-size: 20px;
     }
-    .umo-dialog__close {
+    .mxm-dialog__close {
       position: absolute;
       right: -4px;
       display: flex;
@@ -202,19 +202,19 @@ const stopResize = () => {
       display: none;
     }
   }
-  .umo-toc-content {
+  .mxm-toc-content {
     flex: 1;
     display: flex;
     padding: 10px 10px 10px 15px;
     flex-direction: column;
-    .umo-toc-tree {
+    .mxm-toc-tree {
       user-select: none;
       --td-brand-color-light: rgba(0, 0, 0, 0.03);
-      .umo-tree {
+      .mxm-tree {
         &__item {
           height: 32px;
           &--open .t-icon {
-            color: var(--umo-text-color-light);
+            color: var(--mxm-text-color-light);
           }
         }
         &__label {
@@ -228,33 +228,33 @@ const stopResize = () => {
           display: flex;
           align-items: center;
           justify-content: center;
-          color: var(--umo-text-color-light);
+          color: var(--mxm-text-color-light);
         }
       }
-      .umo-is-active {
+      .mxm-is-active {
         font-weight: 400;
-        color: var(--umo-primary-color);
+        color: var(--mxm-primary-color);
       }
     }
   }
 }
-.umo-editor-container.umo-skin-default {
-  .umo-toc-container {
-    background-color: var(--umo-color-white);
-    border-right: solid 1px var(--umo-border-color);
-    .umo-toc-title {
-      border-bottom: solid 1px var(--umo-border-color-light);
+.mxm-editor-container.mxm-skin-default {
+  .mxm-toc-container {
+    background-color: var(--mxm-color-white);
+    border-right: solid 1px var(--mxm-border-color);
+    .mxm-toc-title {
+      border-bottom: solid 1px var(--mxm-border-color-light);
       padding: 10px 15px;
-      .umo-dialog__close {
+      .mxm-dialog__close {
         right: 15px;
       }
     }
-    .umo-toc-content {
-      .umo-toc-tree {
+    .mxm-toc-content {
+      .mxm-toc-tree {
         --td-comp-size-m: 30px;
         --td-comp-paddingLR-xs: 8px;
         --td-comp-margin-xs: 0;
-        --td-brand-color-light: var(--umo-button-hover-background);
+        --td-brand-color-light: var(--mxm-button-hover-background);
       }
     }
   }

@@ -1,11 +1,11 @@
 <template>
   <node-view-wrapper
     as="span"
-    class="umo-node-tag"
+    class="mxm-node-tag"
     @click.capture="editor?.commands.setNodeSelection(getPos())"
   >
     <span
-      class="umo-node-tag-text"
+      class="mxm-node-tag-text"
       :style="{
         color: attrs.color,
         backgroundColor: attrs.backgroundColor,
@@ -29,7 +29,7 @@ const editor = inject('editor')
 </script>
 
 <style lang="less">
-.umo-node-tag {
+.mxm-node-tag {
   margin: 0 0.2em;
   background-color: transparent !important;
   vertical-align: middle;

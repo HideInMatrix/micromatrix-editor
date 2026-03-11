@@ -1,5 +1,5 @@
 export function useState(key, editorOptions) {
-  const storageKey = `umo-editor:${editorOptions?.value?.editorKey || 'default'}:${key}`
+  const storageKey = `mxm-editor:${editorOptions?.value?.editorKey || 'default'}:${key}`
 
   if (key === 'document') {
     return useStorage(storageKey, editorOptions?.value?.document)
