@@ -33,6 +33,8 @@
 import { TextSelection } from '@tiptap/pm/state'
 import { nodeViewProps, NodeViewWrapper } from '@tiptap/vue-3'
 
+import { t } from '@/composables/i18n'
+
 const { getPos } = defineProps(nodeViewProps)
 
 const container = inject('container')

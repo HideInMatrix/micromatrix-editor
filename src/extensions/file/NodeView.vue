@@ -87,6 +87,7 @@ import { isAsyncFunction, isFunction } from '@tool-belt/type-predicates'
 import { nodeViewProps, NodeViewWrapper } from '@tiptap/vue-3'
 import prettyBytes from 'pretty-bytes'
 
+import { t } from '@/composables/i18n'
 import { getFileExtname, getFileIcon } from '@/utils/file'
 
 import { updateAttributesWithoutHistory } from './'

@@ -93,6 +93,7 @@
 import { nodeViewProps, NodeViewWrapper } from '@tiptap/vue-3'
 import Drager from 'es-drager'
 
+import { t } from '@/composables/i18n'
 import { shortId } from '@/utils/short-id'
 import { dataURLToFile } from '@/utils/file'
 

@@ -53,6 +53,9 @@
 
 <script setup lang="ts">
 import { nodeViewProps, NodeViewWrapper } from '@tiptap/vue-3'
+
+import { t } from '@/composables/i18n'
+
 const options = inject('options')
 const page = inject('page')
 const editor = inject('editor')
