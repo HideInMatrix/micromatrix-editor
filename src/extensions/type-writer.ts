@@ -62,7 +62,7 @@ export default Extension.create({
                 options?.focus === null ? null : options?.focus || 'end'
               // 插入内容
               const typeWriterInsertContent = async (curContent) => {
-                await new Promise((resolve) => {
+                await new Promise<void>((resolve) => {
                   setTimeout(() => {
                     try {
                       editor
@@ -150,7 +150,7 @@ export default Extension.create({
                     if (!typewriterState.value.isRunning) return // 检查是否被停止
                     const endIndex = Math.min(i + step, text.length)
                     const currentText = text.slice(i, endIndex)
-                    await new Promise((resolve) => {
+                    await new Promise<void>((resolve) => {
                       typewriterTimer = setTimeout(async () => {
                         // 插入当前字符
                         await typeWriterInsertContent([
@@ -241,14 +241,16 @@ export default Extension.create({
         return true
       },
 
-      getTypewriterState: () => {
-        return {
-          isRunning: typewriterState.value.isRunning,
-          currentParagraph: typewriterState.value.currentParagraph,
-          currentTextNode: typewriterState.value.currentTextNode,
-          currentChar: typewriterState.value.currentChar,
-        }
-      },
+      getTypewriterState:
+        () =>
+        (() => {
+          return {
+            isRunning: typewriterState.value.isRunning,
+            currentParagraph: typewriterState.value.currentParagraph,
+            currentTextNode: typewriterState.value.currentTextNode,
+            currentChar: typewriterState.value.currentChar,
+          }
+        }) as any,
     }
   },
 })

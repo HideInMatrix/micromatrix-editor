@@ -1,4 +1,5 @@
 import { mergeAttributes, Node, wrappingInputRule } from '@tiptap/core'
+import { TextSelection } from '@tiptap/pm/state'
 import { VueNodeViewRenderer } from '@tiptap/vue-3'
 
 import NodeView from './NodeView.vue'
@@ -8,7 +9,6 @@ export default Node.create({
   group: 'block',
   content: 'paragraph+',
   defining: true,
-  exitable: true,
   selectable: false,
   addAttributes() {
     return {
@@ -85,9 +85,7 @@ export default Node.create({
               state.schema.nodes.paragraph.create(),
             )
             // 将光标移动到新段落
-            tr.setSelection(
-              state.selection.constructor.near(tr.doc.resolve(pos)),
-            )
+            tr.setSelection(TextSelection.near(tr.doc.resolve(pos)))
             dispatch(tr)
             return true
           }

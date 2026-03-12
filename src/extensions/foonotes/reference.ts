@@ -34,11 +34,11 @@ export default Node.create({
           const ref = anchor.getAttribute(REFNUM_ATTR)
           return {
             'data-fn-id': id || shortId(10),
-            referenceNumber: ref || anchor.innerText,
+            referenceNumber: ref || anchor.textContent || '',
           }
         },
         contentElement(node) {
-          return node.firstChild
+          return (node.firstElementChild || node) as HTMLElement
         },
       },
     ]

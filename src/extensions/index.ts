@@ -1,3 +1,4 @@
+import type { AnyExtension, EnableRules, Extensions } from '@tiptap/core'
 import Bold from '@tiptap/extension-bold'
 import {
   Details,
@@ -112,7 +113,7 @@ const nodeTypes = [
 export const getDefaultExtensions = ({ container, options, uploadFileMap }) => {
   const { page, document: doc, users, file, disableExtensions } = options.value
 
-  const extensions = {
+  const extensions: Record<string, AnyExtension | AnyExtension[]> = {
     'ordered-list': OrderedList,
     'bullet-list': BulletList,
     'task-list': TaskList.configure({
@@ -130,9 +131,8 @@ export const getDefaultExtensions = ({ container, options, uploadFileMap }) => {
     video: Video,
     audio: Audio,
     'code-block': CodeBlock,
-    symbol: Symbol,
     math: Mathematics.configure({
-      katex: { throwOnError: false },
+      katexOptions: { throwOnError: false },
     }),
     tag: Tag,
     columns: Columns,
@@ -153,7 +153,7 @@ export const getDefaultExtensions = ({ container, options, uploadFileMap }) => {
     'web-page': Iframe,
   }
 
-  const buildInExtensions = [
+  const buildInExtensions: Extensions = [
     StarterKit.configure({
       document: false,
       bold: false,
@@ -161,13 +161,11 @@ export const getDefaultExtensions = ({ container, options, uploadFileMap }) => {
       horizontalRule: false,
       undoRedo: false,
       link: false,
-      placeholder: false,
       dropcursor: false,
-      selection: false,
       bulletList: false,
       orderedList: false,
-      trailingNode: true,
-      listKeymap: true,
+      trailingNode: {},
+      listKeymap: {},
     }),
     Document.extend({
       content: disableExtensions.includes('footnote')
@@ -242,7 +240,9 @@ export const getDefaultExtensions = ({ container, options, uploadFileMap }) => {
     TableOfContents.configure({
       getIndex: getHierarchicalIndexes,
       scrollParent: () =>
-        document.querySelector(`${container} .mxm-zoomable-container`),
+        document.querySelector<HTMLElement>(
+          `${container} .mxm-zoomable-container`,
+        ) ?? window,
       getId: () => shortId(10),
     }),
     Typography.configure(doc?.typographyRules),
@@ -295,14 +295,15 @@ export const getDefaultExtensions = ({ container, options, uploadFileMap }) => {
   ]
 
   // 合并扩展
-  Object.values(extensions).forEach((item) => {
-    if (!disableExtensions?.includes(item.name)) {
-      if (Array.isArray(item)) {
-        buildInExtensions.push(...item)
-        return
-      }
-      buildInExtensions.push(item)
+  Object.entries(extensions).forEach(([name, item]) => {
+    if (disableExtensions?.includes(name)) {
+      return
     }
+    if (Array.isArray(item)) {
+      buildInExtensions.push(...item)
+      return
+    }
+    buildInExtensions.push(item)
   })
 
   if (doc?.enableNodeId) {
@@ -318,7 +319,7 @@ export const getDefaultExtensions = ({ container, options, uploadFileMap }) => {
 }
 
 export const inputAndPasteRules = (options) => {
-  let enableRules = true
+  let enableRules: EnableRules = true
   const $document = useState('document', options)
   if (
     !options.value.document?.enableMarkdown ||

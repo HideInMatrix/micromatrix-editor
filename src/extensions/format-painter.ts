@@ -1,6 +1,16 @@
 import { Extension } from '@tiptap/core'
 import { Plugin, PluginKey } from '@tiptap/pm/state'
 
+type PainterState = {
+  enabled: boolean
+  once: boolean
+  marks: any[]
+}
+
+type PainterView = {
+  painter?: PainterState
+}
+
 export default Extension.create({
   name: 'painter',
   addCommands() {
@@ -9,12 +19,13 @@ export default Extension.create({
       setFormatPainter:
         (once) =>
         ({ editor, view }) => {
+          const painterView = view as typeof view & PainterView
           const { tr } = view.state
           const marks = editor.state.selection.$head.marks()
-          view.painter = {
+          painterView.painter = {
             enabled: true,
             once,
-            marks,
+            marks: [...marks],
           }
           // 设置格式刷开始的动作
           view.dispatch(tr.setMeta('painterAction', { type: 'start', marks }))
@@ -23,8 +34,9 @@ export default Extension.create({
       unsetFormatPainter:
         () =>
         ({ view }) => {
+          const painterView = view as typeof view & PainterView
           const { tr } = view.state
-          view.painter = {
+          painterView.painter = {
             enabled: false,
             once: true,
             marks: [],
@@ -57,11 +69,12 @@ export default Extension.create({
           handleDOMEvents: {
             mousedown(view) {
               const marks = this.getState(view.state)
+              const painterView = view as typeof view & PainterView
 
               // 通过 view 传值，方便获取，但是不建议这样做
-              const { painter } = view
+              const { painter } = painterView
 
-              if (!marks || marks.length === 0) {
+              if (!marks || marks.length === 0 || !painter) {
                 return false // 如果没有标记，则不执行任何操作
               }
               const mouseup = () => {

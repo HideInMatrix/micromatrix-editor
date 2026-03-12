@@ -1,11 +1,14 @@
 export const findBoundaryPosition = (view, event, handleWidth) => {
-  const gridDOM = event
-    .composedPath()
-    .find((el) => el.classList?.contains('mxm-node-column-container'))
+  const gridDOM = event.composedPath().find(
+    (el): el is HTMLElement =>
+      el instanceof HTMLElement &&
+      el.classList.contains('mxm-node-column-container'),
+  )
   if (!gridDOM) return -1
 
-  const children = Array.from(gridDOM.children).filter((el) =>
-    el.classList.contains('mxm-node-column'),
+  const children = Array.from(gridDOM.children).filter(
+    (el): el is HTMLElement =>
+      el instanceof HTMLElement && el.classList.contains('mxm-node-column'),
   )
   for (let i = 0; i < children.length; i++) {
     const colEl = children[i]
@@ -48,6 +51,7 @@ export const getColumnInfoAtPos = (view, boundaryPos) => {
 
   const columnEl =
     dom.node instanceof HTMLElement ? dom.node : dom.node.childNodes[dom.offset]
+  if (!(columnEl instanceof HTMLElement)) return null
 
   const domWidth = columnEl.offsetWidth
 

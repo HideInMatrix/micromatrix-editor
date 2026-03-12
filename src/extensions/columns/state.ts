@@ -1,15 +1,31 @@
-import { PluginKey } from '@tiptap/pm/state'
+import { PluginKey, type Transaction } from '@tiptap/pm/state'
 
 export const gridResizingPluginKey = new PluginKey('gridResizingPlugin')
 
+export type GridDragging =
+  | {
+      startX: number
+      startWidth: number
+    }
+  | false
+  | null
+
 export class GridResizeState {
-  constructor(activeHandle, dragging) {
+  activeHandle: number
+  dragging: GridDragging
+
+  constructor(activeHandle: number, dragging: GridDragging) {
     this.activeHandle = activeHandle
     this.dragging = dragging
   }
 
-  apply(tr) {
-    const action = tr.getMeta(gridResizingPluginKey)
+  apply(tr: Transaction) {
+    const action = tr.getMeta(gridResizingPluginKey) as
+      | {
+          setHandle?: number
+          setDragging?: GridDragging
+        }
+      | undefined
     if (!action) return this
 
     if (typeof action.setHandle === 'number') {

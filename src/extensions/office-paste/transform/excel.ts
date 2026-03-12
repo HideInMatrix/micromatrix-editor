@@ -63,6 +63,7 @@ export const transformExcel = (view, event) => {
 
   // 添加单元格的样式
   table.querySelectorAll('td, th').forEach((cell) => {
+    if (!(cell instanceof HTMLElement)) return
     const style = styles[cell.getAttribute('class')]
     if (style?.background) {
       cell.style.background = style.background

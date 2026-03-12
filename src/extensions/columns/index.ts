@@ -67,7 +67,9 @@ export default Extension.create({
   addExtensions() {
     return [Column, ColumnContainer]
   },
-  addCommands() {},
+  addCommands() {
+    return {}
+  },
   addProseMirrorPlugins() {
     return [
       gridResizingPlugin({ handleWidth: 2, columnMinWidth: 50 }),

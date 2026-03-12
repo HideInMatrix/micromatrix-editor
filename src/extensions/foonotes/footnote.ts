@@ -3,9 +3,7 @@ import { ListItem } from '@tiptap/extension-list'
 
 export default ListItem.extend({
   name: 'footnote',
-  content() {
-    return this.options.content
-  },
+  content: 'paragraph+',
   isolating: true,
   defining: true,
   draggable: false,
@@ -15,7 +13,6 @@ export default ListItem.extend({
       bulletListTypeName: 'bulletList',
       orderedListTypeName: 'orderedList',
       ...this.parent?.(),
-      content: 'paragraph+',
     }
   },
   addAttributes() {

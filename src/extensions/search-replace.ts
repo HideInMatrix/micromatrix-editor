@@ -1,6 +1,16 @@
 import { Extension } from '@tiptap/core'
-import { Plugin } from '@tiptap/pm/state'
+import { Plugin, PluginKey } from '@tiptap/pm/state'
 import { Decoration, DecorationSet } from '@tiptap/pm/view'
+
+type SearchResult = {
+  from: number
+  to: number
+}
+
+type TextNodeWithPosition = {
+  text: string
+  pos: number
+}
 
 const getRegex = (s, disableRegex, caseSensitive) => {
   return RegExp(
@@ -10,10 +20,10 @@ const getRegex = (s, disableRegex, caseSensitive) => {
 }
 
 const processSearches = (doc, searchTerm, searchResultClass, resultIndex) => {
-  const decorations = []
-  const results = []
+  const decorations: Decoration[] = []
+  const results: SearchResult[] = []
 
-  let textNodesWithPosition = []
+  let textNodesWithPosition: TextNodeWithPosition[] = []
   let index = 0
 
   if (!searchTerm) {
@@ -45,7 +55,7 @@ const processSearches = (doc, searchTerm, searchResultClass, resultIndex) => {
 
   for (const element of textNodesWithPosition) {
     const { text, pos } = element
-    const matches = Array.from(text.matchAll(searchTerm)).filter(
+    const matches = (Array.from(text.matchAll(searchTerm)) as RegExpMatchArray[]).filter(
       ([matchText]) => matchText.trim(),
     )
 
@@ -132,7 +142,7 @@ const replaceAll = (replaceTerm, results, { tr, dispatch }) => {
     ;[offset, resultsCopy] = rebaseNextResultResponse
   }
 
-  dispatch(tr)
+  dispatch?.(tr)
 }
 
 export const SearchAndReplace = Extension.create({
@@ -249,7 +259,7 @@ export const SearchAndReplace = Extension.create({
 
     return [
       new Plugin({
-        key: 'search-replace',
+        key: new PluginKey('search-replace'),
         state: {
           init: () => DecorationSet.empty,
           apply({ doc, docChanged }, oldState) {

@@ -21,7 +21,7 @@ export function calbaseConfigData(data) {
 // 计算配置 根据手工设置的配置信息和数据进行 Options 生成，此方法会逐步扩充
 export function calbaseConfigOptions(data, config, options) {
   // 声明的最终返回的options
-  let resOption = {}
+  let resOption: Record<string, any> = {}
   if (!data || !config) {
     return resOption
   }

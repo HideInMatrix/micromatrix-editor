@@ -116,7 +116,7 @@ export const BlockImage = customImage.extend({
   addCommands() {
     return {
       setImage:
-        (options, replace) =>
+        (options, replace = false) =>
         ({ commands, editor }) => {
           if (replace) {
             return commands.insertContent({

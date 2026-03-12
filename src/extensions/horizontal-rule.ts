@@ -4,8 +4,11 @@ import { NodeSelection, TextSelection } from '@tiptap/pm/state'
 
 export default HorizontalRule.extend({
   addOptions() {
+    const parentOptions = this.parent?.()
     return {
+      ...parentOptions,
       HTMLAttributes: {
+        ...(parentOptions?.HTMLAttributes || {}),
         class: 'mxm-page-divider',
         'data-line-number': false,
       },
@@ -33,8 +36,9 @@ export default HorizontalRule.extend({
   addCommands() {
     return {
       setHorizontalRule:
-        ({ type, color }) =>
+        (options: { type?: string; color?: string } = {}) =>
         ({ chain, state }) => {
+          const { type, color } = options
           const { $to: $originTo } = state.selection
           const currentChain = chain()
           if ($originTo.parentOffset === 0) {

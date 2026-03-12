@@ -1,6 +1,16 @@
 import { Extension } from '@tiptap/core'
 import { NodeSelection } from '@tiptap/pm/state'
 
+type MarginValue = {
+  top?: string
+  bottom?: string
+}
+
+type MarginInput = {
+  top?: string | number | null
+  bottom?: string | number | null
+}
+
 const normalizeMarginValue = (value) => {
   if (value === null || value === undefined) return null
   if (typeof value === 'number') {
@@ -14,17 +24,17 @@ const normalizeMarginValue = (value) => {
   return String(num)
 }
 
-const normalizeMargin = (options) => {
+const normalizeMargin = (options: MarginInput | null | undefined) => {
   if (!options || typeof options !== 'object') return null
   const top = normalizeMarginValue(options.top)
   const bottom = normalizeMarginValue(options.bottom)
-  const next = {}
+  const next: MarginValue = {}
   if (top !== null && top !== '' && top !== '0') next.top = top
   if (bottom !== null && bottom !== '' && bottom !== '0') next.bottom = bottom
   return Object.keys(next).length ? next : null
 }
 
-const isSameMargin = (a, b) => {
+const isSameMargin = (a: MarginValue | null | undefined, b: MarginValue | null | undefined) => {
   if (!a && !b) return true
   if (!a || !b) return false
   if (typeof a !== 'object' || typeof b !== 'object') return false
@@ -99,7 +109,7 @@ export default Extension.create({
               ) {
                 return null
               }
-              const styleMargin = {}
+              const styleMargin: MarginValue = {}
               if (marginTop && marginTop !== '0px') {
                 const top = normalizeMarginValue(marginTop.replace(/px/g, ''))
                 if (top !== null && top !== '' && top !== '0') {
@@ -120,7 +130,7 @@ export default Extension.create({
               const { margin } = attributes
               if (!margin || typeof margin !== 'object') return {}
 
-              const { top, bottom } = margin
+              const { top, bottom } = margin as MarginValue
               let styleMargin = ''
               if (top !== null && top !== undefined && top !== '') {
                 styleMargin += `margin-top: ${top}px;`

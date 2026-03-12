@@ -17,6 +17,7 @@ export const transformMsoStyles = (html) => {
   })
 
   doc.querySelectorAll(`[style*="color: black"]`).forEach((node) => {
+    if (!(node instanceof HTMLElement)) return
     node.style.removeProperty(`color`)
   })
 
