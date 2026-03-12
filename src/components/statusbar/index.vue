@@ -137,15 +137,6 @@
         </template>
       </t-popup>
       <div class="mxm-status-bar-split"></div>
-      <!-- 请遵循开源协议，勿删除或隐藏版权信息！ -->
-      <t-button
-        class="mxm-status-bar-button auto-width"
-        variant="text"
-        size="small"
-        @click="about = !about"
-      >
-        <icon name="copyright" /> Mxm
-      </t-button>
     </div>
     <div class="mxm-status-bar-right">
       <tooltip
@@ -317,7 +308,6 @@
       </div>
     </tooltip>
   </div>
-  <statusbar-about :visible="about" @close="about = false" />
   <t-drawer
     v-model:visible="showShortcut"
     :attach="container"
