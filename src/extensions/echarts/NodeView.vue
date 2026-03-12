@@ -1,5 +1,5 @@
 <template>
-  <node-view-wrapper
+  <NodeViewWrapper
     :id="'chartNode-' + attrs.id"
     ref="containerRef"
     class="mxm-node-view"
@@ -15,7 +15,7 @@
         options.document?.readOnly ? JSON.stringify(chartOption) : null
       "
     >
-      <drager
+      <Drager
         :selected="selected"
         :rotatable="false"
         :boundary="false"
@@ -30,9 +30,9 @@
         @focus="selected = true"
       >
         <div :id="'chart-' + attrs.id" class="mxm-node-echarts-body"></div>
-      </drager>
+      </Drager>
     </div>
-  </node-view-wrapper>
+  </NodeViewWrapper>
 </template>
 
 <script setup lang="ts">

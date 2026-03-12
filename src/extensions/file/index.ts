@@ -3,7 +3,7 @@ import { VueNodeViewRenderer } from '@tiptap/vue-3'
 
 import { shortId } from '@/utils/short-id'
 
-import NodeView from './node-view.vue'
+import NodeView from './NodeView.vue'
 
 const mimeTypes = {
   image: [

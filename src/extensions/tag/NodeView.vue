@@ -1,5 +1,5 @@
 <template>
-  <node-view-wrapper
+  <NodeViewWrapper
     as="span"
     class="mxm-node-tag"
     @click.capture="editor?.commands.setNodeSelection(getPos())"
@@ -16,7 +16,7 @@
       }"
       v-text="attrs.text"
     ></span>
-  </node-view-wrapper>
+  </NodeViewWrapper>
 </template>
 
 <script setup lang="ts">

@@ -1,5 +1,5 @@
 <template>
-  <node-view-wrapper
+  <NodeViewWrapper
     :id="attrs.id"
     ref="containerRef"
     class="mxm-node-view"
@@ -29,7 +29,7 @@
           class="mxm-action-item"
           :title="t('file.uploading')"
         >
-          <icon class="loading" name="loading" />
+          <Icon class="loading" name="loading" />
         </div>
         <template v-else>
           <div
@@ -41,7 +41,7 @@
             :data-file-name="attrs.name"
             @click.stop="togglePreview"
           >
-            <icon name="view" />
+            <Icon name="view" />
           </div>
           <a
             :href="attrs.url"
@@ -50,12 +50,12 @@
             class="mxm-action-item"
             :title="t('file.download')"
           >
-            <icon name="download" />
+            <Icon name="download" />
           </a>
         </template>
       </div>
     </div>
-    <modal
+    <Modal
       dialog-class-name="mxm-file-preview-modal"
       :visible="previewModal"
       :header="false"
@@ -65,21 +65,21 @@
       <div class="mxm-file-preview-modal-header">
         <img :src="fileIcon" class="file-icon" />
         <h3>{{ attrs.name || t('file.unknownName') }}</h3>
-        <t-button
+        <TButton
           class="close-btn"
           size="small"
           shape="square"
           variant="text"
           @click="previewModal = false"
         >
-          <icon name="close" size="18" />
-        </t-button>
+          <Icon name="close" size="18" />
+        </TButton>
       </div>
       <div v-if="previewModal" class="mxm-file-preview-modal-body">
         <iframe :src="previewURL"></iframe>
       </div>
-    </modal>
-  </node-view-wrapper>
+    </Modal>
+  </NodeViewWrapper>
 </template>
 
 <script setup lang="ts">

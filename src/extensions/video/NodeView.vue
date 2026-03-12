@@ -1,5 +1,5 @@
 <template>
-  <node-view-wrapper
+  <NodeViewWrapper
     :id="attrs.id"
     ref="containerRef"
     class="mxm-node-view"
@@ -12,7 +12,7 @@
         'mxm-hover-shadow': !options.document?.readOnly,
       }"
     >
-      <drager
+      <Drager
         :selected="selected"
         :rotatable="false"
         :boundary="false"
@@ -40,9 +40,9 @@
           v-if="!attrs.uploaded && attrs.id !== null"
           class="uploading"
         ></div>
-      </drager>
+      </Drager>
     </div>
-  </node-view-wrapper>
+  </NodeViewWrapper>
 </template>
 
 <script setup lang="ts">

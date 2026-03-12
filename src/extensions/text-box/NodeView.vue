@@ -1,5 +1,5 @@
 <template>
-  <node-view-wrapper
+  <NodeViewWrapper
     :id="attrs.id"
     ref="containerRef"
     class="mxm-node-view mxm-floating-node"
@@ -12,7 +12,7 @@
     }"
   >
     <div class="mxm-node-container mxm-node-text-box">
-      <drager
+      <Drager
         class="is-draggable"
         :style="{
           cursor: !options.document?.readOnly
@@ -38,14 +38,14 @@
         @click="selected = true"
         @dblclick="editTextBox"
       >
-        <node-view-content
+        <NodeViewContent
           ref="contentRef"
           class="mxm-node-text-box-content"
           :style="{ writingMode: attrs.writingMode }"
         />
-      </drager>
+      </Drager>
     </div>
-  </node-view-wrapper>
+  </NodeViewWrapper>
 </template>
 
 <script setup lang="ts">

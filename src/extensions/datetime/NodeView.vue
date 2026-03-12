@@ -1,6 +1,6 @@
 <template>
-  <node-view-wrapper as="span" class="mxm-node-datetime">
-    <t-popup
+  <NodeViewWrapper as="span" class="mxm-node-datetime">
+    <TPopup
       v-model="popupVisible"
       :attach="`${container} .mxm-zoomable-container`"
       trigger="click"
@@ -12,11 +12,11 @@
       "
     >
       <span class="mxm-node-datetime-text">
-        <icon name="date" class="mxm-node-datetime-icon" />
+        <Icon name="date" class="mxm-node-datetime-icon" />
         <span>{{ attrs.text }}</span>
       </span>
       <template #content>
-        <t-date-picker-panel
+        <TDatePickerPanel
           :value="attrs.date"
           :format="
             attrs.format || `YYYY-MM-DD${attrs.withTime ? ' HH:mm:ss' : ''}`
@@ -26,8 +26,8 @@
           @change="datetimeChange"
         />
       </template>
-    </t-popup>
-  </node-view-wrapper>
+    </TPopup>
+  </NodeViewWrapper>
 </template>
 
 <script setup lang="ts">

@@ -2,7 +2,7 @@ import CodeBlock from '@tiptap/extension-code-block-lowlight'
 import { VueNodeViewRenderer } from '@tiptap/vue-3'
 import { common, createLowlight } from 'lowlight'
 
-import NodeView from './node-view.vue'
+import NodeView from './NodeView.vue'
 
 const customCodeBlock = CodeBlock.extend({
   addAttributes() {

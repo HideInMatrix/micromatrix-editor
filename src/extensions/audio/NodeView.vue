@@ -1,5 +1,5 @@
 <template>
-  <node-view-wrapper
+  <NodeViewWrapper
     :id="attrs.id"
     ref="containerRef"
     class="mxm-node-view"
@@ -19,7 +19,7 @@
       ></audio>
       <div v-if="!attrs.uploaded && attrs.id !== null" class="uploading"></div>
     </div>
-  </node-view-wrapper>
+  </NodeViewWrapper>
 </template>
 
 <script setup lang="ts">

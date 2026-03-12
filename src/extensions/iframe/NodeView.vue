@@ -1,5 +1,5 @@
 <template>
-  <node-view-wrapper
+  <NodeViewWrapper
     :id="attrs.id"
     ref="containerRef"
     class="mxm-node-view"
@@ -12,7 +12,7 @@
         'mxm-hover-shadow': !options.document?.readOnly,
       }"
     >
-      <drager
+      <Drager
         :selected="selected"
         :rotatable="false"
         :width="attrs.width"
@@ -28,9 +28,9 @@
           :src="attrs.src"
           :style="{ pointerEvents: attrs.clickable ? 'auto' : 'none' }"
         ></iframe>
-      </drager>
+      </Drager>
     </div>
-  </node-view-wrapper>
+  </NodeViewWrapper>
 </template>
 
 <script setup lang="ts">

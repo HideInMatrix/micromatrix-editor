@@ -2,7 +2,7 @@ import { mergeAttributes, nodeInputRule, nodePasteRule } from '@tiptap/core'
 import Image from '@tiptap/extension-image'
 import { VueNodeViewRenderer } from '@tiptap/vue-3'
 
-import NodeView from './node-view.vue'
+import NodeView from './NodeView.vue'
 
 const customImage = Image.extend({
   atom: true,

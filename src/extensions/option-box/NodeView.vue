@@ -1,5 +1,5 @@
 <template>
-  <node-view-wrapper
+  <NodeViewWrapper
     as="span"
     class="mxm-node-option-box"
     @click.capture="editor?.commands.setNodeSelection(getPos())"
@@ -13,24 +13,24 @@
         :key="box.key"
         class="option-item"
       >
-        <t-radio
+        <TRadio
           :key="index"
           :checked="box.checked"
           :disabled="isDisabled"
           @change="radioChange(index)"
-        ></t-radio>
+        ></TRadio>
         <span>{{ box.label }}</span>
       </span>
     </span>
 
     <span v-else class="mxm-option-box-checkbox-container">
       <span v-if="attrs.checkAll" class="option-item">
-        <t-checkbox
+        <TCheckbox
           key="checkallInxex"
           :checked="attrs.checked"
           :disabled="isDisabled"
           @change="checkboxAll"
-        ></t-checkbox>
+        ></TCheckbox>
         <span>{{ t('insert.option.check') }}</span>
       </span>
 
@@ -39,16 +39,16 @@
         :key="box.key"
         class="option-item"
       >
-        <t-checkbox
+        <TCheckbox
           :key="index"
           :checked="box.checked"
           :disabled="isDisabled"
           @click="checkboxChange(index)"
-        ></t-checkbox>
+        ></TCheckbox>
         <span>{{ box.label }}</span>
       </span>
     </span>
-  </node-view-wrapper>
+  </NodeViewWrapper>
 </template>
 
 <script setup lang="ts">

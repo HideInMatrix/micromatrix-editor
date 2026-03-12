@@ -1,6 +1,6 @@
 <template>
-  <node-view-wrapper class="mxm-node-view">
-    <t-popup
+  <NodeViewWrapper class="mxm-node-view">
+    <TPopup
       :attach="`${container} .mxm-zoomable-container`"
       overlay-inner-class-name="mxm-editor-bubble-menu"
       trigger="click"
@@ -24,7 +24,7 @@
           contenteditable="false"
           >{{ attrs.icon }}</span
         >
-        <node-view-content
+        <NodeViewContent
           class="mxm-node-callout-content"
           :class="{
             'mxm-node-callout-empty': node.content.size <= 2,
@@ -33,18 +33,18 @@
         />
       </div>
       <template #content>
-        <menus-bubble-callout-builtin />
+        <MenusBubbleCalloutBuiltin />
         <div class="mxm-bubble-menu-divider"></div>
-        <menus-toolbar-insert-emoji @select-emoji="selectEmoji" />
-        <menus-bubble-callout-emoji-remove
+        <MenusToolbarInsertEmoji @select-emoji="selectEmoji" />
+        <MenusBubbleCalloutEmojiRemove
           v-if="editor.getAttributes('callout').icon"
         />
-        <menus-bubble-callout-background />
+        <MenusBubbleCalloutBackground />
         <div class="mxm-bubble-menu-divider"></div>
-        <menus-bubble-node-delete />
+        <MenusBubbleNodeDelete />
       </template>
-    </t-popup>
-  </node-view-wrapper>
+    </TPopup>
+  </NodeViewWrapper>
 </template>
 
 <script setup lang="ts">

@@ -1,7 +1,7 @@
 import { mergeAttributes, Node } from '@tiptap/core'
 import { VueNodeViewRenderer } from '@tiptap/vue-3'
 
-import NodeView from './node-view.vue'
+import NodeView from './NodeView.vue'
 
 // 组件扩展于 echarts，适配标准 echarts，也可以自定义属性进行转换
 export default Node.create({

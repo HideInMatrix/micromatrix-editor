@@ -1,7 +1,7 @@
 import { computePosition, flip, shift } from '@floating-ui/dom'
 import { posToDOMRect, VueRenderer } from '@tiptap/vue-3'
 
-import Mentions from './mentions.vue'
+import Mentions from './Mentions.vue'
 
 const updatePosition = (editor, element) => {
   const virtualElement = {

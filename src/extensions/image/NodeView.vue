@@ -1,5 +1,5 @@
 <template>
-  <node-view-wrapper
+  <NodeViewWrapper
     ref="containerRef"
     class="mxm-node-view"
     :class="{
@@ -24,7 +24,7 @@
         class="loading"
         :style="{ height: `${attrs.height}px` }"
       >
-        <icon name="loading" class="loading-icon" />
+        <Icon name="loading" class="loading-icon" />
         {{ t('node.image.loading') }}
       </div>
       <div
@@ -32,10 +32,10 @@
         class="error"
         :style="{ height: `${attrs.height}px` }"
       >
-        <icon name="image-failed" class="error-icon" />
+        <Icon name="image-failed" class="error-icon" />
         {{ t('node.image.error') }}
       </div>
-      <drager
+      <Drager
         v-else
         ref="dragRef"
         :class="{ 'is-draggable': attrs.draggable }"
@@ -84,9 +84,9 @@
         <div v-if="!attrs.uploaded && attrs.file !== null" class="uploading">
           <span></span>
         </div>
-      </drager>
+      </Drager>
     </div>
-  </node-view-wrapper>
+  </NodeViewWrapper>
 </template>
 
 <script setup lang="ts">

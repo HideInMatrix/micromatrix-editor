@@ -1,5 +1,5 @@
 <template>
-  <node-view-wrapper
+  <NodeViewWrapper
     :id="node.attrs.id"
     class="mxm-node-view"
     @click.capture="editor?.commands.setNodeSelection(getPos())"
@@ -9,7 +9,7 @@
     >
       <p class="mxm-node-toc-head" v-text="t('toc.title')"></p>
       <div class="mxm-node-toc-body">
-        <t-tree
+        <TTree
           class="mxm-toc-tree"
           :data="tocTreeData"
           :keys="{
@@ -26,7 +26,7 @@
         />
       </div>
     </div>
-  </node-view-wrapper>
+  </NodeViewWrapper>
 </template>
 
 <script setup lang="ts">

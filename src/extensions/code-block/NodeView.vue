@@ -1,12 +1,12 @@
 <template>
-  <node-view-wrapper ref="containerRef" class="mxm-node-view mxm-code-block">
+  <NodeViewWrapper ref="containerRef" class="mxm-node-view mxm-code-block">
     <div
       :class="`mxm-node-container hover-shadow mxm-node-code-block mxm-node-code-block-theme-${attrs.theme}`"
     >
       <div class="mxm-node-code-block-toolbar">
         <div class="mxm-node-code-block-toolbar-left">
           <template v-if="editor?.isEditable && !options.document?.readOnly">
-            <menus-button
+            <MenusButton
               :text="t('bubbleMenu.code.languages')"
               menu-type="select"
               :select-options="languageOptions"
@@ -20,7 +20,7 @@
               auto-width
               @menu-click="(value) => updateAttribute('language', value)"
             />
-            <menus-button
+            <MenusButton
               :text="t('bubbleMenu.code.themes.text')"
               menu-type="select"
               :select-options="themeOptions"
@@ -37,7 +37,7 @@
           }}</span>
         </div>
         <div class="mxm-node-code-block-toolbar-right">
-          <menus-button
+          <MenusButton
             class="mxm-word-wrap-button"
             :menu-active="attrs.textWrap"
             :text="t('bubbleMenu.code.wordWrap')"
@@ -46,7 +46,7 @@
             force-enabled
             @menu-click="updateAttribute('textWrap', !attrs.textWrap)"
           />
-          <menus-button
+          <MenusButton
             class="mxm-copy-button"
             ico="copy"
             :text="t('bubbleMenu.code.copy.text')"
@@ -54,7 +54,7 @@
             force-enabled
             @menu-click="copyCode"
           />
-          <menus-button
+          <MenusButton
             v-if="editor?.isEditable && !options.document?.readOnly"
             class="mxm-copy-button"
             ico="node-delete"
@@ -69,13 +69,13 @@
         :class="{
           'mxm-node-code-block-word-wrap': attrs.textWrap,
         }"
-      ><node-view-content
+      ><NodeViewContent
         :class="`hljs language-${attrs.language}`"
         :style="`white-space: pre${attrs.textWrap ? '-wrap' : ''} !important;`"
         as="code"
       /></pre>
     </div>
-  </node-view-wrapper>
+  </NodeViewWrapper>
 </template>
 
 <script setup lang="ts">
