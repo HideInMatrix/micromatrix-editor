@@ -1,0 +1,123 @@
+<template>
+  <MenusButton
+    :text="t('base.highlight.text')"
+    shortcut="Ctrl+Shift+H"
+    menu-type="dropdown"
+    popup-handle="arrow"
+    hide-text
+    overlay-class-name="mxm-highlight-dropdown"
+    :disabled="!editor?.can().chain().focus().setBackgroundColor().run()"
+    @menu-click="highlightChange(highlight)"
+  >
+    <Icon
+      name="highlight"
+      class="mxm-icon-highlight"
+      :style="{ backgroundColor: highlight?.bgcolor, color: highlight?.color }"
+    />
+    <template #dropmenu>
+      <TDropdownMenu>
+        <TDropdownItem
+          v-for="item in options"
+          :key="item.value"
+          class="mxm-text-highlight-menu"
+          :value="item.value"
+          :style="{ backgroundColor: item.bgcolor, color: item.color }"
+          :divider="item.divider"
+          @click="highlightChange(item)"
+        >
+          <Icon name="highlight" />
+          <span>{{ item.label }}</span>
+        </TDropdownItem>
+        <TDropdownItem
+          class="mxm-text-highlight-menu mxm-clear-format-menu"
+          @click="clearFormat()"
+        >
+          <Icon name="clear-format" />
+          <span v-text="t('base.highlight.clear')"></span>
+        </TDropdownItem>
+      </TDropdownMenu>
+    </template>
+  </MenusButton>
+</template>
+
+<script setup lang="ts">
+import { t } from '@/composables/i18n'
+const editor = inject('editor')
+
+const options = [
+  { label: t('base.highlight.yellowBg'), value: 1, bgcolor: '#ffff8a' },
+  { label: t('base.highlight.greenBg'), value: 2, bgcolor: '#a7ffa7' },
+  { label: t('base.highlight.purpleBg'), value: 3, bgcolor: '#e6afff' },
+  {
+    label: t('base.highlight.blueBg'),
+    value: 4,
+    bgcolor: '#83d3ff',
+    divider: true,
+  },
+  { label: t('base.highlight.red'), value: 5, color: '#e71313' },
+  {
+    label: t('base.highlight.green'),
+    value: 6,
+    color: '#128a00',
+    divider: true,
+  },
+]
+
+let highlight = $ref<(typeof options)[number] | undefined>(undefined)
+const highlightChange = (item) => {
+  if (!item) {
+    highlightChange(options[0])
+    return
+  }
+  if (item.bgcolor) {
+    editor.value?.chain().focus().setBackgroundColor(item.bgcolor).run()
+  }
+  if (item.color) {
+    editor.value?.chain().focus().setColor(item.color).run()
+  }
+  highlight = item
+}
+const clearFormat = () => {
+  editor.value?.chain().focus().unsetBackgroundColor().run()
+  editor.value?.chain().focus().unsetColor().run()
+  highlight = undefined
+}
+</script>
+
+<style lang="less" scoped>
+.mxm-icon-highlight {
+  border-radius: 2px;
+}
+</style>
+
+<style lang="less">
+.mxm-text-highlight-dropdown {
+  .mxm-popup__content {
+    .mxm-divider {
+      margin-top: 8px;
+      margin-bottom: 8px;
+    }
+  }
+}
+.mxm-text-highlight-menu {
+  width: 140px;
+  margin-bottom: 6px;
+  border: solid 1px transparent;
+  &.mxm-clear-format-menu {
+    margin-bottom: 0;
+  }
+  &:hover {
+    border-color: var(--mxm-primary-color);
+    background-color: inherit;
+  }
+  .mxm-dropdown__item-text {
+    display: flex;
+    align-items: center;
+    padding: 2px;
+    .mxm-icon {
+      font-size: 16px;
+      margin-right: 5px;
+    }
+  }
+}
+</style>

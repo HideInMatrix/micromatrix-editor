@@ -1,18 +1,18 @@
 <template>
   <div v-if="!page.preview?.enabled" class="mxm-status-bar">
     <div class="mxm-status-bar-left">
-      <tooltip :content="page.showToc ? t('toc.hide') : t('toc.show')">
-        <t-button
+      <Tooltip :content="page.showToc ? t('toc.hide') : t('toc.show')">
+        <TButton
           class="mxm-status-bar-button"
           :class="{ active: page.showToc }"
           variant="text"
           size="small"
           @click="page.showToc = !page.showToc"
         >
-          <icon name="toc" color="red" />
-        </t-button>
-      </tooltip>
-      <tooltip
+          <Icon name="toc" color="red" />
+        </TButton>
+      </Tooltip>
+      <Tooltip
         v-if="options.document?.enableSpellcheck"
         :content="
           $document?.enableSpellcheck
@@ -20,38 +20,38 @@
             : t('spellcheck.enable')
         "
       >
-        <t-button
+        <TButton
           class="mxm-status-bar-button"
           :class="{ active: $document.enableSpellcheck }"
           variant="text"
           size="small"
           @click="toggleSpellcheck"
         >
-          <icon name="spellcheck" color="red" />
-        </t-button>
-      </tooltip>
-      <tooltip :content="t('shortcut.title')">
-        <t-button
+          <Icon name="spellcheck" color="red" />
+        </TButton>
+      </Tooltip>
+      <Tooltip :content="t('shortcut.title')">
+        <TButton
           class="mxm-status-bar-button"
           variant="text"
           size="small"
           @click="showShortcut = true"
         >
-          <icon name="shortcut" />
-        </t-button>
-      </tooltip>
-      <tooltip :content="t('resetAll.title')">
-        <t-button
+          <Icon name="shortcut" />
+        </TButton>
+      </Tooltip>
+      <Tooltip :content="t('resetAll.title')">
+        <TButton
           class="mxm-status-bar-button"
           variant="text"
           size="small"
           @click="reset(false)"
         >
-          <icon name="clear-cache" />
-        </t-button>
-      </tooltip>
+          <Icon name="clear-cache" />
+        </TButton>
+      </Tooltip>
       <div class="mxm-status-bar-split"></div>
-      <t-dropdown
+      <TDropdown
         :attach="container"
         :popup-props="{
           onVisibleChange(visible) {
@@ -61,22 +61,22 @@
         placement="top-left"
         trigger="click"
       >
-        <t-button
+        <TButton
           class="mxm-status-bar-button auto-width"
           variant="text"
           size="small"
         >
-          <icon :name="`layout-${page.layout}`" />
+          <Icon :name="`layout-${page.layout}`" />
           {{ currentLayout.content }}
-          <icon
+          <Icon
             name="arrow-down"
             :style="{
               transform: `rotate(${showLayoutSelect ? '180deg' : 0})`,
             }"
           />
-        </t-button>
-        <t-dropdown-menu>
-          <t-dropdown-item
+        </TButton>
+        <TDropdownMenu>
+          <TDropdownItem
             v-for="item in layouts"
             :key="item.value"
             :value="item.value"
@@ -84,20 +84,20 @@
             @click="page.layout = item.value"
           >
             <div class="mxm-layout-dropdown-item">
-              <icon :name="`layout-${item.value}`" size="16" />
+              <Icon :name="`layout-${item.value}`" size="16" />
               {{ item.content }}
             </div>
-          </t-dropdown-item>
-        </t-dropdown-menu>
-      </t-dropdown>
+          </TDropdownItem>
+        </TDropdownMenu>
+      </TDropdown>
       <div class="mxm-status-bar-split"></div>
-      <t-popup
+      <TPopup
         v-if="editor"
         v-model="showWordCount"
         trigger="click"
         placement="top-left"
       >
-        <t-button
+        <TButton
           class="mxm-status-bar-button auto-width word-count"
           variant="text"
           size="small"
@@ -107,11 +107,11 @@
           </span>
           <span class="mxm-word-count">{{ totalCharacters }}</span>
           {{ t('wordCount.characters') }}
-          <icon
+          <Icon
             name="arrow-down"
             :style="{ transform: `rotate(${showWordCount ? '180deg' : 0})` }"
           />
-        </t-button>
+        </TButton>
         <template #content>
           <div v-if="showWordCount" class="mxm-word-count-detail">
             <div class="mxm-word-count-title">{{ t('wordCount.title') }}</div>
@@ -135,51 +135,51 @@
             </ul>
           </div>
         </template>
-      </t-popup>
+      </TPopup>
       <div class="mxm-status-bar-split"></div>
     </div>
     <div class="mxm-status-bar-right">
-      <tooltip
+      <Tooltip
         :content="`${fullscreen?.isFullscreen ? t('fullscreen.disable') : t('fullscreen.title')} (${getShortcut('Ctrl+F11')})`"
       >
-        <t-button
+        <TButton
           class="mxm-status-bar-button"
           variant="text"
           size="small"
           @click="toggleFullscreen"
         >
-          <icon :name="fullscreen ? 'full-screen-exit' : 'full-screen'" />
-        </t-button>
-      </tooltip>
-      <tooltip
+          <Icon :name="fullscreen ? 'full-screen-exit' : 'full-screen'" />
+        </TButton>
+      </Tooltip>
+      <Tooltip
         :content="
           page.preview?.enabled ? t('preview.disable') : t('preview.title')
         "
       >
-        <t-button
+        <TButton
           class="mxm-status-bar-button"
           :class="{ active: page.preview?.enabled }"
           variant="text"
           size="small"
           @click="togglePreview"
         >
-          <icon name="preview" />
-        </t-button>
-      </tooltip>
+          <Icon name="preview" />
+        </TButton>
+      </Tooltip>
       <div class="mxm-status-bar-split"></div>
       <div v-if="page.layout === 'page'" class="mxm-zoom-level-bar">
-        <tooltip :content="`${t('zoom.zoomOut')} (${getShortcut('Ctrl-')})`">
-          <t-button
+        <Tooltip :content="`${t('zoom.zoomOut')} (${getShortcut('Ctrl-')})`">
+          <TButton
             class="mxm-status-bar-button"
             variant="text"
             size="small"
             :disabled="page.zoomLevel <= 20"
             @click="zoomOut"
           >
-            <icon name="minus" />
-          </t-button>
-        </tooltip>
-        <t-slider
+            <Icon name="minus" />
+          </TButton>
+        </Tooltip>
+        <TSlider
           v-model="page.zoomLevel"
           class="mxm-zoom-level-slider"
           :min="20"
@@ -194,30 +194,30 @@
           }"
           :label="t('zoom.level') + '${value}%%'"
         />
-        <tooltip :content="`${t('zoom.zoomIn')} (${getShortcut('Ctrl+')})`">
-          <t-button
+        <Tooltip :content="`${t('zoom.zoomIn')} (${getShortcut('Ctrl+')})`">
+          <TButton
             class="mxm-status-bar-button"
             variant="text"
             size="small"
             :disabled="!!(page.zoomLevel && page.zoomLevel >= 500)"
             @click="zoomIn"
           >
-            <icon name="plus" />
-          </t-button>
-        </tooltip>
-        <tooltip :content="`${t('zoom.autoWidth')} (${getShortcut('Ctrl0')})`">
-          <t-button
+            <Icon name="plus" />
+          </TButton>
+        </Tooltip>
+        <Tooltip :content="`${t('zoom.autoWidth')} (${getShortcut('Ctrl0')})`">
+          <TButton
             class="mxm-status-bar-button mxm-auto-width-button"
             :class="{ active: page.autoWidth }"
             variant="text"
             size="small"
             @click="autoWidth(true)"
           >
-            <icon name="auto-width" />
-          </t-button>
-        </tooltip>
-        <tooltip :content="`${t('zoom.reset')} (${getShortcut('Ctrl1')})`">
-          <t-button
+            <Icon name="auto-width" />
+          </TButton>
+        </Tooltip>
+        <Tooltip :content="`${t('zoom.reset')} (${getShortcut('Ctrl1')})`">
+          <TButton
             class="mxm-status-bar-button auto-width"
             variant="text"
             style="width: 80px"
@@ -225,44 +225,44 @@
             @click="zoomReset"
           >
             {{ page.zoomLevel }}%
-          </t-button>
-        </tooltip>
+          </TButton>
+        </Tooltip>
       </div>
-      <t-dropdown
+      <TDropdown
         :attach="container"
         :options="langs"
         placement="top-left"
         trigger="click"
         @click="changeLang"
       >
-        <t-button
+        <TButton
           class="mxm-status-bar-button auto-width mxm-lang-button"
           variant="text"
           size="small"
         >
           {{ lang }}
-        </t-button>
-      </t-dropdown>
+        </TButton>
+      </TDropdown>
     </div>
   </div>
   <div v-else class="mxm-preview-bar">
     <div v-if="countdownValue !== ''" class="mxm-preview-countdown">
       {{ countdownValue }}
     </div>
-    <statusbar-countdown
+    <StatusbarCountdown
       :visible="countdownSetting"
       @visible-change="(visible) => (countdownSetting = visible)"
       @countdown-change="countdownChange"
       @exit-preivew="exitPreview"
       @close="countdownSetting = false"
     >
-      <tooltip :content="t('preview.countdown.title')">
+      <Tooltip :content="t('preview.countdown.title')">
         <div class="item" :class="{ active: countdownSetting }">
-          <icon name="time" />
+          <Icon name="time" />
         </div>
-      </tooltip>
-    </statusbar-countdown>
-    <tooltip :content="t('preview.laserPointer')">
+      </Tooltip>
+    </StatusbarCountdown>
+    <Tooltip :content="t('preview.laserPointer')">
       <div
         class="item"
         :class="{ active: page.preview?.laserPointer }"
@@ -271,18 +271,18 @@
           (page.preview.laserPointer = !page.preview.laserPointer)
         "
       >
-        <icon name="laser-pointer" />
+        <Icon name="laser-pointer" />
       </div>
-    </tooltip>
-    <tooltip
+    </Tooltip>
+    <Tooltip
       v-if="page.layout === 'page'"
       :content="`${t('zoom.zoomOut')} (${getShortcut('Ctrl-')})`"
     >
       <div class="item" @click="zoomOut">
-        <icon name="minus" />
+        <Icon name="minus" />
       </div>
-    </tooltip>
-    <tooltip
+    </Tooltip>
+    <Tooltip
       v-if="page.layout === 'page'"
       :content="`${t('zoom.autoWidth')} (${getShortcut('Ctrl0')})`"
     >
@@ -291,24 +291,24 @@
         :class="{ active: page.autoWidth }"
         @click="autoWidth(true)"
       >
-        <icon name="auto-width" />
+        <Icon name="auto-width" />
       </div>
-    </tooltip>
-    <tooltip
+    </Tooltip>
+    <Tooltip
       v-if="page.layout === 'page'"
       :content="`${t('zoom.zoomIn')} (${getShortcut('Ctrl+')})`"
     >
       <div class="item" @click="zoomIn">
-        <icon name="plus" />
+        <Icon name="plus" />
       </div>
-    </tooltip>
-    <tooltip :content="`${t('preview.disable')} (${getShortcut('Esc')})`">
+    </Tooltip>
+    <Tooltip :content="`${t('preview.disable')} (${getShortcut('Esc')})`">
       <div class="item" @click="togglePreview">
-        <icon name="exit" />
+        <Icon name="exit" />
       </div>
-    </tooltip>
+    </Tooltip>
   </div>
-  <t-drawer
+  <TDrawer
     v-model:visible="showShortcut"
     :attach="container"
     size="320px"
@@ -319,12 +319,12 @@
   >
     <template #header>
       <div class="mxm-shortcuts-drawer-header">
-        <icon name="shortcut" />
+        <Icon name="shortcut" />
         {{ t('shortcut.title') }}
       </div>
     </template>
-    <statusbar-shortcuts />
-  </t-drawer>
+    <StatusbarShortcuts />
+  </TDrawer>
 </template>
 
 <script setup lang="ts">

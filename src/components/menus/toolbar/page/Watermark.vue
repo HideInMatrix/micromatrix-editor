@@ -1,0 +1,198 @@
+<template>
+  <MenusButton
+    ico="watermark"
+    :text="t('page.watermark.text')"
+    huge
+    menu-type="popup"
+    :popup-visible="popupVisible"
+    @toggle-popup="togglePopup"
+  >
+    <template #content>
+      <div class="mxm-watermark-container">
+        <div class="mxm-watermark-toolbar">
+          <MenusButton
+            style="width: 140px"
+            :tooltip="t('page.watermark.fontFamily')"
+            menu-type="select"
+            :select-options="fonts"
+            :select-value="page.watermark?.fontFamily"
+            @menu-click="
+              (value) => {
+                updateWatermark({ fontFamily: value })
+              }
+            "
+          ></MenusButton>
+          <MenusButton
+            menu-type="input"
+            :tooltip="t('page.watermark.fontSize')"
+          >
+            <TInputNumber
+              v-if="page.watermark"
+              :value="page.watermark.fontSize"
+              style="width: 60px"
+              size="small"
+              theme="column"
+              align="center"
+              :max="96"
+              :min="12"
+              :allow-input-over-limit="false"
+              placeholder=""
+              @change="
+                (newFontSize) => updateWatermark({ fontSize: newFontSize })
+              "
+            >
+            </TInputNumber>
+          </MenusButton>
+          <MenusToolbarBaseColor
+            v-if="page.watermark"
+            :text="t('page.watermark.fontColor')"
+            :default-color="page.watermark?.fontColor"
+            modeless
+            @change="
+              (value) => {
+                updateWatermark({ fontColor: value })
+              }
+            "
+          />
+          <MenusToolbarBaseBold
+            v-if="page.watermark"
+            :menu-active="page.watermark.fontWeight === 'bold'"
+            @menu-click-through="
+              updateWatermark({
+                fontWeight:
+                  page.watermark.fontWeight === 'bold' ? 'normal' : 'bold',
+              })
+            "
+          />
+        </div>
+        <TInput
+          v-if="page.watermark"
+          :value="page.watermark.text"
+          maxlength="30"
+          clearable
+          :placeholder="t('page.watermark.content')"
+          @change="(newText) => updateWatermark({ text: newText })"
+        />
+        <div
+          class="mxm-watermark-type-title"
+          v-text="t('page.watermark.type')"
+        ></div>
+        <div class="mxm-watermark-type">
+          <div
+            v-if="page.watermark"
+            class="item compact"
+            :class="{ active: page.watermark.type === 'compact' }"
+            @click="updateWatermark({ type: 'compact' })"
+          >
+            <div class="bg"></div>
+            <span v-text="t('page.watermark.compact')"></span>
+          </div>
+          <div
+            v-if="page.watermark"
+            class="item spacious"
+            :class="{ active: page.watermark.type === 'spacious' }"
+            @click="updateWatermark({ type: 'spacious' })"
+          >
+            <div class="bg"></div>
+            <span v-text="t('page.watermark.spacious')"></span>
+          </div>
+        </div>
+        <TButton
+          v-if="page.watermark?.text"
+          class="mxm-clear-button"
+          block
+          variant="outline"
+          @click="clearWatermark"
+          v-text="t('page.watermark.clear')"
+        ></TButton>
+      </div>
+    </template>
+  </MenusButton>
+</template>
+
+<script setup lang="ts">
+import { l, t } from '@/composables/i18n'
+const { popupVisible, togglePopup } = usePopup()
+
+const page = inject('page')
+const options = inject('options')
+
+const fonts = options.value.dicts?.fonts.map((item) => {
+  return {
+    label: l(item.label),
+    value: item.value || '',
+  }
+})
+// 公共方法：更新水印属性（生成新对象，改变引用）
+const updateWatermark = (props) => {
+  if (!page.value.watermark) return
+  // 生成新对象，确保引用改变
+  page.value.watermark = { ...page.value.watermark, ...props }
+}
+const clearWatermark = () => {
+  updateWatermark({ text: '' })
+  popupVisible.value = false
+}
+</script>
+
+<style lang="less" scoped>
+.mxm-watermark-container {
+  width: 320px;
+  .mxm-watermark-toolbar {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+  }
+  .mxm-watermark-type {
+    display: flex;
+    &-title {
+      color: var(--mxm-text-color-light);
+      margin: 10px 0;
+      font-size: 12px;
+    }
+    .item {
+      cursor: pointer;
+      &:first-child {
+        margin-right: 10px;
+      }
+      .bg {
+        width: 70px;
+        height: 90px;
+        border: solid 1px var(--mxm-border-color);
+        position: relative;
+        border-radius: var(--mxm-radius);
+        background-size: cover;
+        background-position: center center;
+        background-repeat: no-repeat;
+      }
+      span {
+        display: block;
+        background-color: rgba(0, 0, 0, 0.05);
+        border-radius: 12px;
+        padding: 0 10px;
+        text-align: center;
+        margin-top: 8px;
+        font-size: 12px;
+      }
+      &:hover,
+      &.active {
+        .bg {
+          border-color: var(--mxm-primary-color);
+        }
+        span {
+          color: var(--mxm-primary-color);
+        }
+      }
+      &.compact .bg {
+        background-image: url('@/assets/images/watermark-compact.png');
+      }
+      &.spacious .bg {
+        background-image: url('@/assets/images/watermark-spacious.png');
+      }
+    }
+  }
+  .mxm-clear-button {
+    margin-top: 20px;
+  }
+}
+</style>

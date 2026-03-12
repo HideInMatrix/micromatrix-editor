@@ -1,11 +1,11 @@
 <template>
-  <bubble-menu v-if="editor" class="mxm-editor-bubble-menu" :editor="editor">
-    <menus-bubble-menus v-if="options?.document?.enableBubbleMenu">
+  <BubbleMenu v-if="editor" class="mxm-editor-bubble-menu" :editor="editor">
+    <MenusBubbleMenus v-if="options?.document?.enableBubbleMenu">
       <template #bubble_menu="props">
         <slot name="bubble_menu" v-bind="props" />
       </template>
-    </menus-bubble-menus>
-  </bubble-menu>
+    </MenusBubbleMenus>
+  </BubbleMenu>
 </template>
 
 <script setup lang="ts">

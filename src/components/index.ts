@@ -1,9 +1,9 @@
 import 'virtual:svg-icons-register'
 
 import MxmEditor from './index.vue'
-import MxmMenuButton from './menus/button.vue'
-import MxmDialog from './modal.vue'
-import MxmTooltip from './tooltip.vue'
+import MxmMenuButton from './menus/Button.vue'
+import MxmDialog from './Modal.vue'
+import MxmTooltip from './Tooltip.vue'
 
 const useMxmEditor = {
   install: (app, options) => {

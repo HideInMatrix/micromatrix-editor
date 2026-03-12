@@ -1,6 +1,6 @@
 <template>
   <div v-if="$toolbar.show" class="mxm-toolbar-container">
-    <toolbar-ribbon
+    <ToolbarRibbon
       v-if="$toolbar.mode === 'ribbon'"
       :menus="toolbarMenus"
       :current-menu="currentMenu"
@@ -13,8 +13,8 @@
       >
         <slot :name="`toolbar_${item}`" v-bind="props" />
       </template>
-    </toolbar-ribbon>
-    <toolbar-classic
+    </ToolbarRibbon>
+    <ToolbarClassic
       v-if="$toolbar.mode === 'classic'"
       :menus="toolbarMenus"
       :current-menu="currentMenu"
@@ -27,12 +27,12 @@
       >
         <slot :name="`toolbar_${item}`" v-bind="props" />
       </template>
-    </toolbar-classic>
+    </ToolbarClassic>
     <div
       class="mxm-toolbar-actions"
       :class="`mxm-toolbar-actions-${$toolbar.mode}`"
     >
-      <t-popup
+      <TPopup
         v-if="
           options.toolbar.showSaveLabel && options.document.readOnly !== true
         "
@@ -42,7 +42,7 @@
         placement="bottom-right"
         @visible-change="(visible) => (statusPopup = visible)"
       >
-        <t-button
+        <TButton
           class="mxm-toolbar-actions-button"
           variant="text"
           size="small"
@@ -61,7 +61,7 @@
               <span v-else class="unsaved" v-text="t('save.unsaved')"></span>
             </span>
           </span>
-        </t-button>
+        </TButton>
         <template #content>
           <div class="mxm-document-status-container mxm-status">
             <div>
@@ -77,23 +77,23 @@
               <span v-else v-text="t('save.unsaved')"></span>
             </div>
             <div class="mxm-document-button-container">
-              <t-button
+              <TButton
                 size="small"
                 @click="saveContent"
                 v-text="t('save.text')"
-              ></t-button>
-              <t-button
+              ></TButton>
+              <TButton
                 size="small"
                 variant="outline"
                 @click="setContentFromCache"
                 v-text="t('save.cache.text')"
               >
-              </t-button>
+              </TButton>
             </div>
           </div>
         </template>
-      </t-popup>
-      <t-dropdown
+      </TPopup>
+      <TDropdown
         trigger="click"
         size="small"
         placement="bottom-right"
@@ -103,16 +103,16 @@
         }"
         @click="toggleToolbarMode"
       >
-        <t-button
+        <TButton
           class="mxm-toolbar-actions-button"
           variant="text"
           size="small"
         >
-          <icon name="expand-down" />
+          <Icon name="expand-down" />
           <span class="mxm-button-text">{{ t('toolbar.toggle') }}</span>
-        </t-button>
+        </TButton>
         <template #dropdown>
-          <t-dropdown-menu
+          <TDropdownMenu
             v-for="item in editorModeOptions"
             :key="item.value"
             :content="item.label"
@@ -121,18 +121,18 @@
             :active="item.value === $toolbar.mode"
           >
             <template #prefixIcon>
-              <icon :name="item.prefixIcon" />
+              <Icon :name="item.prefixIcon" />
             </template>
-          </t-dropdown-menu>
+          </TDropdownMenu>
         </template>
-      </t-dropdown>
+      </TDropdown>
     </div>
   </div>
-  <tooltip v-else :content="t('toolbar.show')" placement="bottom-right">
+  <Tooltip v-else :content="t('toolbar.show')" placement="bottom-right">
     <div class="mxm-show-toolbar" @click="$toolbar.show = true">
-      <icon name="arrow-down" />
+      <Icon name="arrow-down" />
     </div>
-  </tooltip>
+  </Tooltip>
 </template>
 
 <script setup lang="ts">

@@ -1,0 +1,33 @@
+<template>
+  <MenusButton
+    ico="table"
+    :text="t('table.borderColor')"
+    menu-type="popup"
+    huge
+    :disabled="!editor?.can().setCellAttribute('borderColor', '')"
+    :popup-visible="popupVisible"
+    @toggle-popup="togglePopup"
+  >
+    <template #content>
+      <PickerColor default-color="" @change="colorBorderChange" />
+    </template>
+  </MenusButton>
+</template>
+
+<script setup lang="ts">
+import { t } from '@/composables/i18n'
+const emits = defineEmits(['change'])
+
+const { popupVisible, togglePopup } = usePopup()
+const editor = inject('editor')
+
+const colorBorderChange = (color) => {
+  popupVisible.value = false
+  const borderColor = color === '' ? null : color
+  editor.value
+    ?.chain()
+    .focus()
+    .setCellAttribute('borderColor', borderColor)
+    .run()
+}
+</script>

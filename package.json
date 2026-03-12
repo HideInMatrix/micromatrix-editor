@@ -49,7 +49,7 @@
   },
   "scripts": {
     "build": "vite build",
-    "dev": "vite --port 9000 --open --force",
+    "dev": "vite --open --force",
     "format": "oxfmt --write .",
     "lint": "oxlint --fix src",
     "analyzer": "vite-bundle-visualizer",
@@ -112,6 +112,7 @@
     "yjs": "13.6.29"
   },
   "devDependencies": {
+    "@unocss/preset-wind4": "^66.6.6",
     "@vitejs/plugin-vue": "^6.0.4",
     "@vue-macros/reactivity-transform": "^3.1.2",
     "husky": "^9.1.7",
@@ -123,6 +124,7 @@
     "postcss": "^8.5.6",
     "postcss-html": "^1.8.1",
     "tdesign-vue-next": "1.18.2",
+    "unocss": "^66.6.6",
     "unplugin-auto-import": "^21.0.0",
     "unplugin-vue": "^7.1.1",
     "unplugin-vue-components": "^31.0.0",

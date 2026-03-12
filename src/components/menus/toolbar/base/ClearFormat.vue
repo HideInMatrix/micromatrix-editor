@@ -1,0 +1,13 @@
+<template>
+  <MenusButton
+    ico="clear-format"
+    :text="t('base.clearFormat')"
+    hide-text
+    @menu-click="editor?.chain().focus().unsetAllMarks().run()"
+  />
+</template>
+
+<script setup lang="ts">
+import { t } from '@/composables/i18n'
+const editor = inject('editor')
+</script>

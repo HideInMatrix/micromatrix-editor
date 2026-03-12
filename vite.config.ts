@@ -4,8 +4,9 @@ import AutoImport from 'unplugin-auto-import/vite'
 import { TDesignResolver } from 'unplugin-vue-components/resolvers'
 import Components from 'unplugin-vue-components/vite'
 import VueMacros from 'unplugin-vue-macros/vite'
-import { defineConfig } from 'vite'
+import { BuildEnvironmentOptions, defineConfig } from 'vite'
 import { createSvgIconsPlugin } from 'vite-plugin-svg-icons'
+import UnoCSS from 'unocss/vite'
 
 import pkg from './package.json'
 import copyright from './src/utils/copyright'
@@ -35,10 +36,11 @@ const vuePlugins = {
     symbolId: 'mxm-icon-[name]',
     customDomId: 'mxm-icons',
   }),
+  UnoCSS: UnoCSS(),
 }
 
 // Build configuration
-const buildConfig = {
+const buildConfig:BuildEnvironmentOptions = {
   target: 'es2018',
   lib: {
     entry: `${process.cwd()}/src/components/index.ts`,

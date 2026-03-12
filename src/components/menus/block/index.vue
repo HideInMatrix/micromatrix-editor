@@ -1,6 +1,6 @@
 <template>
   <!-- @vue-ignore -->
-  <drag-handle
+  <DragHandle
     :editor="editor"
     class="mxm-block-menu-drag-handle"
     :class="{
@@ -11,19 +11,19 @@
     @node-change="nodeChange"
   >
     <div class="mxm-block-menu-hander">
-      <menus-block-node
+      <MenusBlockNode
         :node="selectedNode"
         :pos="selectedNodePos"
         @dropdown-visible="dropdownVisible"
       />
-      <menus-block-common
+      <MenusBlockCommon
         v-if="!editor?.isEmpty"
         :node="selectedNode"
         :pos="selectedNodePos"
         @dropdown-visible="dropdownVisible"
       />
     </div>
-  </drag-handle>
+  </DragHandle>
 </template>
 
 <script setup lang="ts">

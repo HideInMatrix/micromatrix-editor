@@ -1,5 +1,5 @@
 <template>
-  <t-config-provider
+  <TConfigProvider
     :key="options.editorKey"
     :global-config="{
       ...localeConfig[locale],
@@ -25,7 +25,7 @@
       }"
     >
       <header class="mxm-toolbar">
-        <toolbar
+        <Toolbar
           :key="toolbarKey"
           @menu-change="(event) => emits('changed:menu', event)"
         >
@@ -36,20 +36,20 @@
           >
             <slot :name="`toolbar_${item}`" v-bind="slotProps" />
           </template>
-        </toolbar>
+        </Toolbar>
       </header>
       <main class="mxm-main">
-        <container-page>
+        <ContainerPage>
           <template #bubble_menu="slotProps">
             <slot name="bubble_menu" v-bind="slotProps" />
           </template>
-        </container-page>
+        </ContainerPage>
       </main>
       <footer class="mxm-footer">
-        <statusbar />
+        <Statusbar />
       </footer>
     </div>
-  </t-config-provider>
+  </TConfigProvider>
 </template>
 
 <script setup lang="ts">

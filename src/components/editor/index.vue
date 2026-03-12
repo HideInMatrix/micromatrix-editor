@@ -1,5 +1,5 @@
 <template>
-  <editor-content
+  <EditorContent
     class="mxm-editor-content"
     :class="{
       'show-bookmark': page.showBookmark,
@@ -17,20 +17,20 @@
     "
   />
   <template v-if="editor && !destroyed">
-    <menus-block
+    <MenusBlock
       v-if="options.document?.enableBlockMenu"
       v-show="
         page.zoomLevel === 100 && !page.preview?.enabled && editor.isEditable
       "
     />
-    <menus-bubble
+    <MenusBubble
       v-if="options.document?.enableBubbleMenu"
       v-show="!editor?.view?.painter?.enabled && !editor?.isEmpty"
     >
       <template #bubble_menu="props">
         <slot name="bubble_menu" v-bind="props" />
       </template>
-    </menus-bubble>
+    </MenusBubble>
   </template>
 </template>
 

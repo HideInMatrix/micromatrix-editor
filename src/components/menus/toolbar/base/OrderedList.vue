@@ -1,0 +1,180 @@
+<template>
+  <MenusButton
+    ico="ordered-list"
+    :text="t('list.ordered.text')"
+    shortcut="Ctrl+Shift+7"
+    menu-type="popup"
+    popup-handle="arrow"
+    hide-text
+    :popup-visible="popupVisible"
+    :menu-active="editor?.isActive('orderedList')"
+    :disabled="
+      !editor?.can().chain().focus().toggleBulletList().run() &&
+      !editor?.can().chain().focus().toggleOrderedList().run() &&
+      !editor?.can().chain().focus().toggleTaskList().run()
+    "
+    @toggle-popup="togglePopup"
+    @menu-click="toggleOrderedList(options[0].value)"
+  >
+    <template #content>
+      <div class="mxm-ordered-list-group">
+        <Tooltip
+          v-for="item in options"
+          :key="item.value"
+          :content="item.label"
+        >
+          <div
+            class="mxm-ordered-list-item"
+            :class="{ active: listStyleType === item.value }"
+            @click="toggleOrderedList(item.value)"
+          >
+            <Icon
+              class="mxm-icon-ordered-list"
+              :name="`ordered-list-${item.value}`"
+            />
+          </div>
+        </Tooltip>
+      </div>
+      <div class="mxm-ordered-list-divider"></div>
+      <div
+        class="mxm-ordered-list-title"
+        v-text="t('list.ordered.property')"
+      ></div>
+      <div class="mxm-ordered-list-properties">
+        <TInputNumber
+          v-model="startAt"
+          :min="1"
+          align="left"
+          theme="column"
+          @change="changeOrderedListStart"
+        >
+          <template #label
+            ><span v-text="t('list.ordered.startAt')"></span
+          ></template>
+        </TInputNumber>
+      </div>
+    </template>
+  </MenusButton>
+</template>
+
+<script setup lang="ts">
+import { t } from '@/composables/i18n'
+const { popupVisible, togglePopup } = usePopup()
+const editor = inject('editor')
+
+const options = [
+  { label: t('list.ordered.decimal'), value: 'decimal' },
+  {
+    label: t('list.ordered.decimalLeadingZero'),
+    value: 'decimal-leading-zero',
+  },
+  { label: t('list.ordered.lowerRoman'), value: 'lower-roman' },
+  { label: t('list.ordered.upperRoman'), value: 'upper-roman' },
+  { label: t('list.ordered.lowerLatin'), value: 'lower-latin' },
+  { label: t('list.ordered.upperLatin'), value: 'upper-latin' },
+  {
+    label: t('list.ordered.tradChineseInformal'),
+    value: 'trad-chinese-informal',
+  },
+  {
+    label: t('list.ordered.simpChineseFormal'),
+    value: 'simp-chinese-formal',
+  },
+]
+
+// 列表类型
+let listStyleType = $ref('left')
+watch(
+  () => popupVisible.value,
+  (val) => {
+    if (val && editor.value) {
+      const { listType } = editor.value.getAttributes('orderedList')
+      listStyleType = listType
+    }
+  },
+)
+const toggleOrderedList = (listType) => {
+  const chain = editor.value?.chain().focus()
+  if (editor.value?.isActive('orderedList')) {
+    if (editor.value.getAttributes('orderedList').listType === listType) {
+      chain?.toggleOrderedList().run()
+    } else {
+      chain?.updateAttributes('orderedList', { listType }).run()
+    }
+  } else {
+    chain
+      ?.toggleOrderedList()
+      .updateAttributes('orderedList', { listType })
+      .run()
+  }
+  listStyleType = listType
+  popupVisible.value = false
+}
+
+// 起始编号
+let startAt = $ref(1)
+const changeOrderedListStart = () => {
+  if (editor.value) {
+    editor.value
+      .chain()
+      .focus()
+      .updateAttributes('orderedList', { start: startAt })
+      .run()
+  }
+}
+watch(
+  () => popupVisible.value,
+  (visible) => {
+    if (visible && editor.value) {
+      startAt = editor.value.getAttributes('orderedList').start || 1
+    }
+  },
+)
+</script>
+
+<style lang="less" scoped>
+.mxm-ordered-list-group {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  flex-wrap: wrap;
+  gap: 8px;
+  width: 248px;
+  margin-bottom: 10px;
+  .mxm-ordered-list-item {
+    cursor: pointer;
+    padding: 5px;
+    border: solid 1px var(--mxm-border-color);
+    box-sizing: border-box;
+    &:nth-child(4n) {
+      margin-right: 0;
+    }
+    &:hover {
+      background-color: var(--mxm-button-hover-background);
+    }
+    &.active {
+      border-color: var(--mxm-primary-color);
+    }
+  }
+  .mxm-icon-ordered-list {
+    font-size: 44px;
+  }
+}
+.mxm-ordered-list-title {
+  color: var(--mxm-text-color-light);
+  font-size: 12px;
+  margin: 7px 0 4px;
+}
+.mxm-ordered-list-divider {
+  height: 1px;
+  background-color: var(--mxm-border-color-light);
+  margin: 5px 0 0;
+}
+.mxm-ordered-list-properties {
+  display: flex;
+  flex-direction: column;
+  :deep(.mxm-input-number) {
+    width: 248px;
+  }
+}
+</style>

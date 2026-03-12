@@ -1,0 +1,242 @@
+<template>
+  <MenusButton
+    :ico="content ? 'edit' : 'mermaid'"
+    :text="content ? t('tools.mermaid.edit') : t('tools.mermaid.text')"
+    huge
+    @menu-click="dialogVisible = true"
+  >
+    <Modal
+      :visible="dialogVisible"
+      icon="mermaid"
+      width="960px"
+      @confirm="setMermaid"
+      @close="dialogVisible = false"
+    >
+      <template #header>
+        <Icon name="mermaid" />
+        {{ content ? t('tools.mermaid.edit') : t('tools.mermaid.text') }}
+      </template>
+      <div class="mxm-mermaid-container">
+        <div class="mxm-mermaid-editor">
+          <div class="mxm-mermaid-toolbar">
+            <MenusButton
+              style="width: 100px"
+              menu-type="select"
+              :text="t('tools.mermaid.theme')"
+              :select-options="themes"
+              :select-value="localConfig.theme"
+              @menu-click="(value) => (localConfig.theme = value)"
+            />
+            <MenusButton
+              ico="copy"
+              :tooltip="t('tools.mermaid.copy')"
+              hide-text
+              @menu-click="copyCode"
+            />
+            <MenusButton
+              ico="node-delete"
+              :tooltip="t('tools.mermaid.clear')"
+              hide-text
+              @menu-click="mermaidCode = ''"
+            />
+          </div>
+          <TTextarea
+            v-model="mermaidCode"
+            class="mxm-mermaid-code"
+            autofocus
+            :placeholder="t('tools.mermaid.placeholder')"
+          />
+        </div>
+        <div class="mxm-mermaid-render">
+          <div
+            class="mxm-mermaid-title"
+            v-text="t('tools.mermaid.preview')"
+          ></div>
+          <div
+            ref="mermaidRef"
+            class="mxm-mermaid-svg mxm-scrollbar"
+            v-html="svgCode"
+          ></div>
+        </div>
+      </div>
+      <TCheckbox
+        class="mxm-mermaid-keep-size"
+        v-if="content && content !== ''"
+        v-model="keepSize"
+      >
+        {{ t('tools.mermaid.keepSize') }}
+      </TCheckbox>
+    </Modal>
+  </MenusButton>
+</template>
+
+<script setup lang="ts">
+import { t } from '@/composables/i18n'
+import { getSelectionNode } from '@/utils/selection'
+import { shortId } from '@/utils/short-id'
+import { svgToDataURL } from '@/utils/file'
+
+const props = defineProps({
+  config: {
+    type: Object,
+    default: () => ({
+      theme: 'default',
+    }),
+  },
+  content: {
+    type: String,
+    default: undefined,
+  },
+})
+
+const editor = inject('editor')
+const container = inject('container')
+
+let dialogVisible = $ref(false)
+
+// 工具栏
+const themes = [
+  { label: t('tools.mermaid.themes.default'), value: 'default' },
+  { label: t('tools.mermaid.themes.base'), value: 'base' },
+  { label: t('tools.mermaid.themes.dark'), value: 'dark' },
+  { label: t('tools.mermaid.themes.forest'), value: 'forest' },
+  { label: t('tools.mermaid.themes.neutral'), value: 'neutral' },
+]
+let localConfig = $ref<any>({})
+
+const copyCode = () => {
+  const { copy } = useClipboard({
+    source: mermaidCode,
+  })
+  copy()
+  useMessage('success', {
+    attach: container,
+    content: t('tools.mermaid.copied'),
+  })
+}
+
+//  初始化 Mermaid
+const mermaidInit = () => {
+  mermaid.initialize({
+    darkMode: false,
+    startOnLoad: false,
+    fontSize: 12,
+    securityLevel: 'loose',
+    ...localConfig,
+  })
+}
+
+// 渲染 Mermaid
+let mermaidCode = $ref(props.content)
+let svgCode = $ref('')
+const mermaidRef = $ref(null)
+const renderMermaid = async () => {
+  try {
+    svgCode = await mermaid.render('mermaid-svg', mermaidCode)
+  } catch {
+    svgCode = ''
+  }
+}
+watch(
+  () => dialogVisible,
+  async (visible) => {
+    if (visible) {
+      localConfig = { ...props.config }
+      mermaidCode = props.content || 'graph TB\na-->b'
+    }
+  },
+  { immediate: true },
+)
+watch(
+  () => [localConfig, mermaidCode],
+  async () => {
+    if (!mermaidCode || mermaidCode === '') return
+    await nextTick()
+    mermaidInit()
+    renderMermaid()
+  },
+  { deep: true },
+)
+
+// 创建或更新 Mermaid
+const keepSize = $ref(false)
+const setMermaid = () => {
+  if (mermaidCode === '') {
+    useMessage('error', {
+      attach: container,
+      content: t('tools.mermaid.notEmpty'),
+    })
+    return
+  }
+  if (!props.content || (props.content && props.content !== mermaidCode)) {
+    const svg = mermaidRef.querySelector('svg')
+    const { width, height } = svg.getBoundingClientRect()
+    const { attrs } = getSelectionNode(editor.value) || {}
+    const imageOptions = {
+      id: shortId(10),
+      type: 'mermaid',
+      src: svgToDataURL(svgCode),
+      config: JSON.stringify(localConfig),
+      content: mermaidCode,
+      width: keepSize ? attrs?.width || width : width,
+      height: keepSize ? attrs?.height || height : height,
+      equalProportion: false,
+    }
+    editor.value?.chain().focus().setImage(imageOptions, !!props.content).run()
+  }
+  dialogVisible = false
+}
+</script>
+
+<style lang="less" scoped>
+.mxm-mermaid-container {
+  display: flex;
+  .mxm-mermaid-editor {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .mxm-mermaid-toolbar {
+    display: flex;
+    align-items: center;
+    padding: 2px;
+  }
+  .mxm-mermaid-code {
+    width: 320px;
+    margin-left: 2px;
+    flex: 1;
+    :deep(.mxm-textarea__inner) {
+      height: 100%;
+      resize: none;
+    }
+  }
+  .mxm-mermaid-render {
+    flex: 1;
+    margin-left: 20px;
+    border: solid 1px var(--td-border-level-2-color);
+    border-radius: var(--mxm-radius);
+    position: relative;
+    overflow: hidden;
+    box-sizing: border-box;
+    .mxm-mermaid-title {
+      background-color: var(--mxm-button-hover-background);
+      padding: 0 10px;
+      position: absolute;
+      font-size: 12px;
+      border-bottom-right-radius: var(--mxm-radius);
+    }
+    .mxm-mermaid-svg {
+      box-sizing: border-box;
+      height: 320px;
+      padding: 40px 20px 20px;
+      overflow: auto;
+      display: flex;
+      justify-content: center;
+    }
+  }
+}
+.mxm-mermaid-keep-size {
+  position: absolute;
+  bottom: 30px;
+}
+</style>
