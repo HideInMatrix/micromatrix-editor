@@ -8,7 +8,7 @@
           width: pageZoomWidth,
           height: pageZoomHeight,
         }">
-        <TWatermark
+        <ElWatermark
           class="mxm-page-content"
           :style="{
             '--mxm-page-orientation': pageOptions.orientation,
@@ -22,14 +22,22 @@
             width: pageOptions.layout === 'page' ? pageSize.width + 'cm' : '100%',
             transform: `scale(${pageOptions.zoomLevel ? pageOptions.zoomLevel / 100 : 1})`,
           }"
-          :alpha="pageOptions.watermark.alpha"
-          v-bind="watermarkOptions"
-          :watermark-content="pageOptions.watermark">
+          :content="pageWatermarkConfig.content"
+          :font="pageWatermarkConfig.font"
+          :rotate="pageWatermarkConfig.rotate"
+          :z-index="pageWatermarkConfig.zIndex"
+          :gap="pageWatermarkConfig.gap"
+          :offset="pageWatermarkConfig.offset"
+          :width="pageWatermarkConfig.width">
           <div class="mxm-page-node-header" contenteditable="false">
-            <div class="mxm-page-corner corner-tl" style="width: var(--mxm-page-margin-left)"></div>
+            <div
+              :class="['mxm-page-corner corner-tl box-border relative z-10', pageOptions.layout === 'web' ? 'hidden' : '']"
+              style="width: var(--mxm-page-margin-left)"></div>
 
-            <div class="mxm-page-node-header-content"></div>
-            <div class="mxm-page-corner corner-tr" style="width: var(--mxm-page-margin-right)"></div>
+            <div class="mxm-page-node-header-content flex-1"></div>
+            <div
+              :class="['mxm-page-corner corner-tr box-border relative z-10', pageOptions.layout === 'web' ? 'hidden' : '']"
+              style="width: var(--mxm-page-margin-right)"></div>
           </div>
           <div class="mxm-page-node-content">
             <Editor>
@@ -39,15 +47,23 @@
             </Editor>
           </div>
           <div class="mxm-page-node-footer" contenteditable="false">
-            <div class="mxm-page-corner corner-bl" style="width: var(--mxm-page-margin-left)"></div>
-            <div class="mxm-page-node-footer-content"></div>
-            <div class="mxm-page-corner corner-br" style="width: var(--mxm-page-margin-right)"></div>
+            <div
+              :class="['mxm-page-corner corner-bl box-border relative z-10', pageOptions.layout === 'web' ? 'hidden' : '']"
+              style="width: var(--mxm-page-margin-left)"></div>
+            <div class="mxm-page-node-footer-content flex-1"></div>
+            <div
+              :class="['mxm-page-corner corner-br box-border relative z-10', pageOptions.layout === 'web' ? 'hidden' : '']"
+              style="width: var(--mxm-page-margin-right)"></div>
           </div>
-        </TWatermark>
+        </ElWatermark>
       </div>
     </div>
-    <div class="mxm-main-floating-actions">
-      <TBackTop style="position: relative" :container="`${container} .mxm-zoomable-container`" :visible-height="800" size="small" />
+    <div class="mxm-main-floating-actions absolute right-[25px] bottom-[25px] z-[200] flex flex-col gap-[10px]">
+      <TBackTop
+        class="mxm-main-floating-action relative opacity-90 hover:opacity-100 [inset-inline-end:unset!important] [inset-block-end:unset!important]"
+        :container="`${container} .mxm-zoomable-container`"
+        :visible-height="800"
+        size="small" />
     </div>
     <TImageViewer :attach="container" v-model:visible="imageViewer.visible" v-model:index="currentImageIndex" :images="previewImages" :trigger="emptyImageTrigger" @close="imageViewer.visible = false" />
     <ContainerSearchReplace />
@@ -56,6 +72,8 @@
 </template>
 
 <script setup lang="ts">
+import { ElWatermark } from "element-plus";
+
 const container = inject("container");
 const imageViewer = inject("imageViewer");
 const pageOptions = inject("page");
@@ -138,27 +156,53 @@ watch(
 );
 
 // 水印
-const watermarkOptions = $ref({
-  x: 0,
-  y: 0,
-  width: 0,
-  height: 0,
-  type: undefined,
-});
-watch(
-  () => pageOptions.value.watermark,
-  (watermarkObj = { type: "" }) => {
-    const { type } = watermarkObj;
-    if (type === "compact") {
-      watermarkOptions.width = 320;
-      watermarkOptions.y = 240;
-    } else {
-      watermarkOptions.width = 480;
-      watermarkOptions.y = 360;
-    }
+const clampWatermarkAlpha = (alpha = 1) => Math.min(Math.max(alpha, 0), 1);
+const toWatermarkColor = (color = "#000000", alpha = 1) => {
+  const nextAlpha = Number(clampWatermarkAlpha(alpha).toFixed(3));
+  const rgbColor = color.match(/^rgba?\((.+)\)$/i)?.[1];
+  if (rgbColor) {
+    const [red = "0", green = "0", blue = "0"] = rgbColor.split(",").map((value) => value.trim());
+    return `rgba(${red}, ${green}, ${blue}, ${nextAlpha})`;
+  }
+  const hexColor = color.replace("#", "").trim();
+  if ([3, 4, 6, 8].includes(hexColor.length)) {
+    const unit = hexColor.length <= 4 ? 1 : 2;
+    const rawChannels = hexColor.match(new RegExp(`.{${unit}}`, "g")) || [];
+    const [red = "00", green = "00", blue = "00"] = rawChannels.map((value) =>
+      unit === 1 ? value.repeat(2) : value,
+    );
+    return `rgba(${Number.parseInt(red, 16)}, ${Number.parseInt(green, 16)}, ${Number.parseInt(blue, 16)}, ${nextAlpha})`;
+  }
+  return color;
+};
+const watermarkPresets = {
+  compact: {
+    width: 320,
+    gap: [0, 240] as [number, number],
+    offset: [0, 120] as [number, number],
   },
-  { deep: true, immediate: true },
-);
+  spacious: {
+    width: 480,
+    gap: [0, 360] as [number, number],
+    offset: [0, 180] as [number, number],
+  },
+} as const;
+const pageWatermarkConfig = $computed(() => {
+  const watermark = pageOptions.value.watermark || {};
+  const preset = watermark.type === "compact" ? watermarkPresets.compact : watermarkPresets.spacious;
+  return {
+    content: watermark.text || "",
+    font: {
+      color: toWatermarkColor(watermark.fontColor || "#000000", watermark.alpha ?? 0.2),
+      fontFamily: watermark.fontFamily || "sans-serif",
+      fontSize: watermark.fontSize || 16,
+      fontWeight: watermark.fontWeight || "normal",
+    },
+    rotate: -22,
+    zIndex: 9,
+    ...preset,
+  };
+});
 
 // 图片预览
 let previewImages = $ref([]);
@@ -210,9 +254,6 @@ watch(
     display: flex;
     .mxm-zoomable-content {
       flex: 1;
-      .mxm-page-corner {
-        display: none;
-      }
       .mxm-page-content {
         min-height: 100%;
         .mxm-page-node-content {
@@ -253,12 +294,6 @@ watch(
 .mxm-page-node-footer {
   display: flex;
   justify-content: space-between;
-}
-
-.mxm-page-corner {
-  box-sizing: border-box;
-  position: relative;
-  z-index: 10;
 }
 
 .mxm-page-corner {
@@ -304,11 +339,6 @@ watch(
   }
 }
 
-.mxm-page-node-header-content,
-.mxm-page-node-footer-content {
-  flex: 1;
-}
-
 .mxm-page-node-content {
   position: relative;
   box-sizing: border-box;
@@ -316,23 +346,9 @@ watch(
 }
 
 .mxm-main-floating-actions {
-  position: absolute;
-  bottom: 25px;
-  right: 25px;
-  z-index: 200;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  > * {
-    position: relative;
-    inset-inline-end: unset !important;
-    inset-block-end: unset !important;
-    opacity: 0.9;
-    &:hover {
-      opacity: 1;
-      background-color: var(--mxm-color-white) !important;
-      border: solid 1px var(--mxm-primary-color);
-    }
+  .mxm-main-floating-action:hover {
+    background-color: var(--mxm-color-white) !important;
+    border: solid 1px var(--mxm-primary-color);
   }
 }
 
