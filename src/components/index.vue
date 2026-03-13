@@ -68,7 +68,6 @@ import { getTypewriterRunState } from '@/extensions/type-writer'
 import { i18n } from '@/i18n'
 import { propsOptions } from '@/options'
 import { contentTransform } from '@/utils/content-transform'
-import { consoleCopyright } from '@/utils/copyright'
 import {
   addHistory,
   redoHistoryRecord,
@@ -490,7 +489,6 @@ watch(
 const { t, locale, mergeLocaleMessage } = useI18n()
 const $locale = useStorage('mxm-editor:locale', options.value.locale)
 locale.value = $locale.value
-consoleCopyright()
 const getLocaleMessage = (lang) => {
   const translations = options.value.translations?.[lang.replaceAll('-', '_')]
   if (isRecord(translations)) {

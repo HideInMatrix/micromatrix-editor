@@ -1,5 +1,6 @@
 <template>
-  <EditorContent
+  <div
+    ref="editorSurfaceRef"
     class="mxm-editor-content"
     :class="{
       'show-bookmark': page.showBookmark,
@@ -8,14 +9,24 @@
       'is-empty': editor?.isEmpty && editor?.state.doc.childCount <= 1,
       'is-readonly': !editor?.isEditable,
     }"
-    :editor="editor"
-    :style="{
-      lineHeight: defaultLineHeight,
-    }"
-    :spellcheck="
-      options.document?.enableSpellcheck && $document.enableSpellcheck
-    "
-  />
+  >
+    <EditorTableHoverControls
+      v-if="editor?.isEditable"
+      :editor="editor"
+      :container="editorSurfaceRef"
+    />
+    <EditorTableColumn v-if="editor?.isEditable" :editor="editor" />
+    <EditorTableSelection v-if="editor?.isEditable" :editor="editor" />
+    <EditorContent
+      :editor="editor"
+      :style="{
+        lineHeight: defaultLineHeight,
+      }"
+      :spellcheck="
+        options.document?.enableSpellcheck && $document.enableSpellcheck
+      "
+    />
+  </div>
   <template v-if="editor && !destroyed">
     <MenusBlock
       v-if="options.document?.enableBlockMenu"
@@ -38,6 +49,10 @@
 import { migrateMathStrings } from '@tiptap/extension-mathematics'
 import { Editor, EditorContent } from '@tiptap/vue-3'
 
+import EditorTableColumn from './table/TableColumn.vue'
+import EditorTableHoverControls from './table/HoverControls.vue'
+import EditorTableSelection from './table/TableSelection.vue'
+
 import { getDefaultExtensions, inputAndPasteRules } from '@/extensions'
 import { contentTransform } from '@/utils/content-transform'
 import { addHistory } from '@/utils/history-record'
@@ -54,6 +69,7 @@ const $document = useState('document', options)
 const defaultLineHeight = $computed(
   () => options.value.dicts?.lineHeights?.find((item) => item.default)?.value,
 )
+const editorSurfaceRef = ref<HTMLElement | null>(null)
 
 const container = inject('container')
 const extensions = getDefaultExtensions({

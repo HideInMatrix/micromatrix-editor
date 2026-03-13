@@ -61,7 +61,7 @@ import OrderedList from './ordered-list'
 import PageBreak from './page-break'
 import SearchReplace from './search-replace'
 import Selection from './selection'
-import { Table, TableCell, TableHeader, TableRow } from './table'
+import { getTableExtensions } from './table'
 import Tag from './tag'
 import TextAlign from './text-align'
 import TextBox from './text-box'
@@ -222,10 +222,7 @@ export const getDefaultExtensions = ({ container, options, uploadFileMap }) => {
     }),
 
     // 表格
-    Table,
-    TableRow,
-    TableCell,
-    TableHeader,
+    ...getTableExtensions(),
 
     // 工具
     Echarts,

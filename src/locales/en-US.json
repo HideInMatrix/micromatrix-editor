@@ -211,6 +211,10 @@
     "addRowAfter": "Insert Row Below",
     "addRowBefore": "Insert Row Above",
     "borderColor": "Border Color",
+    "cellTextColor": {
+      "text": "Text Color",
+      "tip": "Cell Text Color"
+    },
     "cellAlign": {
       "text": "Alignment",
       "tip": "Cell Alignment",
@@ -252,6 +256,10 @@
       "delete": "Delete Now",
       "success": "Deleted Successfully"
     },
+    "columnMenu": {
+      "text": "Column Menu",
+      "clear": "Clear Column Content"
+    },
     "fix": {
       "text": "Fix Table",
       "tip": "Click to automatically fix table when it's disordered"
@@ -268,6 +276,9 @@
     "mergeCells": "Merge Cells",
     "nextCell": "Next Cell",
     "prevCell": "Previous Cell",
+    "selectionMenu": {
+      "text": "Selection Menu"
+    },
     "splitCell": "Split Cell",
     "toggleHeaderCell": "Header Cell",
     "toggleHeaderRow": "Header Row",

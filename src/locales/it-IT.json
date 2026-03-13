@@ -195,6 +195,10 @@
     "addRowAfter": "Inserisci riga sotto",
     "addRowBefore": "Inserisci riga sopra",
     "borderColor": "Colore bordo",
+    "cellTextColor": {
+      "text": "Colore testo",
+      "tip": "Colore testo cella"
+    },
     "cellAlign": {
       "text": "Allineamento",
       "tip": "Allineamento cella",
@@ -236,6 +240,10 @@
       "delete": "Elimina ora",
       "success": "Eliminazione riuscita"
     },
+    "columnMenu": {
+      "text": "Menu colonna",
+      "clear": "Svuota contenuto colonna"
+    },
     "fix": {
       "text": "Aggiusta tabella",
       "tip": "Clicca per sistemare automaticamente la tabella se è disordinata"
@@ -252,6 +260,9 @@
     "mergeCells": "Unisci celle",
     "nextCell": "Cella successiva",
     "prevCell": "Cella precedente",
+    "selectionMenu": {
+      "text": "Menu selezione"
+    },
     "splitCell": "Dividi cella",
     "toggleHeaderCell": "Cella intestazione",
     "toggleHeaderRow": "Riga intestazione",

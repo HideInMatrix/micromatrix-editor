@@ -211,6 +211,10 @@
     "addRowAfter": "插入行(后)",
     "addRowBefore": "插入行(前)",
     "borderColor": "边框颜色",
+    "cellTextColor": {
+      "text": "文字颜色",
+      "tip": "单元格文字颜色"
+    },
     "cellAlign": {
       "text": "对齐方式",
       "tip": "单元格对齐方式",
@@ -252,6 +256,10 @@
       "delete": "立即删除",
       "success": "删除成功"
     },
+    "columnMenu": {
+      "text": "列菜单",
+      "clear": "清空列内容"
+    },
     "fix": {
       "text": "修复",
       "tip": "当表格有错乱时，点击此按钮可自动修复表格"
@@ -268,6 +276,9 @@
     "mergeCells": "合并单元格",
     "nextCell": "下一个单元格",
     "prevCell": "上一个单元格",
+    "selectionMenu": {
+      "text": "选区菜单"
+    },
     "splitCell": "拆分单元格",
     "toggleHeaderCell": "切换表头单元格",
     "toggleHeaderRow": "切换表头行",
