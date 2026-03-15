@@ -611,7 +611,7 @@ export function createPlaygroundExtensions(
     ...(interactive
       ? [
           Placeholder.configure({
-            showOnlyCurrent: false,
+            showOnlyCurrent: true,
             placeholder: ({ node }) =>
               node.type.name.startsWith("heading")
                 ? "Write a headline"

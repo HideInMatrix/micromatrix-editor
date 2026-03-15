@@ -478,13 +478,13 @@ export const DragHandlePlugin = ({
 
   const onDragStart = (event: DragEvent) => {
     onElementDragStart?.(event);
+    let nodeSelection: NodeSelection | null = null;
 
     if (currentNodePos >= 0) {
       try {
+        nodeSelection = NodeSelection.create(editor.state.doc, currentNodePos);
         editor.view?.dispatch(
-          editor.state.tr.setSelection(
-            NodeSelection.create(editor.state.doc, currentNodePos),
-          ),
+          editor.state.tr.setSelection(nodeSelection),
         );
       } catch {
         // Ignore invalid node selections and keep drag behavior best-effort.
@@ -496,13 +496,23 @@ export const DragHandlePlugin = ({
       : null;
 
     if (dom && event.dataTransfer) {
-      event.dataTransfer.effectAllowed = "move";
+      event.dataTransfer.effectAllowed = "copyMove";
       event.dataTransfer.setData("text/plain", currentNode?.textContent ?? "");
       event.dataTransfer.setData("text/html", dom.outerHTML);
 
       if (event.dataTransfer.setDragImage) {
         event.dataTransfer.setDragImage(dom, 0, 0);
       }
+    }
+
+    if (editor.view && nodeSelection) {
+      editor.view.dragging = {
+        slice: nodeSelection.content(),
+        move: true,
+        node: nodeSelection,
+      } as typeof editor.view.dragging & {
+        node: NodeSelection;
+      };
     }
 
     element.dataset.dragging = "true";
@@ -513,6 +523,9 @@ export const DragHandlePlugin = ({
 
   const onDragEnd = (event: DragEvent) => {
     onElementDragEnd?.(event);
+    if (editor.view?.dragging) {
+      editor.view.dragging = null;
+    }
     hideHandle(element);
     element.style.pointerEvents = "auto";
     element.dataset.dragging = "false";

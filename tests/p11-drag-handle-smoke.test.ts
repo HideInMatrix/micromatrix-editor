@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { Editor } from "@mxm-editor/core";
 import { DragHandle } from "@mxm-editor/extension-drag-handle";
+import { NodeSelection } from "@mxm-editor/pm";
 import { StarterKit } from "@mxm-editor/starter-kit";
 
 afterEach(() => {
@@ -136,5 +137,65 @@ describe("P11 drag handle smoke", () => {
 
     expect(nodeChange).toHaveBeenCalled();
     expect(nodeChange.mock.calls.at(-1)?.[0].node?.type.name).toBe("paragraph");
+  });
+
+  it("registers a move drag state so dragged nodes are moved instead of copied", async () => {
+    const element = document.createElement("div");
+
+    document.body.appendChild(element);
+
+    const editor = new Editor({
+      element,
+      extensions: [
+        StarterKit.configure({
+          undoRedo: false,
+        }),
+        DragHandle,
+      ],
+      content: "<p>Draggable</p>",
+    });
+    const paragraph = element.querySelector("p");
+
+    expect(paragraph).not.toBeNull();
+
+    setRect(paragraph!, new DOMRect(80, 40, 160, 32));
+
+    const textPosition = getTextPosition(editor, "Draggable");
+
+    editor.view!.posAtCoords = () => ({
+      inside: textPosition,
+      pos: textPosition,
+    });
+
+    editor.view!.dom.dispatchEvent(new MouseEvent("mousemove", {
+      bubbles: true,
+      clientX: 96,
+      clientY: 48,
+    }));
+    await flushFrame();
+
+    const handle = element.querySelector(".drag-handle") as HTMLElement | null;
+    const dataTransfer = {
+      effectAllowed: "",
+      setData: vi.fn(),
+      setDragImage: vi.fn(),
+    };
+    const dragEvent = new Event("dragstart", {
+      bubbles: true,
+    }) as DragEvent;
+
+    expect(handle).not.toBeNull();
+
+    Object.defineProperty(dragEvent, "dataTransfer", {
+      configurable: true,
+      value: dataTransfer,
+    });
+
+    handle!.dispatchEvent(dragEvent);
+
+    expect(editor.state.selection).toBeInstanceOf(NodeSelection);
+    expect(editor.view!.dragging).not.toBeNull();
+    expect(editor.view!.dragging?.move).toBe(true);
+    expect(dataTransfer.effectAllowed).toBe("copyMove");
   });
 });

@@ -108,6 +108,42 @@ describe("P3 alignment smoke", () => {
     expect(editor.getHTML()).toContain('data-checked="true"');
   });
 
+  it("toggles task item state when the checkbox UI is clicked", () => {
+    const element = document.createElement("div");
+
+    document.body.appendChild(element);
+
+    const editor = new Editor({
+      element,
+      extensions: [
+        StarterKit.configure({
+          undoRedo: false,
+          bulletList: false,
+          orderedList: false,
+          listItem: false,
+          trailingNode: false,
+        }),
+        ListKit,
+      ],
+      content: "<p>todo</p>",
+    });
+
+    editor.commands.setTextSelection({ from: 1, to: 5 });
+    expect(editor.commands.setTaskList()).toBe(true);
+
+    const checkbox = element.querySelector(
+      'li[data-type="taskItem"] input[type="checkbox"]',
+    ) as HTMLInputElement | null;
+
+    expect(checkbox).not.toBeNull();
+
+    checkbox!.dispatchEvent(new MouseEvent("click", {
+      bubbles: true,
+    }));
+
+    expect(editor.getHTML()).toContain('data-checked="true"');
+  });
+
   it("inserts tables through TableKit", () => {
     const element = document.createElement("div");
 

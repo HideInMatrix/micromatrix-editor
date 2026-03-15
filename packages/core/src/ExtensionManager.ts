@@ -51,6 +51,8 @@ export class ExtensionManager {
 
   readonly storage: Record<string, unknown>;
 
+  private proseMirrorPluginsCache: Plugin[] | null = null;
+
   constructor(extensions: AnyExtension[], editor: Editor) {
     this.editor = editor;
     this.extensions = this.resolveExtensions(extensions);
@@ -105,11 +107,14 @@ export class ExtensionManager {
 
       return extension.config.addPasteRules?.call(context) ?? [];
     });
-    const proseMirrorPlugins = this.extensions.flatMap((extension) => {
-      const context = extension.createContext(this.editor);
+    const proseMirrorPlugins = this.proseMirrorPluginsCache
+      ?? this.extensions.flatMap((extension) => {
+        const context = extension.createContext(this.editor);
 
-      return extension.config.addProseMirrorPlugins?.call(context) ?? [];
-    });
+        return extension.config.addProseMirrorPlugins?.call(context) ?? [];
+      });
+
+    this.proseMirrorPluginsCache = proseMirrorPlugins;
 
     return [
       ...keyboardPlugins,
