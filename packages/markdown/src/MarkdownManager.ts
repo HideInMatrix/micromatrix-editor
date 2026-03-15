@@ -1,4 +1,9 @@
-import { Editor, type AnyExtension, type JSONContent, escapeMarkdown } from "@mxm-editor/core";
+import {
+  Editor,
+  type AnyExtension,
+  type JSONContent,
+  escapeMarkdown,
+} from "@mxm-editor/core";
 import { DOMParser as ProseMirrorDOMParser, type Node as ProseMirrorNode } from "@mxm-editor/pm";
 import { marked } from "marked";
 
@@ -7,13 +12,19 @@ export interface MarkdownManagerOptions {
 }
 
 export class MarkdownManager {
+  readonly instance = marked;
+
   private readonly editor: Editor;
 
   private readonly extensionsByName: Map<string, AnyExtension>;
 
   constructor(options: MarkdownManagerOptions) {
+    const extensions = options.extensions.filter(
+      (extension) => extension.name !== "markdown",
+    );
+
     this.editor = new Editor({
-      extensions: options.extensions,
+      extensions,
     });
     this.extensionsByName = new Map(
       this.editor.extensionManager.extensions.map((extension) => [

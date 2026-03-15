@@ -57,6 +57,7 @@ export class ExtensionManager {
     this.storage = Object.fromEntries(
       this.extensions.map((extension) => [extension.name, extension.storage]),
     );
+    this.onExtensionsResolved();
     this.schema = this.createSchema();
   }
 
@@ -210,6 +211,17 @@ export class ExtensionManager {
   onDestroy() {
     this.extensions.forEach((extension) => {
       extension.config.onDestroy?.call(extension.createContext(this.editor));
+    });
+  }
+
+  private onExtensionsResolved() {
+    this.extensions.forEach((extension) => {
+      extension.config.onExtensionsResolved?.call(
+        extension.createContext(this.editor),
+        {
+          extensions: this.extensions,
+        },
+      );
     });
   }
 

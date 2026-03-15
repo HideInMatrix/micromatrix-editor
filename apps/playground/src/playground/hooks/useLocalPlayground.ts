@@ -5,7 +5,7 @@ import {
   sampleImageUrl,
   sampleMarkdown,
 } from "../constants";
-import { localExtensions, markdownManager } from "../extensions";
+import { localExtensions } from "../extensions";
 
 export interface LocalPlaygroundController {
   editor: Editor;
@@ -56,7 +56,9 @@ export function useLocalPlayground(): LocalPlaygroundController {
   };
 
   const loadMarkdown = () => {
-    editor.setContent(markdownManager.parse(sampleMarkdown));
+    editor.setContent(sampleMarkdown, {
+      contentType: "markdown",
+    });
   };
 
   return {

@@ -125,6 +125,10 @@ export interface ExtensionConfig<
     this: ExtensionContext<Options, Storage>,
     props: { transaction: Transaction },
   ) => void;
+  onExtensionsResolved?: (
+    this: ExtensionContext<Options, Storage>,
+    props: { extensions: AnyExtension[] },
+  ) => void;
   onDestroy?: (this: ExtensionContext<Options, Storage>) => void;
 }
 
@@ -206,6 +210,14 @@ export type Content =
   | JSONContent[]
   | null;
 
+export type ContentType = "json" | "html" | "markdown";
+
+export interface MarkdownParser {
+  parse: (markdown: string) => ProseMirrorNode;
+  serialize: (content: JSONContent | ProseMirrorNode) => string;
+  instance?: unknown;
+}
+
 export type FocusPosition =
   | boolean
   | "start"
@@ -226,11 +238,13 @@ export interface EditorGetTextOptions {
 export interface SetContentOptions {
   emitUpdate?: boolean;
   parseOptions?: ParseOptions;
+  contentType?: ContentType;
 }
 
 export interface InsertContentOptions {
   parseOptions?: ParseOptions;
   updateSelection?: boolean;
+  contentType?: ContentType;
 }
 
 export type InsertContentAtPosition = number | { from: number; to: number };
@@ -242,6 +256,7 @@ export type RulesSetting = boolean | string[] | AnyExtension[];
 export interface EditorOptions {
   element?: HTMLElement | null;
   content?: Content;
+  contentType?: ContentType;
   extensions?: AnyExtension[];
   autofocus?: FocusPosition;
   editable?: boolean;
@@ -255,8 +270,9 @@ export interface EditorOptions {
 }
 
 export type ResolvedEditorOptions =
-  Omit<Required<EditorOptions>, "parseOptions"> & {
+  Omit<Required<EditorOptions>, "parseOptions" | "contentType"> & {
     parseOptions?: ParseOptions;
+    contentType?: ContentType;
   };
 
 export interface EditorEventMap {

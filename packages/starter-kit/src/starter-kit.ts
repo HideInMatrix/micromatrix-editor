@@ -22,6 +22,10 @@ import { OrderedList } from "@mxm-editor/extension-ordered-list";
 import { Paragraph } from "@mxm-editor/extension-paragraph";
 import { Strike, type StrikeOptions } from "@mxm-editor/extension-strike";
 import { Text } from "@mxm-editor/extension-text";
+import {
+  TrailingNode,
+  type TrailingNodeOptions,
+} from "@mxm-editor/extension-trailing-node";
 import { Underline, type UnderlineOptions } from "@mxm-editor/extension-underline";
 import { UndoRedo, type UndoRedoOptions } from "@mxm-editor/extension-undo-redo";
 
@@ -40,6 +44,7 @@ export interface StarterKitOptions {
   underline: false | Partial<UnderlineOptions>;
   hardBreak: false | Record<string, never>;
   horizontalRule: false | Record<string, never>;
+  trailingNode: false | Partial<TrailingNodeOptions>;
   bold: false | Partial<BoldOptions>;
   italic: false | Partial<ItalicOptions>;
   link: false | Partial<LinkOptions>;
@@ -68,6 +73,7 @@ export const StarterKit = Extension.create<StarterKitOptions>({
       underline: {},
       hardBreak: {},
       horizontalRule: {},
+      trailingNode: {},
       bold: {},
       italic: {},
       link: {},
@@ -135,6 +141,10 @@ export const StarterKit = Extension.create<StarterKitOptions>({
 
     if (this.options.horizontalRule !== false) {
       extensions.push(HorizontalRule.configure(this.options.horizontalRule));
+    }
+
+    if (this.options.trailingNode !== false) {
+      extensions.push(TrailingNode.configure(this.options.trailingNode));
     }
 
     if (this.options.bold !== false) {

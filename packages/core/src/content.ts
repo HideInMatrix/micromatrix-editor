@@ -6,7 +6,18 @@ import {
   type ParseOptions,
   type Schema,
 } from "@mxm-editor/pm";
-import type { Content, JSONContent } from "./types";
+import type {
+  Content,
+  ContentType,
+  JSONContent,
+  MarkdownParser,
+} from "./types";
+
+export interface ContentParseOptions {
+  parseOptions?: ParseOptions;
+  contentType?: ContentType;
+  markdown?: MarkdownParser | null;
+}
 
 function isJSONContent(value: Content): value is JSONContent {
   return Boolean(
@@ -38,8 +49,21 @@ function normalizeProseMirrorNode(
 function parseStringContent(
   schema: Schema,
   content: string,
-  parseOptions?: ParseOptions,
+  options?: ContentParseOptions,
 ) {
+  if (options?.contentType === "markdown") {
+    if (!options.markdown) {
+      throw new Error("Markdown content requires the Markdown extension.");
+    }
+
+    const document = normalizeProseMirrorNode(
+      schema,
+      options.markdown.parse(content),
+    );
+
+    return new Slice(document.content, 0, 0);
+  }
+
   if (typeof document === "undefined") {
     return null;
   }
@@ -48,13 +72,16 @@ function parseStringContent(
 
   element.innerHTML = content;
 
-  return ProseMirrorDOMParser.fromSchema(schema).parseSlice(element, parseOptions);
+  return ProseMirrorDOMParser.fromSchema(schema).parseSlice(
+    element,
+    options?.parseOptions,
+  );
 }
 
 export function createFragmentFromContent(
   schema: Schema,
   content: Content,
-  parseOptions?: ParseOptions,
+  options?: ContentParseOptions,
 ) {
   if (content === null) {
     return Fragment.empty;
@@ -83,7 +110,7 @@ export function createFragmentFromContent(
   }
 
   if (typeof content === "string") {
-    return parseStringContent(schema, content, parseOptions)?.content
+    return parseStringContent(schema, content, options)?.content
       ?? Fragment.empty;
   }
 
@@ -93,19 +120,19 @@ export function createFragmentFromContent(
 export function createSliceFromContent(
   schema: Schema,
   content: Content,
-  parseOptions?: ParseOptions,
+  options?: ContentParseOptions,
 ) {
   if (content === null) {
     return Slice.empty;
   }
 
   if (typeof content === "string") {
-    return parseStringContent(schema, content, parseOptions)
+    return parseStringContent(schema, content, options)
       ?? Slice.empty;
   }
 
   return new Slice(
-    createFragmentFromContent(schema, content, parseOptions),
+    createFragmentFromContent(schema, content, options),
     0,
     0,
   );
@@ -114,7 +141,7 @@ export function createSliceFromContent(
 export function createDocumentFromContent(
   schema: Schema,
   content: Content,
-  parseOptions?: ParseOptions,
+  options?: ContentParseOptions,
 ) {
   if (content === null) {
     return schema.topNodeType.createAndFill() ?? schema.topNodeType.create();
@@ -156,12 +183,35 @@ export function createDocumentFromContent(
     ) ?? schema.topNodeType.create(null, Fragment.from(node));
   }
 
+  if (typeof content === "string" && options?.contentType === "markdown") {
+    if (!options.markdown) {
+      throw new Error("Markdown content requires the Markdown extension.");
+    }
+
+    const node = normalizeProseMirrorNode(
+      schema,
+      options.markdown.parse(content),
+    );
+
+    if (node.type === schema.topNodeType) {
+      return node;
+    }
+
+    return schema.topNodeType.createAndFill(
+      null,
+      Fragment.from(node),
+    ) ?? schema.topNodeType.create(null, Fragment.from(node));
+  }
+
   if (typeof content === "string" && typeof document !== "undefined") {
     const element = document.createElement("div");
 
     element.innerHTML = content;
 
-    return ProseMirrorDOMParser.fromSchema(schema).parse(element, parseOptions);
+    return ProseMirrorDOMParser.fromSchema(schema).parse(
+      element,
+      options?.parseOptions,
+    );
   }
 
   return schema.topNodeType.createAndFill() ?? schema.topNodeType.create();

@@ -31,6 +31,7 @@
     "@mxm-editor/extension-paragraph": "workspace:*",
     "@mxm-editor/extension-strike": "workspace:*",
     "@mxm-editor/extension-text": "workspace:*",
+    "@mxm-editor/extension-trailing-node": "workspace:*",
     "@mxm-editor/extension-underline": "workspace:*",
     "@mxm-editor/extension-undo-redo": "workspace:*",
     "@mxm-editor/pm": "workspace:*"

@@ -39,6 +39,7 @@ function normalizeInsertContentOptions(
   return {
     parseOptions: options?.parseOptions,
     updateSelection: options?.updateSelection ?? true,
+    contentType: options?.contentType,
   };
 }
 
@@ -132,7 +133,11 @@ export function createCoreCommands(editor: Editor): RawCommands {
         const document = createDocumentFromContent(
           editor.schema,
           content,
-          normalizedOptions.parseOptions ?? editor.options.parseOptions,
+          {
+            parseOptions: normalizedOptions.parseOptions ?? editor.options.parseOptions,
+            contentType: normalizedOptions.contentType,
+            markdown: editor.markdown,
+          },
         );
 
         tr.replaceWith(0, tr.doc.content.size, document.content);
@@ -175,7 +180,11 @@ export function createCoreCommands(editor: Editor): RawCommands {
         const slice = createSliceFromContent(
           editor.schema,
           value,
-          normalizedOptions.parseOptions ?? editor.options.parseOptions,
+          {
+            parseOptions: normalizedOptions.parseOptions ?? editor.options.parseOptions,
+            contentType: normalizedOptions.contentType,
+            markdown: editor.markdown,
+          },
         );
 
         tr.replaceRange(from, to, slice);

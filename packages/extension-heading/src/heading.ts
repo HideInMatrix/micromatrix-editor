@@ -10,6 +10,15 @@ export interface HeadingAttributes {
   level: number;
 }
 
+function renderHeadingStyle(attrs: Record<string, any> | undefined) {
+  const styles = [
+    attrs?.textAlign ? `text-align: ${attrs.textAlign}` : null,
+    attrs?.lineHeight ? `line-height: ${attrs.lineHeight}` : null,
+  ].filter(Boolean);
+
+  return styles.length ? styles.join("; ") : null;
+}
+
 export const Heading = Node.create<HeadingOptions>({
   name: "heading",
 
@@ -54,9 +63,10 @@ export const Heading = Node.create<HeadingOptions>({
 
   renderMarkdown({ node, children }) {
     const level = Math.max(1, Math.min(6, Number(node.attrs?.level ?? 1)));
+    const style = renderHeadingStyle(node.attrs);
 
-    if (node.attrs?.textAlign) {
-      return `<h${level} style="text-align: ${node.attrs.textAlign}">${children}</h${level}>\n\n`;
+    if (style) {
+      return `<h${level} style="${style}">${children}</h${level}>\n\n`;
     }
 
     return `${"#".repeat(level)} ${children}\n\n`;

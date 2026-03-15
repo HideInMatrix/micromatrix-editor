@@ -12,20 +12,29 @@ const editorCorePackages = [
   "/packages/extension-paragraph/",
   "/packages/extension-text/",
   "/packages/extension-bold/",
+  "/packages/extension-background-color/",
   "/packages/extension-character-count/",
   "/packages/extension-color/",
   "/packages/extension-code/",
   "/packages/extension-italic/",
+  "/packages/extension-font-family/",
+  "/packages/extension-font-size/",
   "/packages/extension-highlight/",
   "/packages/extension-image/",
+  "/packages/extension-invisible-characters/",
+  "/packages/extension-line-height/",
   "/packages/extension-link/",
   "/packages/extension-list-keymap/",
+  "/packages/extension-selection/",
   "/packages/extension-strike/",
+  "/packages/extension-subscript/",
+  "/packages/extension-superscript/",
   "/packages/extension-text-style/",
   "/packages/extension-underline/",
   "/packages/extension-hard-break/",
   "/packages/extension-horizontal-rule/",
   "/packages/extension-placeholder/",
+  "/packages/extension-trailing-node/",
   "/packages/extension-history/",
   "/packages/extension-text-align/",
   "/packages/extension-undo-redo/",
@@ -40,10 +49,17 @@ const editorCorePackages = [
   "/packages/extension-task-item/",
   "/packages/extension-code-block/",
   "/packages/extension-table/",
+  "/packages/extension-table-of-contents/",
+  "/packages/extension-typography/",
+  "/packages/list-kit/",
+  "/packages/table-kit/",
+  "/packages/text-style-kit/",
 ];
 const editorFeaturePackages = [
   "/packages/extension-callout/",
+  "/packages/extension-focus/",
   "/packages/extension-mention/",
+  "/packages/extension-unique-id/",
   "/packages/suggestion/",
   "/packages/markdown/",
 ];
@@ -115,6 +131,9 @@ export default defineConfig({
       "@mxm-editor/extension-blockquote": fromRoot(
         "../../packages/extension-blockquote/src/index.ts",
       ),
+      "@mxm-editor/extension-background-color": fromRoot(
+        "../../packages/extension-background-color/src/index.ts",
+      ),
       "@mxm-editor/extension-bullet-list": fromRoot(
         "../../packages/extension-bullet-list/src/index.ts",
       ),
@@ -139,6 +158,15 @@ export default defineConfig({
       "@mxm-editor/extension-dropcursor": fromRoot(
         "../../packages/extension-dropcursor/src/index.ts",
       ),
+      "@mxm-editor/extension-focus": fromRoot(
+        "../../packages/extension-focus/src/index.ts",
+      ),
+      "@mxm-editor/extension-font-family": fromRoot(
+        "../../packages/extension-font-family/src/index.ts",
+      ),
+      "@mxm-editor/extension-font-size": fromRoot(
+        "../../packages/extension-font-size/src/index.ts",
+      ),
       "@mxm-editor/extension-gapcursor": fromRoot(
         "../../packages/extension-gapcursor/src/index.ts",
       ),
@@ -157,6 +185,12 @@ export default defineConfig({
       "@mxm-editor/extension-image": fromRoot(
         "../../packages/extension-image/src/index.ts",
       ),
+      "@mxm-editor/extension-invisible-characters": fromRoot(
+        "../../packages/extension-invisible-characters/src/index.ts",
+      ),
+      "@mxm-editor/extension-line-height": fromRoot(
+        "../../packages/extension-line-height/src/index.ts",
+      ),
       "@mxm-editor/extension-list-item": fromRoot(
         "../../packages/extension-list-item/src/index.ts",
       ),
@@ -169,8 +203,14 @@ export default defineConfig({
       "@mxm-editor/extension-placeholder": fromRoot(
         "../../packages/extension-placeholder/src/index.ts",
       ),
+      "@mxm-editor/extension-selection": fromRoot(
+        "../../packages/extension-selection/src/index.ts",
+      ),
       "@mxm-editor/extension-table": fromRoot(
         "../../packages/extension-table/src/index.ts",
+      ),
+      "@mxm-editor/extension-table-of-contents": fromRoot(
+        "../../packages/extension-table-of-contents/src/index.ts",
       ),
       "@mxm-editor/extension-text-style": fromRoot(
         "../../packages/extension-text-style/src/index.ts",
@@ -196,6 +236,12 @@ export default defineConfig({
       "@mxm-editor/extension-strike": fromRoot(
         "../../packages/extension-strike/src/index.ts",
       ),
+      "@mxm-editor/extension-subscript": fromRoot(
+        "../../packages/extension-subscript/src/index.ts",
+      ),
+      "@mxm-editor/extension-superscript": fromRoot(
+        "../../packages/extension-superscript/src/index.ts",
+      ),
       "@mxm-editor/extension-history": fromRoot(
         "../../packages/extension-history/src/index.ts",
       ),
@@ -220,6 +266,18 @@ export default defineConfig({
       "@mxm-editor/extension-task-list": fromRoot(
         "../../packages/extension-task-list/src/index.ts",
       ),
+      "@mxm-editor/extension-trailing-node": fromRoot(
+        "../../packages/extension-trailing-node/src/index.ts",
+      ),
+      "@mxm-editor/extension-typography": fromRoot(
+        "../../packages/extension-typography/src/index.ts",
+      ),
+      "@mxm-editor/extension-unique-id": fromRoot(
+        "../../packages/extension-unique-id/src/index.ts",
+      ),
+      "@mxm-editor/list-kit": fromRoot(
+        "../../packages/list-kit/src/index.ts",
+      ),
       "@mxm-editor/starter-kit": fromRoot(
         "../../packages/starter-kit/src/index.ts",
       ),
@@ -228,6 +286,12 @@ export default defineConfig({
       "@mxm-editor/markdown": fromRoot("../../packages/markdown/src/index.ts"),
       "@mxm-editor/suggestion": fromRoot(
         "../../packages/suggestion/src/index.ts",
+      ),
+      "@mxm-editor/table-kit": fromRoot(
+        "../../packages/table-kit/src/index.ts",
+      ),
+      "@mxm-editor/text-style-kit": fromRoot(
+        "../../packages/text-style-kit/src/index.ts",
       ),
     },
   },

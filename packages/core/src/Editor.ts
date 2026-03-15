@@ -23,6 +23,7 @@ import type {
   Content,
   EditorEventMap,
   EditorGetTextOptions,
+  MarkdownParser,
   EditorOptions,
   FocusOptions,
   FocusPosition,
@@ -79,6 +80,8 @@ export class Editor extends EventEmitter<EditorEventMap> {
 
   readonly coreCommands: RawCommands;
 
+  markdown: MarkdownParser | null = null;
+
   private readonly commandManager: CommandManager;
 
   private editorState: EditorState;
@@ -95,6 +98,7 @@ export class Editor extends EventEmitter<EditorEventMap> {
     this.options = {
       element: null,
       content: null,
+      contentType: undefined,
       extensions: [],
       autofocus: false,
       editable: true,
@@ -264,6 +268,7 @@ export class Editor extends EventEmitter<EditorEventMap> {
       doc: this.createDocument(
         content ?? null,
         normalizedOptions.parseOptions,
+        normalizedOptions.contentType,
       ),
       plugins: this.allPlugins,
     });
@@ -306,6 +311,14 @@ export class Editor extends EventEmitter<EditorEventMap> {
     element.appendChild(fragment);
 
     return element.innerHTML;
+  }
+
+  getMarkdown() {
+    if (!this.markdown) {
+      throw new Error("Markdown support requires the Markdown extension.");
+    }
+
+    return this.markdown.serialize(this.state.doc);
   }
 
   getAttributes(name: string) {
@@ -496,7 +509,7 @@ export class Editor extends EventEmitter<EditorEventMap> {
   private createState(content: EditorOptions["content"]) {
     return EditorState.create({
       schema: this.schema,
-      doc: this.createDocument(content),
+      doc: this.createDocument(content, undefined, this.options.contentType),
       plugins: this.allPlugins,
     });
   }
@@ -504,11 +517,16 @@ export class Editor extends EventEmitter<EditorEventMap> {
   private createDocument(
     content: EditorOptions["content"],
     parseOptions?: ParseOptions,
+    contentType?: EditorOptions["contentType"],
   ): ProseMirrorNode {
     return createDocumentFromContent(
       this.schema,
       content ?? null,
-      parseOptions ?? this.options.parseOptions,
+      {
+        parseOptions: parseOptions ?? this.options.parseOptions,
+        contentType,
+        markdown: this.markdown,
+      },
     );
   }
 

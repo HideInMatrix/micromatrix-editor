@@ -228,6 +228,7 @@ describe("P2 smoke", () => {
       extensions: [
         StarterKit.configure({
           undoRedo: false,
+          trailingNode: false,
         }),
         TrailingNode,
       ],

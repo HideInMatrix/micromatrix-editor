@@ -3,6 +3,7 @@ import type { Node as ProseMirrorNode } from "@mxm-editor/pm";
 import { MarkdownManager } from "./MarkdownManager";
 
 export { MarkdownManager } from "./MarkdownManager";
+export { Markdown, type MarkdownOptions, type MarkdownStorage } from "./markdown";
 
 export function generateMarkdown(
   content: JSONContent | ProseMirrorNode,

@@ -1,6 +1,15 @@
 import { Node, mergeAttributes } from "@mxm-editor/core";
 import { setBlockType } from "@mxm-editor/pm";
 
+function renderParagraphStyle(attrs: Record<string, any> | undefined) {
+  const styles = [
+    attrs?.textAlign ? `text-align: ${attrs.textAlign}` : null,
+    attrs?.lineHeight ? `line-height: ${attrs.lineHeight}` : null,
+  ].filter(Boolean);
+
+  return styles.length ? styles.join("; ") : null;
+}
+
 export const Paragraph = Node.create({
   name: "paragraph",
   group: "block",
@@ -15,8 +24,10 @@ export const Paragraph = Node.create({
   },
 
   renderMarkdown({ node, children }) {
-    if (node.attrs?.textAlign) {
-      return `<p style="text-align: ${node.attrs.textAlign}">${children}</p>\n\n`;
+    const style = renderParagraphStyle(node.attrs);
+
+    if (style) {
+      return `<p style="${style}">${children}</p>\n\n`;
     }
 
     return children.length ? `${children}\n\n` : "\n\n";

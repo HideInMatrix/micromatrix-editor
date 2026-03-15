@@ -15,7 +15,7 @@ const emptySnapshot: InspectorSnapshot = {
 function serializeEditor(editor: Editor): InspectorSnapshot {
   return {
     html: editor.getHTML(),
-    markdown: markdownManager.serialize(editor.state.doc),
+    markdown: editor.markdown ? editor.getMarkdown() : markdownManager.serialize(editor.state.doc),
   };
 }
 

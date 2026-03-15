@@ -19,7 +19,7 @@ import { TaskItem } from "@mxm-editor/extension-task-item";
 import { TaskList } from "@mxm-editor/extension-task-list";
 import { TextAlign } from "@mxm-editor/extension-text-align";
 import { TextStyle } from "@mxm-editor/extension-text-style";
-import { MarkdownManager } from "@mxm-editor/markdown";
+import { Markdown, MarkdownManager } from "@mxm-editor/markdown";
 import { PluginKey, type EditorView } from "@mxm-editor/pm";
 import {
   Suggestion,
@@ -581,6 +581,7 @@ export function createPlaygroundExtensions(
     TaskList,
     Table,
     Image,
+    Markdown,
     TextStyle,
     Color,
     Highlight.configure({
