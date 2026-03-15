@@ -1,24 +1,18 @@
 {
-  "name": "@mxm-editor/react",
+  "name": "@mxm-editor/extension-floating-menu",
   "version": "0.1.0",
   "private": true,
   "type": "module",
   "exports": {
-    ".": "./src/index.ts",
-    "./menus": "./src/menus.ts"
+    ".": "./src/index.ts"
   },
   "scripts": {
     "build": "tsc --project tsconfig.json --noEmit",
     "typecheck": "tsc --project tsconfig.json --noEmit"
   },
   "dependencies": {
+    "@floating-ui/dom": "^1.7.4",
     "@mxm-editor/core": "workspace:*",
-    "@mxm-editor/extension-bubble-menu": "workspace:*",
-    "@mxm-editor/extension-floating-menu": "workspace:*",
     "@mxm-editor/pm": "workspace:*"
-  },
-  "peerDependencies": {
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0"
   }
 }

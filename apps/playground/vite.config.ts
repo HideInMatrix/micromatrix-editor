@@ -15,6 +15,7 @@ const editorCorePackages = [
   "/packages/extension-text/",
   "/packages/extension-bold/",
   "/packages/extension-background-color/",
+  "/packages/extension-bubble-menu/",
   "/packages/extension-character-count/",
   "/packages/extension-color/",
   "/packages/extension-details/",
@@ -67,6 +68,7 @@ const editorFeaturePackages = [
   "/packages/extension-emoji/",
   "/packages/extension-focus/",
   "/packages/extension-file-handler/",
+  "/packages/extension-floating-menu/",
   "/packages/extension-mention/",
   "/packages/extension-unique-id/",
   "/packages/suggestion/",
@@ -146,6 +148,9 @@ export default defineConfig({
       "@mxm-editor/extension-background-color": fromRoot(
         "../../packages/extension-background-color/src/index.ts",
       ),
+      "@mxm-editor/extension-bubble-menu": fromRoot(
+        "../../packages/extension-bubble-menu/src/index.ts",
+      ),
       "@mxm-editor/extension-bullet-list": fromRoot(
         "../../packages/extension-bullet-list/src/index.ts",
       ),
@@ -190,6 +195,9 @@ export default defineConfig({
       ),
       "@mxm-editor/extension-focus": fromRoot(
         "../../packages/extension-focus/src/index.ts",
+      ),
+      "@mxm-editor/extension-floating-menu": fromRoot(
+        "../../packages/extension-floating-menu/src/index.ts",
       ),
       "@mxm-editor/extension-font-family": fromRoot(
         "../../packages/extension-font-family/src/index.ts",

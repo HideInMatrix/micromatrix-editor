@@ -10,6 +10,8 @@ export { useCurrentEditor } from "./useCurrentEditor";
 export { useEditor } from "./useEditor";
 export { useEditorState } from "./useEditorState";
 export type { EditorOptions } from "@mxm-editor/core";
+export type { BubbleMenuProps } from "./BubbleMenu";
+export type { FloatingMenuProps } from "./FloatingMenu";
 export type {
   MenuVisibilityContext,
   MenuVisibilityContextWithEditor,

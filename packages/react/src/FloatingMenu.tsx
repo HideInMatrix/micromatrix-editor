@@ -1,202 +1,160 @@
 import type { HTMLAttributes, ReactNode } from "react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import type { Editor } from "@mxm-editor/core";
-import { createPortal } from "react-dom";
 import {
-  createMenuVisibilityContext,
-  type MenuVisibilityContextWithEditor,
-} from "./menuContext";
-
-export interface FloatingMenuOptions {
-  offset?: number;
-}
+  FloatingMenuPlugin,
+  floatingMenuPluginKey,
+  type FloatingMenuAppendTo,
+  type FloatingMenuPluginOptions,
+} from "@mxm-editor/extension-floating-menu";
+import { PluginKey } from "@mxm-editor/pm";
+import { createPortal } from "react-dom";
+import type { MenuVisibilityContextWithEditor } from "./menuContext";
+import { useCurrentEditor } from "./useCurrentEditor";
 
 export interface FloatingMenuProps
   extends Omit<HTMLAttributes<HTMLDivElement>, "content"> {
-  editor: Editor | null;
+  editor?: Editor | null;
   children: ReactNode;
-  offset?: number;
-  options?: FloatingMenuOptions;
+  pluginKey?: string | PluginKey;
+  updateDelay?: number;
+  resizeDelay?: number;
+  appendTo?: FloatingMenuAppendTo;
+  options?: FloatingMenuPluginOptions;
   shouldShow?: (props: MenuVisibilityContextWithEditor) => boolean;
   onShow?: (props: MenuVisibilityContextWithEditor) => void;
   onHide?: (props: MenuVisibilityContextWithEditor) => void;
-}
-
-interface FloatingPosition {
-  left: number;
-  top: number;
-  visible: boolean;
-}
-
-function getCursorRect(editor: Editor) {
-  const view = editor.view;
-
-  if (!view) {
-    return null;
-  }
-
-  const { selection } = view.state;
-
-  if (!selection.empty) {
-    return null;
-  }
-
-  const start = view.coordsAtPos(selection.from);
-
-  return new DOMRect(
-    (start.left + start.right) / 2,
-    start.top,
-    Math.max(start.right - start.left, 1),
-    Math.max(start.bottom - start.top, 1),
-  );
+  onUpdate?: (props: MenuVisibilityContextWithEditor) => void;
+  onDestroy?: (props: MenuVisibilityContextWithEditor) => void;
 }
 
 export function FloatingMenu({
   editor,
   children,
-  offset = 12,
+  pluginKey,
+  updateDelay,
+  resizeDelay,
+  appendTo,
   options,
   shouldShow,
   onShow,
   onHide,
-  style,
+  onUpdate,
+  onDestroy,
   ...props
 }: FloatingMenuProps) {
-  const previousVisibleRef = useRef(false);
-  const lastStateRef = useRef(editor?.state ?? null);
-  const [position, setPosition] = useState<FloatingPosition>({
-    left: 0,
-    top: 0,
-    visible: false,
+  const currentEditor = useCurrentEditor();
+  const resolvedEditor = editor ?? currentEditor.editor;
+  const targetElementRef = useRef<HTMLDivElement | null>(null);
+  const pluginKeyRef = useRef<PluginKey>(floatingMenuPluginKey);
+  const pluginKeySourceRef = useRef<string | PluginKey | undefined>(undefined);
+  const pluginPropsRef = useRef({
+    appendTo,
+    editor: resolvedEditor,
+    element: targetElementRef.current,
+    onDestroy,
+    onHide,
+    onShow,
+    onUpdate,
+    options,
+    pluginKey: pluginKeyRef.current,
+    resizeDelay,
+    shouldShow,
+    updateDelay,
   });
-  const resolvedOffset = options?.offset ?? offset;
+
+  if (
+    !targetElementRef.current
+    && typeof document !== "undefined"
+  ) {
+    targetElementRef.current = document.createElement("div");
+  }
+
+  const resolvedPluginKey = (() => {
+    const nextSource = pluginKey ?? floatingMenuPluginKey;
+
+    if (pluginKeySourceRef.current !== nextSource) {
+      pluginKeySourceRef.current = nextSource;
+      pluginKeyRef.current = typeof nextSource === "string"
+        ? new PluginKey(nextSource)
+        : nextSource;
+    }
+
+    return pluginKeyRef.current;
+  })();
+
+  pluginPropsRef.current = {
+    appendTo,
+    editor: resolvedEditor,
+    element: targetElementRef.current,
+    onDestroy,
+    onHide,
+    onShow,
+    onUpdate,
+    options,
+    pluginKey: resolvedPluginKey,
+    resizeDelay,
+    shouldShow,
+    updateDelay,
+  };
 
   useEffect(() => {
-    if (!editor?.view || typeof document === "undefined") {
+    if (!resolvedEditor?.view || !targetElementRef.current) {
       return;
     }
 
-    lastStateRef.current = editor.state;
+    const plugin = FloatingMenuPlugin({
+      ...pluginPropsRef.current,
+      editor: resolvedEditor,
+      element: targetElementRef.current,
+      getProps: () => ({
+        ...pluginPropsRef.current,
+        editor: resolvedEditor,
+        element: targetElementRef.current!,
+        pluginKey: resolvedPluginKey,
+      }),
+      pluginKey: resolvedPluginKey,
+    });
 
-    const update = (oldState = lastStateRef.current) => {
-      if (!editor.view) {
-        setPosition((current) =>
-          current.visible
-            ? { left: 0, top: 0, visible: false }
-            : current,
-        );
-        return;
-      }
-
-      const context = createMenuVisibilityContext(editor, oldState);
-
-      if (!editor.view.hasFocus() || !editor.state.selection.empty) {
-        setPosition((current) =>
-          current.visible
-            ? { left: 0, top: 0, visible: false }
-            : current,
-        );
-        return;
-      }
-
-      if (shouldShow && !shouldShow(context)) {
-        setPosition((current) =>
-          current.visible
-            ? { left: 0, top: 0, visible: false }
-            : current,
-        );
-        return;
-      }
-
-      const rect = getCursorRect(editor);
-
-      if (!rect) {
-        setPosition((current) =>
-          current.visible
-            ? { left: 0, top: 0, visible: false }
-            : current,
-        );
-        return;
-      }
-
-      setPosition({
-        left: rect.left + rect.width / 2,
-        top: rect.top - resolvedOffset,
-        visible: true,
-      });
-    };
-
-    update();
-
-    const handleEditorUpdate = () => {
-      const previousState = lastStateRef.current;
-
-      update(previousState);
-      lastStateRef.current = editor.state;
-    };
-    const removeSelectionUpdate = editor.on("selectionUpdate", handleEditorUpdate);
-    const removeUpdate = editor.on("update", handleEditorUpdate);
-    const onScroll = () => update();
-    const onResize = () => update();
-    const onFocus = () => update();
-    const onBlur = () => {
-      requestAnimationFrame(() => update());
-    };
-
-    window.addEventListener("scroll", onScroll, true);
-    window.addEventListener("resize", onResize);
-    document.addEventListener("selectionchange", onSelectionChange);
-    editor.view.dom.addEventListener("focus", onFocus, true);
-    editor.view.dom.addEventListener("blur", onBlur, true);
-
-    function onSelectionChange() {
-      requestAnimationFrame(() => update());
-    }
+    resolvedEditor.registerPlugin(plugin);
 
     return () => {
-      removeSelectionUpdate();
-      removeUpdate();
-      window.removeEventListener("scroll", onScroll, true);
-      window.removeEventListener("resize", onResize);
-      document.removeEventListener("selectionchange", onSelectionChange);
-      editor.view?.dom.removeEventListener("focus", onFocus, true);
-      editor.view?.dom.removeEventListener("blur", onBlur, true);
+      resolvedEditor.unregisterPlugin(resolvedPluginKey);
     };
-  }, [editor, resolvedOffset, shouldShow]);
+  }, [resolvedEditor, resolvedPluginKey]);
 
   useEffect(() => {
-    if (!editor || position.visible === previousVisibleRef.current) {
+    if (!resolvedEditor?.view) {
       return;
     }
 
-    previousVisibleRef.current = position.visible;
-    const context = createMenuVisibilityContext(editor, lastStateRef.current);
+    resolvedEditor.view.dispatch(
+      resolvedEditor.state.tr
+        .setMeta(resolvedPluginKey, { refresh: true })
+        .setMeta("preventUpdate", true),
+    );
+  }, [
+    appendTo,
+    onDestroy,
+    onHide,
+    onShow,
+    onUpdate,
+    options,
+    resolvedEditor,
+    resolvedPluginKey,
+    resizeDelay,
+    shouldShow,
+    updateDelay,
+  ]);
 
-    if (position.visible) {
-      onShow?.(context);
-      return;
-    }
-
-    onHide?.(context);
-  }, [editor, onHide, onShow, position.visible]);
-
-  if (!editor?.view || typeof document === "undefined" || !position.visible) {
+  if (!targetElementRef.current) {
     return null;
   }
 
   return createPortal(
-    <div
-      {...props}
-      style={{
-        position: "fixed",
-        left: position.left,
-        top: position.top,
-        transform: "translate(-50%, -100%)",
-        ...style,
-      }}
-    >
+    <div {...props}>
       {children}
     </div>,
-    document.body,
+    targetElementRef.current,
   );
 }
