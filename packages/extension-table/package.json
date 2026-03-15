@@ -12,6 +12,9 @@
   },
   "dependencies": {
     "@mxm-editor/core": "workspace:*",
+    "@mxm-editor/extension-table-cell": "workspace:*",
+    "@mxm-editor/extension-table-header": "workspace:*",
+    "@mxm-editor/extension-table-row": "workspace:*",
     "@mxm-editor/pm": "workspace:*"
   }
 }

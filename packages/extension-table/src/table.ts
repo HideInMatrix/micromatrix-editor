@@ -19,9 +19,9 @@ import {
   toggleHeaderColumn as toggleHeaderColumnCommand,
   toggleHeaderRow as toggleHeaderRowCommand,
 } from "@mxm-editor/pm";
-import { TableCell } from "./table-cell";
-import { TableHeader } from "./table-header";
-import { TableRow } from "./table-row";
+import { TableCell } from "@mxm-editor/extension-table-cell";
+import { TableHeader } from "@mxm-editor/extension-table-header";
+import { TableRow } from "@mxm-editor/extension-table-row";
 import { renderTableMarkdown } from "./utils";
 
 export interface InsertTableOptions {

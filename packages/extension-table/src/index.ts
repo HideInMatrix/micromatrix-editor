@@ -1,4 +1,4 @@
 export * from "./table";
-export * from "./table-cell";
-export * from "./table-header";
-export * from "./table-row";
+export * from "@mxm-editor/extension-table-cell";
+export * from "@mxm-editor/extension-table-header";
+export * from "@mxm-editor/extension-table-row";

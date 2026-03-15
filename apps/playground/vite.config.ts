@@ -55,6 +55,9 @@ const editorCorePackages = [
   "/packages/extension-task-item/",
   "/packages/extension-code-block/",
   "/packages/extension-table/",
+  "/packages/extension-table-cell/",
+  "/packages/extension-table-header/",
+  "/packages/extension-table-row/",
   "/packages/extension-table-of-contents/",
   "/packages/extension-typography/",
   "/packages/extension-twitch/",
@@ -250,6 +253,15 @@ export default defineConfig({
       ),
       "@mxm-editor/extension-table": fromRoot(
         "../../packages/extension-table/src/index.ts",
+      ),
+      "@mxm-editor/extension-table-cell": fromRoot(
+        "../../packages/extension-table-cell/src/index.ts",
+      ),
+      "@mxm-editor/extension-table-header": fromRoot(
+        "../../packages/extension-table-header/src/index.ts",
+      ),
+      "@mxm-editor/extension-table-row": fromRoot(
+        "../../packages/extension-table-row/src/index.ts",
       ),
       "@mxm-editor/extension-table-of-contents": fromRoot(
         "../../packages/extension-table-of-contents/src/index.ts",

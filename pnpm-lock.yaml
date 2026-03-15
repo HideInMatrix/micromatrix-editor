@@ -600,9 +600,30 @@ importers:
       '@mxm-editor/core':
         specifier: workspace:*
         version: link:../core
+      '@mxm-editor/extension-table-cell':
+        specifier: workspace:*
+        version: link:../extension-table-cell
+      '@mxm-editor/extension-table-header':
+        specifier: workspace:*
+        version: link:../extension-table-header
+      '@mxm-editor/extension-table-row':
+        specifier: workspace:*
+        version: link:../extension-table-row
       '@mxm-editor/pm':
         specifier: workspace:*
         version: link:../pm
+
+  packages/extension-table-cell:
+    dependencies:
+      '@mxm-editor/core':
+        specifier: workspace:*
+        version: link:../core
+
+  packages/extension-table-header:
+    dependencies:
+      '@mxm-editor/core':
+        specifier: workspace:*
+        version: link:../core
 
   packages/extension-table-of-contents:
     dependencies:
@@ -612,6 +633,12 @@ importers:
       '@mxm-editor/pm':
         specifier: workspace:*
         version: link:../pm
+
+  packages/extension-table-row:
+    dependencies:
+      '@mxm-editor/core':
+        specifier: workspace:*
+        version: link:../core
 
   packages/extension-task-item:
     dependencies:
