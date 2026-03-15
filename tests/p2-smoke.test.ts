@@ -8,8 +8,12 @@ import {
   type CollaborationCaretStorage,
 } from "@mxm-editor/extension-collaboration-caret";
 import { Color } from "@mxm-editor/extension-color";
+import { Focus } from "@mxm-editor/extension-focus";
 import { Highlight } from "@mxm-editor/extension-highlight";
+import { Subscript } from "@mxm-editor/extension-subscript";
+import { Superscript } from "@mxm-editor/extension-superscript";
 import { TextStyle } from "@mxm-editor/extension-text-style";
+import { TrailingNode } from "@mxm-editor/extension-trailing-node";
 import { StarterKit } from "@mxm-editor/starter-kit";
 import { applyAwarenessUpdate, Awareness, encodeAwarenessUpdate } from "y-protocols/awareness";
 import { applyUpdate, Doc } from "yjs";
@@ -158,5 +162,98 @@ describe("P2 smoke", () => {
 
     expect(rightStorage?.users.some((user) => user.name === "Lin")).toBe(true);
     expect(rightStorage?.users.some((user) => user.name === "Right")).toBe(true);
+  });
+
+  it("supports subscript and superscript commands without overlapping marks", () => {
+    const element = document.createElement("div");
+
+    document.body.appendChild(element);
+
+    const editor = new Editor({
+      element,
+      extensions: [
+        StarterKit.configure({
+          undoRedo: false,
+        }),
+        Subscript,
+        Superscript,
+      ],
+      content: "<p>hello</p>",
+    });
+
+    editor.commands.setTextSelection({ from: 1, to: 6 });
+
+    expect(editor.commands.toggleSubscript()).toBe(true);
+    expect(editor.isActive("subscript")).toBe(true);
+    expect(editor.getHTML()).toContain("<sub>hello</sub>");
+
+    expect(editor.commands.toggleSuperscript()).toBe(true);
+    expect(editor.isActive("superscript")).toBe(true);
+    expect(editor.isActive("subscript")).toBe(false);
+    expect(editor.getHTML()).toContain("<sup>hello</sup>");
+    expect(editor.getHTML()).not.toContain("<sub>");
+  });
+
+  it("applies focus decorations to the deepest selected node", () => {
+    const element = document.createElement("div");
+
+    document.body.appendChild(element);
+
+    const editor = new Editor({
+      element,
+      extensions: [
+        StarterKit.configure({
+          undoRedo: false,
+        }),
+        Focus.configure({
+          mode: "deepest",
+        }),
+      ],
+      content: "<blockquote><p>hello</p></blockquote>",
+    });
+
+    editor.commands.setTextSelection({ from: 3, to: 5 });
+
+    expect(element.querySelector("p.has-focus")).not.toBeNull();
+    expect(element.querySelector("blockquote.has-focus")).toBeNull();
+  });
+
+  it("appends a trailing paragraph after disallowed trailing nodes", () => {
+    const element = document.createElement("div");
+
+    document.body.appendChild(element);
+
+    const editor = new Editor({
+      element,
+      extensions: [
+        StarterKit.configure({
+          undoRedo: false,
+        }),
+        TrailingNode,
+      ],
+      content: "<p>start</p>",
+    });
+
+    expect(editor.commands.setContent("<blockquote><p>quote</p></blockquote>")).toBe(true);
+
+    expect(editor.getJSON().content).toEqual([
+      {
+        type: "blockquote",
+        content: [
+          {
+            type: "paragraph",
+            content: [
+              {
+                type: "text",
+                text: "quote",
+              },
+            ],
+          },
+        ],
+      },
+      {
+        type: "paragraph",
+      },
+    ]);
   });
 });
