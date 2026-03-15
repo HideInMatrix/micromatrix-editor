@@ -1,10 +1,20 @@
 import type { CommandProps } from "@mxm-editor/core";
 import { Mark, mergeAttributes } from "@mxm-editor/core";
-import { Plugin, PluginKey, TextSelection, toggleMark } from "@mxm-editor/pm";
+import {
+  Fragment,
+  InputRule,
+  Plugin,
+  PluginKey,
+  Slice,
+  TextSelection,
+  toggleMark,
+  type MarkType,
+} from "@mxm-editor/pm";
 import {
   find as findLinks,
   registerCustomProtocol,
   reset,
+  tokenize,
 } from "linkifyjs";
 
 export interface LinkProtocol {
@@ -28,12 +38,13 @@ export interface AllowedUriContext {
 
 export interface LinkOptions {
   HTMLAttributes: Record<string, string>;
-  openOnClick: boolean;
+  openOnClick: boolean | "whenNotEditable";
   enableClickSelection: boolean;
   autolink: boolean;
   linkOnPaste: boolean;
   protocols: Array<string | LinkProtocol>;
   defaultProtocol: string;
+  validate: (url: string) => boolean;
   isAllowedUri: (url: string, context: AllowedUriContext) => boolean;
   shouldAutoLink: (url: string) => boolean;
 }
@@ -46,6 +57,26 @@ const UNICODE_WHITESPACE_REGEX_GLOBAL = new RegExp(
   UNICODE_WHITESPACE_PATTERN,
   "g",
 );
+
+const defaultValidate = (url: string) => !!url;
+
+const defaultShouldAutoLink = (url: string) => {
+  const hasProtocol = /^[a-z][a-z0-9+.-]*:\/\//i.test(url);
+  const hasMaybeProtocol = /^[a-z][a-z0-9+.-]*:/i.test(url);
+
+  if (hasProtocol || (hasMaybeProtocol && !url.includes("@"))) {
+    return true;
+  }
+
+  const urlWithoutUserinfo = url.includes("@") ? url.split("@").pop() : url;
+  const hostname = (urlWithoutUserinfo ?? "").split(/[/?#:]/)[0];
+
+  if (/^\d{1,3}(\.\d{1,3}){3}$/.test(hostname)) {
+    return false;
+  }
+
+  return /\./.test(hostname);
+};
 
 function isAllowedUriByProtocol(
   uri: string | null | undefined,
@@ -83,6 +114,14 @@ function isAllowedUriByProtocol(
   );
 }
 
+function getAllowedUriContext(options: LinkOptions): AllowedUriContext {
+  return {
+    defaultValidate: (url) => isAllowedUriByProtocol(url, options.protocols),
+    protocols: options.protocols,
+    defaultProtocol: options.defaultProtocol,
+  };
+}
+
 function getDefaultLinkAttributes(options: LinkOptions): LinkAttributes {
   return {
     href: null,
@@ -93,35 +132,42 @@ function getDefaultLinkAttributes(options: LinkOptions): LinkAttributes {
   };
 }
 
-function findSingleLink(url: string, options: LinkOptions) {
-  const matches = findLinks(url, {
+function isValidLinkStructure(tokens: Array<{ isLink?: boolean; value?: string }>) {
+  if (tokens.length === 1) {
+    return Boolean(tokens[0]?.isLink);
+  }
+
+  if (tokens.length === 3 && tokens[1]?.isLink) {
+    return ["()", "[]"].includes(`${tokens[0]?.value ?? ""}${tokens[2]?.value ?? ""}`);
+  }
+
+  return false;
+}
+
+function findLinkMatches(text: string, options: LinkOptions) {
+  const context = getAllowedUriContext(options);
+
+  return findLinks(text, {
     defaultProtocol: options.defaultProtocol,
-  }).filter((item) => item.isLink && item.value === url);
+  }).filter((item) =>
+    item.isLink
+    && options.isAllowedUri(item.value, context)
+    && options.shouldAutoLink(item.value),
+  );
+}
+
+function findSingleLink(url: string, options: LinkOptions) {
+  const matches = findLinkMatches(url, options)
+    .filter((item) => item.value === url);
   const link = matches[0];
 
   if (!link) {
     return null;
   }
 
-  const href =
-    /^[a-z][a-z0-9+.-]*:/i.test(link.value)
-      ? link.href
-      : `${options.defaultProtocol}://${link.value}`;
-
-  if (
-    !options.isAllowedUri(href, {
-      defaultValidate: (href) => isAllowedUriByProtocol(href, options.protocols),
-      protocols: options.protocols,
-      defaultProtocol: options.defaultProtocol,
-    })
-    || !options.shouldAutoLink(link.value)
-  ) {
-    return null;
-  }
-
   return {
     ...link,
-    href,
+    href: link.href,
   };
 }
 
@@ -144,6 +190,17 @@ function setMarkWithAttrs(
   }
 
   if (empty) {
+    const range = getLinkRange(state, from, markName);
+
+    if (range) {
+      dispatch(
+        state.tr
+          .removeMark(range.from, range.to, markType)
+          .addMark(range.from, range.to, markType.create(attrs)),
+      );
+      return true;
+    }
+
     dispatch(state.tr.addStoredMark(markType.create(attrs)));
     return true;
   }
@@ -175,6 +232,13 @@ function unsetMark(
   }
 
   if (empty) {
+    const range = getLinkRange(state, from, markName);
+
+    if (range) {
+      dispatch(state.tr.removeMark(range.from, range.to, markType));
+      return true;
+    }
+
     dispatch(state.tr.removeStoredMark(markType));
     return true;
   }
@@ -284,8 +348,9 @@ function createClickHandler(
         }
 
         if (options.openOnClick) {
-          const href = link.getAttribute("href");
-          const targetName = link.getAttribute("target") ?? "_blank";
+          const attributes = editor.getAttributes(markName);
+          const href = link.getAttribute("href") ?? attributes.href;
+          const targetName = link.getAttribute("target") ?? attributes.target ?? "_blank";
 
           if (href) {
             window.open(href, targetName);
@@ -328,10 +393,86 @@ function createPasteHandler(
   });
 }
 
+function buildPasteNodes(
+  text: string,
+  options: LinkOptions,
+  markType: MarkType,
+  state: CommandProps["state"],
+) {
+  const links = findLinkMatches(text, options);
+
+  if (!links.length) {
+    return null;
+  }
+
+  const defaults = getDefaultLinkAttributes(options);
+  const nodes = [];
+  let lastIndex = 0;
+
+  for (const link of links) {
+    if (link.start > lastIndex) {
+      nodes.push(state.schema.text(text.slice(lastIndex, link.start)));
+    }
+
+    nodes.push(
+      state.schema.text(link.value, [
+        markType.create({
+          ...defaults,
+          href: link.href,
+        }),
+      ]),
+    );
+
+    lastIndex = link.end;
+  }
+
+  if (lastIndex < text.length) {
+    nodes.push(state.schema.text(text.slice(lastIndex)));
+  }
+
+  return nodes.length ? nodes : null;
+}
+
+function createPasteLinkifier(
+  options: LinkOptions,
+  markName: string,
+) {
+  return new Plugin({
+    key: new PluginKey("linkPasteRule"),
+    props: {
+      handlePaste(view, event) {
+        const text = event.clipboardData?.getData("text/plain");
+        const markType = view.state.schema.marks[markName];
+
+        if (!text || !markType) {
+          return false;
+        }
+
+        const nodes = buildPasteNodes(text, options, markType, view.state);
+
+        if (!nodes) {
+          return false;
+        }
+
+        view.dispatch(
+          view.state.tr.replaceSelection(
+            new Slice(Fragment.fromArray(nodes), 0, 0),
+          ),
+        );
+
+        return true;
+      },
+    },
+  });
+}
+
 export const Link = Mark.create<LinkOptions>({
   name: "link",
   priority: 1000,
-  inclusive: false,
+
+  inclusive() {
+    return this.options.autolink;
+  },
 
   addOptions() {
     return {
@@ -345,29 +486,24 @@ export const Link = Mark.create<LinkOptions>({
       linkOnPaste: true,
       protocols: [],
       defaultProtocol: "http",
+      validate: defaultValidate,
       isAllowedUri: (url, context) =>
         !!url && isAllowedUriByProtocol(url, context.protocols),
-      shouldAutoLink: (url) => {
-        const hasProtocol = /^[a-z][a-z0-9+.-]*:\/\//i.test(url);
-        const hasMaybeProtocol = /^[a-z][a-z0-9+.-]*:/i.test(url);
-
-        if (hasProtocol || (hasMaybeProtocol && !url.includes("@"))) {
-          return true;
-        }
-
-        const urlWithoutUserinfo = url.includes("@") ? url.split("@").pop() : url;
-        const hostname = (urlWithoutUserinfo ?? "").split(/[/?#:]/)[0];
-
-        if (/^\d{1,3}(\.\d{1,3}){3}$/.test(hostname)) {
-          return false;
-        }
-
-        return /\./.test(hostname);
-      },
+      shouldAutoLink: defaultShouldAutoLink,
     };
   },
 
   onCreate() {
+    if (
+      this.options.validate !== defaultValidate
+      && this.options.shouldAutoLink === defaultShouldAutoLink
+    ) {
+      this.options.shouldAutoLink = this.options.validate;
+      console.warn(
+        "The `validate` option is deprecated. Rename to the `shouldAutoLink` option instead.",
+      );
+    }
+
     this.options.protocols.forEach((protocol) => {
       if (typeof protocol === "string") {
         registerCustomProtocol(protocol);
@@ -417,12 +553,7 @@ export const Link = Mark.create<LinkOptions>({
 
           if (
             !href
-            || !this.options.isAllowedUri(href, {
-              defaultValidate: (url) =>
-                isAllowedUriByProtocol(url, this.options.protocols),
-              protocols: this.options.protocols,
-              defaultProtocol: this.options.defaultProtocol,
-            })
+            || !this.options.isAllowedUri(href, getAllowedUriContext(this.options))
           ) {
             return false;
           }
@@ -441,11 +572,10 @@ export const Link = Mark.create<LinkOptions>({
 
   renderHTML({ HTMLAttributes }) {
     const href = HTMLAttributes.href;
-    const isAllowed = this.options.isAllowedUri(href, {
-      defaultValidate: (url) => isAllowedUriByProtocol(url, this.options.protocols),
-      protocols: this.options.protocols,
-      defaultProtocol: this.options.defaultProtocol,
-    });
+    const isAllowed = this.options.isAllowedUri(
+      href,
+      getAllowedUriContext(this.options),
+    );
 
     return [
       "a",
@@ -480,12 +610,7 @@ export const Link = Mark.create<LinkOptions>({
 
           if (
             href
-            && !this.options.isAllowedUri(href, {
-              defaultValidate: (url) =>
-                isAllowedUriByProtocol(url, this.options.protocols),
-              protocols: this.options.protocols,
-              defaultProtocol: this.options.defaultProtocol,
-            })
+            && !this.options.isAllowedUri(href, getAllowedUriContext(this.options))
           ) {
             return false;
           }
@@ -503,12 +628,7 @@ export const Link = Mark.create<LinkOptions>({
 
           if (
             href
-            && !this.options.isAllowedUri(href, {
-              defaultValidate: (url) =>
-                isAllowedUriByProtocol(url, this.options.protocols),
-              protocols: this.options.protocols,
-              defaultProtocol: this.options.defaultProtocol,
-            })
+            && !this.options.isAllowedUri(href, getAllowedUriContext(this.options))
           ) {
             return false;
           }
@@ -518,6 +638,19 @@ export const Link = Mark.create<LinkOptions>({
 
           if (!markType) {
             return false;
+          }
+
+          if (state.selection.empty) {
+            const range = getLinkRange(state, state.selection.from, this.name);
+
+            if (range) {
+              if (!dispatch) {
+                return true;
+              }
+
+              dispatch(state.tr.removeMark(range.from, range.to, markType));
+              return true;
+            }
           }
 
           return toggleMark(markType, {
@@ -533,33 +666,68 @@ export const Link = Mark.create<LinkOptions>({
     };
   },
 
-  addPasteRules() {
+  addInputRules() {
     const type = this.editor.schema.marks[this.name];
 
-    if (!type) {
+    if (!type || !this.options.autolink) {
       return [];
     }
 
     return [
-      {
-        find: pasteRegex,
-        replace: ({ state, match }) => {
-          const url = match[0];
-          const link = findSingleLink(url, this.options);
+      new InputRule(/(?:^|\s)([^\s]+)\s$/, (state, match, _start, end) => {
+        const text = match[1] ?? "";
 
-          if (!link) {
-            return null;
+        if (!text.length) {
+          return null;
+        }
+
+        const tokens = tokenize(text)
+          .map((token) => token.toObject(this.options.defaultProtocol));
+
+        if (!isValidLinkStructure(tokens)) {
+          return null;
+        }
+
+        const links = tokens
+          .filter((token) => token.isLink)
+          .filter((token) =>
+            this.options.isAllowedUri(token.value, getAllowedUriContext(this.options))
+            && this.options.shouldAutoLink(token.value),
+          );
+
+        if (!links.length) {
+          return null;
+        }
+
+        const codeMark = state.schema.marks.code;
+        const linkStart = end - 1 - text.length;
+        const defaults = getDefaultLinkAttributes(this.options);
+        const tr = state.tr;
+
+        links.forEach((link) => {
+          const from = linkStart + link.start;
+          const to = linkStart + link.end;
+
+          if (
+            (codeMark && state.doc.rangeHasMark(from, to, codeMark))
+            || state.doc.rangeHasMark(from, to, type)
+          ) {
+            return;
           }
 
-          return state.schema.text(url, [
-            type.create({
-              ...getDefaultLinkAttributes(this.options),
-              href: link.href,
-            }),
-          ]);
-        },
-      },
+          tr.addMark(from, to, type.create({
+            ...defaults,
+            href: link.href,
+          }));
+        });
+
+        return tr.steps.length ? tr : null;
+      }),
     ];
+  },
+
+  addPasteRules() {
+    return [];
   },
 
   addProseMirrorPlugins() {
@@ -570,6 +738,8 @@ export const Link = Mark.create<LinkOptions>({
     if (this.options.linkOnPaste) {
       plugins.push(createPasteHandler(this.editor, this.options));
     }
+
+    plugins.push(createPasteLinkifier(this.options, this.name));
 
     return plugins;
   },

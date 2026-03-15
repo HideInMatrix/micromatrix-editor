@@ -311,8 +311,12 @@ export class ExtensionManager {
         marks.map((mark) => {
           const context = mark.createContext(this.editor);
           const attributes = this.getAttributes(mark);
+          const inclusive =
+            typeof mark.config.inclusive === "function"
+              ? mark.config.inclusive.call(context)
+              : mark.config.inclusive;
           const spec: MarkSpec = cleanObject({
-            inclusive: mark.config.inclusive,
+            inclusive,
             excludes: mark.config.excludes,
             group: mark.config.group,
             code: mark.config.code,

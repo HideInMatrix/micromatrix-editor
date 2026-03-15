@@ -170,7 +170,9 @@ export interface MarkConfig<
   Options = Record<string, never>,
   Storage = Record<string, never>,
 > extends ExtensionConfig<Options, Storage> {
-  inclusive?: MarkSpec["inclusive"];
+  inclusive?:
+    | MarkSpec["inclusive"]
+    | ((this: ExtensionContext<Options, Storage>) => MarkSpec["inclusive"]);
   excludes?: MarkSpec["excludes"];
   group?: MarkSpec["group"];
   code?: MarkSpec["code"];
