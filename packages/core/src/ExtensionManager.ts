@@ -264,11 +264,19 @@ export class ExtensionManager {
         nodes.map((node) => {
           const context = node.createContext(this.editor);
           const attributes = this.getAttributes(node);
+          const group =
+            typeof node.config.group === "function"
+              ? node.config.group.call(context)
+              : node.config.group;
+          const inline =
+            typeof node.config.inline === "function"
+              ? node.config.inline.call(context)
+              : node.config.inline;
           const spec: NodeSpec = cleanObject({
             content: node.config.content,
             marks: node.config.marks,
-            group: node.config.group,
-            inline: node.config.inline,
+            group,
+            inline,
             atom: node.config.atom,
             selectable: node.config.selectable,
             draggable: node.config.draggable,

@@ -145,6 +145,24 @@ importers:
         specifier: workspace:*
         version: link:../pm
 
+  packages/extension-audio:
+    dependencies:
+      '@mxm-editor/core':
+        specifier: workspace:*
+        version: link:../core
+      '@mxm-editor/pm':
+        specifier: workspace:*
+        version: link:../pm
+
+  packages/extension-background-color:
+    dependencies:
+      '@mxm-editor/core':
+        specifier: workspace:*
+        version: link:../core
+      '@mxm-editor/extension-text-style':
+        specifier: workspace:*
+        version: link:../extension-text-style
+
   packages/extension-blockquote:
     dependencies:
       '@mxm-editor/core':
@@ -205,6 +223,18 @@ importers:
         specifier: workspace:*
         version: link:../pm
 
+  packages/extension-code-block-lowlight:
+    dependencies:
+      '@mxm-editor/core':
+        specifier: workspace:*
+        version: link:../core
+      '@mxm-editor/pm':
+        specifier: workspace:*
+        version: link:../pm
+      lowlight:
+        specifier: ^3.3.0
+        version: 3.3.0
+
   packages/extension-collaboration:
     dependencies:
       '@mxm-editor/core':
@@ -247,6 +277,36 @@ importers:
         specifier: workspace:*
         version: link:../extension-text-style
 
+  packages/extension-details:
+    dependencies:
+      '@mxm-editor/core':
+        specifier: workspace:*
+        version: link:../core
+      '@mxm-editor/extension-details-content':
+        specifier: workspace:*
+        version: link:../extension-details-content
+      '@mxm-editor/extension-details-summary':
+        specifier: workspace:*
+        version: link:../extension-details-summary
+      '@mxm-editor/pm':
+        specifier: workspace:*
+        version: link:../pm
+
+  packages/extension-details-content:
+    dependencies:
+      '@mxm-editor/core':
+        specifier: workspace:*
+        version: link:../core
+      '@mxm-editor/pm':
+        specifier: workspace:*
+        version: link:../pm
+
+  packages/extension-details-summary:
+    dependencies:
+      '@mxm-editor/core':
+        specifier: workspace:*
+        version: link:../core
+
   packages/extension-document:
     dependencies:
       '@mxm-editor/core':
@@ -261,6 +321,54 @@ importers:
       '@mxm-editor/pm':
         specifier: workspace:*
         version: link:../pm
+
+  packages/extension-emoji:
+    dependencies:
+      '@mxm-editor/core':
+        specifier: workspace:*
+        version: link:../core
+      '@mxm-editor/pm':
+        specifier: workspace:*
+        version: link:../pm
+      '@mxm-editor/suggestion':
+        specifier: workspace:*
+        version: link:../suggestion
+
+  packages/extension-file-handler:
+    dependencies:
+      '@mxm-editor/core':
+        specifier: workspace:*
+        version: link:../core
+      '@mxm-editor/pm':
+        specifier: workspace:*
+        version: link:../pm
+
+  packages/extension-focus:
+    dependencies:
+      '@mxm-editor/core':
+        specifier: workspace:*
+        version: link:../core
+      '@mxm-editor/pm':
+        specifier: workspace:*
+        version: link:../pm
+
+  packages/extension-font-family:
+    dependencies:
+      '@mxm-editor/core':
+        specifier: workspace:*
+        version: link:../core
+      '@mxm-editor/extension-text-style':
+        specifier: workspace:*
+        version: link:../extension-text-style
+
+  packages/extension-font-size:
+    dependencies:
+      '@mxm-editor/core':
+        specifier: workspace:*
+        version: link:../core
+      '@mxm-editor/extension-text-style':
+        specifier: workspace:*
+        version: link:../extension-text-style
 
   packages/extension-gapcursor:
     dependencies:
@@ -322,7 +430,25 @@ importers:
         specifier: workspace:*
         version: link:../core
 
+  packages/extension-invisible-characters:
+    dependencies:
+      '@mxm-editor/core':
+        specifier: workspace:*
+        version: link:../core
+      '@mxm-editor/pm':
+        specifier: workspace:*
+        version: link:../pm
+
   packages/extension-italic:
+    dependencies:
+      '@mxm-editor/core':
+        specifier: workspace:*
+        version: link:../core
+      '@mxm-editor/pm':
+        specifier: workspace:*
+        version: link:../pm
+
+  packages/extension-line-height:
     dependencies:
       '@mxm-editor/core':
         specifier: workspace:*
@@ -339,6 +465,9 @@ importers:
       '@mxm-editor/pm':
         specifier: workspace:*
         version: link:../pm
+      linkifyjs:
+        specifier: ^4.3.2
+        version: 4.3.2
 
   packages/extension-list-item:
     dependencies:
@@ -394,6 +523,15 @@ importers:
         specifier: workspace:*
         version: link:../pm
 
+  packages/extension-selection:
+    dependencies:
+      '@mxm-editor/core':
+        specifier: workspace:*
+        version: link:../core
+      '@mxm-editor/pm':
+        specifier: workspace:*
+        version: link:../pm
+
   packages/extension-strike:
     dependencies:
       '@mxm-editor/core':
@@ -403,7 +541,34 @@ importers:
         specifier: workspace:*
         version: link:../pm
 
+  packages/extension-subscript:
+    dependencies:
+      '@mxm-editor/core':
+        specifier: workspace:*
+        version: link:../core
+      '@mxm-editor/pm':
+        specifier: workspace:*
+        version: link:../pm
+
+  packages/extension-superscript:
+    dependencies:
+      '@mxm-editor/core':
+        specifier: workspace:*
+        version: link:../core
+      '@mxm-editor/pm':
+        specifier: workspace:*
+        version: link:../pm
+
   packages/extension-table:
+    dependencies:
+      '@mxm-editor/core':
+        specifier: workspace:*
+        version: link:../core
+      '@mxm-editor/pm':
+        specifier: workspace:*
+        version: link:../pm
+
+  packages/extension-table-of-contents:
     dependencies:
       '@mxm-editor/core':
         specifier: workspace:*
@@ -457,6 +622,30 @@ importers:
         specifier: workspace:*
         version: link:../pm
 
+  packages/extension-trailing-node:
+    dependencies:
+      '@mxm-editor/core':
+        specifier: workspace:*
+        version: link:../core
+      '@mxm-editor/pm':
+        specifier: workspace:*
+        version: link:../pm
+
+  packages/extension-twitch:
+    dependencies:
+      '@mxm-editor/core':
+        specifier: workspace:*
+        version: link:../core
+
+  packages/extension-typography:
+    dependencies:
+      '@mxm-editor/core':
+        specifier: workspace:*
+        version: link:../core
+      '@mxm-editor/pm':
+        specifier: workspace:*
+        version: link:../pm
+
   packages/extension-underline:
     dependencies:
       '@mxm-editor/core':
@@ -474,6 +663,45 @@ importers:
       '@mxm-editor/pm':
         specifier: workspace:*
         version: link:../pm
+
+  packages/extension-unique-id:
+    dependencies:
+      '@mxm-editor/core':
+        specifier: workspace:*
+        version: link:../core
+      '@mxm-editor/pm':
+        specifier: workspace:*
+        version: link:../pm
+
+  packages/extension-youtube:
+    dependencies:
+      '@mxm-editor/core':
+        specifier: workspace:*
+        version: link:../core
+
+  packages/list-kit:
+    dependencies:
+      '@mxm-editor/core':
+        specifier: workspace:*
+        version: link:../core
+      '@mxm-editor/extension-bullet-list':
+        specifier: workspace:*
+        version: link:../extension-bullet-list
+      '@mxm-editor/extension-list-item':
+        specifier: workspace:*
+        version: link:../extension-list-item
+      '@mxm-editor/extension-list-keymap':
+        specifier: workspace:*
+        version: link:../extension-list-keymap
+      '@mxm-editor/extension-ordered-list':
+        specifier: workspace:*
+        version: link:../extension-ordered-list
+      '@mxm-editor/extension-task-item':
+        specifier: workspace:*
+        version: link:../extension-task-item
+      '@mxm-editor/extension-task-list':
+        specifier: workspace:*
+        version: link:../extension-task-list
 
   packages/markdown:
     dependencies:
@@ -609,6 +837,9 @@ importers:
       '@mxm-editor/extension-text':
         specifier: workspace:*
         version: link:../extension-text
+      '@mxm-editor/extension-trailing-node':
+        specifier: workspace:*
+        version: link:../extension-trailing-node
       '@mxm-editor/extension-underline':
         specifier: workspace:*
         version: link:../extension-underline
@@ -627,6 +858,39 @@ importers:
       '@mxm-editor/pm':
         specifier: workspace:*
         version: link:../pm
+
+  packages/table-kit:
+    dependencies:
+      '@mxm-editor/core':
+        specifier: workspace:*
+        version: link:../core
+      '@mxm-editor/extension-table':
+        specifier: workspace:*
+        version: link:../extension-table
+
+  packages/text-style-kit:
+    dependencies:
+      '@mxm-editor/core':
+        specifier: workspace:*
+        version: link:../core
+      '@mxm-editor/extension-background-color':
+        specifier: workspace:*
+        version: link:../extension-background-color
+      '@mxm-editor/extension-color':
+        specifier: workspace:*
+        version: link:../extension-color
+      '@mxm-editor/extension-font-family':
+        specifier: workspace:*
+        version: link:../extension-font-family
+      '@mxm-editor/extension-font-size':
+        specifier: workspace:*
+        version: link:../extension-font-size
+      '@mxm-editor/extension-line-height':
+        specifier: workspace:*
+        version: link:../extension-line-height
+      '@mxm-editor/extension-text-style':
+        specifier: workspace:*
+        version: link:../extension-text-style
 
 packages:
 
@@ -1078,6 +1342,9 @@ packages:
   '@types/estree@1.0.8':
     resolution: {integrity: sha512-dWHzHa2WqEXI/O1E9OjrocMTKJl2mSrEolh1Iomrv6U+JuNwaHXsXx9bLu5gG7BUWFIN0skIQJQ/L1rIex4X6w==}
 
+  '@types/hast@3.0.4':
+    resolution: {integrity: sha512-WPs+bbQw5aCj+x6laNGWLH3wviHtoCv/P3+otBhbOhJgG8qtpdAMlTCxLtsTWA7LH1Oh/bFCHsBn0TPS5m30EQ==}
+
   '@types/react-dom@19.2.3':
     resolution: {integrity: sha512-jp2L/eY6fn+KgVVQAOqYItbF0VY/YApe5Mz2F0aykSO8gx31bYCZyvSeYxCHKvzHG5eZjc+zyaS5BrBWya2+kQ==}
     peerDependencies:
@@ -1085,6 +1352,9 @@ packages:
 
   '@types/react@19.2.14':
     resolution: {integrity: sha512-ilcTH/UniCkMdtexkoCN0bI7pMcJDvmQFPvuPvmEaYA/NSfFTAgdUSLAoVjaRJm7+6PvcM+q1zYOwS4wTYMF9w==}
+
+  '@types/unist@3.0.3':
+    resolution: {integrity: sha512-ko/gIFJRv177XgZsZcBwnqJN5x/Gien8qNOn0D5bQU/zAzVf9Zt3BlcUiLqhV9y4ARk0GbT3tnUiPNgnTXzc/Q==}
 
   '@vitejs/plugin-react@4.7.0':
     resolution: {integrity: sha512-gUu9hwfWvvEDBBmgtAowQCojwZmJ5mcLn3aufeCsitijs3+f2NsrPtlAWIR6OPiqljl96GVCUbLe0HyqIpVaoA==}
@@ -1184,6 +1454,13 @@ packages:
     resolution: {integrity: sha512-h5k/5U50IJJFpzfL6nO9jaaumfjO/f2NjK/oYB2Djzm4p9L+3T9qWpZqZ2hAbLPuuYq9wrU08WQyBTL5GbPk5Q==}
     engines: {node: '>=6'}
 
+  dequal@2.0.3:
+    resolution: {integrity: sha512-0je+qPKHEMohvfRTCEo3CrPG6cAzAYgmzKyxRiYSSDkS6eGJdyVJm7WaYA5ECaAD9wLB2T4EEeymA5aFVcYXCA==}
+    engines: {node: '>=6'}
+
+  devlop@1.1.0:
+    resolution: {integrity: sha512-RWmIqhcFf1lRYBvNmr7qTNuyCt/7/ns2jbpp1+PalgE/rDQcBT0fioSMUpJ93irlUhC5hrg4cYqe6U+0ImW0rA==}
+
   electron-to-chromium@1.5.313:
     resolution: {integrity: sha512-QBMrTWEf00GXZmJyx2lbYD45jpI3TUFnNIzJ5BBc8piGUDwMPa1GV6HJWTZVvY/eiN3fSopl7NRbgGp9sZ9LTA==}
 
@@ -1230,6 +1507,10 @@ packages:
 
   globrex@0.1.2:
     resolution: {integrity: sha512-uHJgbwAMwNFf5mLst7IWLNg14x1CkeqglJb/K3doi4dw6q2IvAAmM/Y81kevy83wP+Sst+nutFTYOGg3d1lsxg==}
+
+  highlight.js@11.11.1:
+    resolution: {integrity: sha512-Xwwo44whKBVCYoliBQwaPvtd/2tYFkRQtXDWj1nackaV2JPXx3L0+Jvd8/qCJ2p+ML0/XVkJ2q+Mr+UVdpJK5w==}
+    engines: {node: '>=12.0.0'}
 
   html-encoding-sniffer@4.0.0:
     resolution: {integrity: sha512-Y22oTqIU4uuPgEemfz7NDJz6OeKf12Lsu+QC+s3BVpda64lTiMYCyGwg5ki4vFxkMwQdeZDl2adZoqUgdFuTgQ==}
@@ -1283,8 +1564,14 @@ packages:
     engines: {node: '>=16'}
     hasBin: true
 
+  linkifyjs@4.3.2:
+    resolution: {integrity: sha512-NT1CJtq3hHIreOianA8aSXn6Cw0JzYOuDQbOrSPe7gqFnCpKP++MQe3ODgO3oh2GJFORkAAdqredOa60z63GbA==}
+
   loupe@3.2.1:
     resolution: {integrity: sha512-CdzqowRJCeLU72bHvWqwRBBlLcMEtIvGrlvef74kMnV2AolS9Y8xUv1I0U/MNAWMhBlKIoyuEgoJ0t/bbwHbLQ==}
+
+  lowlight@3.3.0:
+    resolution: {integrity: sha512-0JNhgFoPvP6U6lE/UdVsSq99tn6DhjjpAj5MxG49ewd2mOBVtwWYIT8ClyABhq198aXXODMU6Ox8DrGy/CpTZQ==}
 
   lru-cache@10.4.3:
     resolution: {integrity: sha512-JNAzZcXrCt42VGLuYz0zfAzDfAvJWW6AfYlDBQyDV5DClI2m5sAmK+OIO7s59XfsRsWHp02jAJrRadPRGTt6SQ==}
@@ -1997,6 +2284,10 @@ snapshots:
 
   '@types/estree@1.0.8': {}
 
+  '@types/hast@3.0.4':
+    dependencies:
+      '@types/unist': 3.0.3
+
   '@types/react-dom@19.2.3(@types/react@19.2.14)':
     dependencies:
       '@types/react': 19.2.14
@@ -2004,6 +2295,8 @@ snapshots:
   '@types/react@19.2.14':
     dependencies:
       csstype: 3.2.3
+
+  '@types/unist@3.0.3': {}
 
   '@vitejs/plugin-react@4.7.0(vite@6.4.1)':
     dependencies:
@@ -2109,6 +2402,12 @@ snapshots:
 
   deep-eql@5.0.2: {}
 
+  dequal@2.0.3: {}
+
+  devlop@1.1.0:
+    dependencies:
+      dequal: 2.0.3
+
   electron-to-chromium@1.5.313: {}
 
   entities@6.0.1: {}
@@ -2162,6 +2461,8 @@ snapshots:
   gensync@1.0.0-beta.2: {}
 
   globrex@0.1.2: {}
+
+  highlight.js@11.11.1: {}
 
   html-encoding-sniffer@4.0.0:
     dependencies:
@@ -2228,7 +2529,15 @@ snapshots:
     dependencies:
       isomorphic.js: 0.2.5
 
+  linkifyjs@4.3.2: {}
+
   loupe@3.2.1: {}
+
+  lowlight@3.3.0:
+    dependencies:
+      '@types/hast': 3.0.4
+      devlop: 1.1.0
+      highlight.js: 11.11.1
 
   lru-cache@10.4.3: {}
 

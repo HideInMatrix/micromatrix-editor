@@ -139,8 +139,12 @@ export interface NodeConfig<
   topNode?: boolean;
   content?: NodeSpec["content"];
   marks?: NodeSpec["marks"];
-  group?: NodeSpec["group"];
-  inline?: NodeSpec["inline"];
+  group?:
+    | NodeSpec["group"]
+    | ((this: ExtensionContext<Options, Storage>) => NodeSpec["group"]);
+  inline?:
+    | NodeSpec["inline"]
+    | ((this: ExtensionContext<Options, Storage>) => NodeSpec["inline"]);
   atom?: NodeSpec["atom"];
   selectable?: NodeSpec["selectable"];
   draggable?: NodeSpec["draggable"];

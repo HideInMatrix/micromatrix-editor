@@ -1,5 +1,5 @@
 {
-  "name": "@mxm-editor/extension-link",
+  "name": "@mxm-editor/extension-code-block-lowlight",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -13,6 +13,6 @@
   "dependencies": {
     "@mxm-editor/core": "workspace:*",
     "@mxm-editor/pm": "workspace:*",
-    "linkifyjs": "^4.3.2"
+    "lowlight": "^3.3.0"
   }
 }

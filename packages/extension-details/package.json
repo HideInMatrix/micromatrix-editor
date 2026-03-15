@@ -1,5 +1,5 @@
 {
-  "name": "@mxm-editor/extension-link",
+  "name": "@mxm-editor/extension-details",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -12,7 +12,8 @@
   },
   "dependencies": {
     "@mxm-editor/core": "workspace:*",
-    "@mxm-editor/pm": "workspace:*",
-    "linkifyjs": "^4.3.2"
+    "@mxm-editor/extension-details-content": "workspace:*",
+    "@mxm-editor/extension-details-summary": "workspace:*",
+    "@mxm-editor/pm": "workspace:*"
   }
 }

@@ -1,3 +1,10 @@
+import type {
+  ContentMatch,
+  Node as ProseMirrorNode,
+  ResolvedPos,
+  Selection,
+} from "@mxm-editor/pm";
+
 export function cleanObject<T extends Record<string, unknown>>(value: T): T {
   return Object.fromEntries(
     Object.entries(value).filter(([, item]) => item !== undefined && item !== null),
@@ -85,4 +92,72 @@ function parseStyleString(style: string) {
 
 export function escapeMarkdown(value: string) {
   return value.replace(/([\\`*_[\]()>#+.!-])/g, "\\$1");
+}
+
+export interface NodeWithPosition {
+  pos: number;
+  start: number;
+  depth: number;
+  node: ProseMirrorNode;
+}
+
+export function defaultBlockAt(match: ContentMatch) {
+  for (let index = 0; index < match.edgeCount; index += 1) {
+    const edge = match.edge(index);
+
+    if (edge.type.isTextblock && !edge.type.hasRequiredAttrs()) {
+      return edge.type;
+    }
+  }
+
+  return null;
+}
+
+export function findChildren(
+  node: ProseMirrorNode,
+  predicate: (node: ProseMirrorNode) => boolean,
+) {
+  const nodes: Array<{ node: ProseMirrorNode; pos: number }> = [];
+
+  node.descendants((child, pos) => {
+    if (predicate(child)) {
+      nodes.push({
+        node: child,
+        pos,
+      });
+    }
+
+    return true;
+  });
+
+  return nodes;
+}
+
+export function findParentNodeClosestToPos(
+  $pos: ResolvedPos,
+  predicate: (node: ProseMirrorNode) => boolean,
+): NodeWithPosition | undefined {
+  for (let depth = $pos.depth; depth > 0; depth -= 1) {
+    const node = $pos.node(depth);
+
+    if (!predicate(node)) {
+      continue;
+    }
+
+    return {
+      pos: $pos.before(depth),
+      start: $pos.start(depth),
+      depth,
+      node,
+    };
+  }
+
+  return undefined;
+}
+
+export function findParentNode(
+  predicate: (node: ProseMirrorNode) => boolean,
+) {
+  return (selection: Selection) =>
+    findParentNodeClosestToPos(selection.$from, predicate);
 }

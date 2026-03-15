@@ -8,6 +8,8 @@ const editorCorePackages = [
   "/packages/core/",
   "/packages/react/",
   "/packages/starter-kit/",
+  "/packages/extension-audio/",
+  "/packages/extension-code-block-lowlight/",
   "/packages/extension-document/",
   "/packages/extension-paragraph/",
   "/packages/extension-text/",
@@ -15,6 +17,9 @@ const editorCorePackages = [
   "/packages/extension-background-color/",
   "/packages/extension-character-count/",
   "/packages/extension-color/",
+  "/packages/extension-details/",
+  "/packages/extension-details-content/",
+  "/packages/extension-details-summary/",
   "/packages/extension-code/",
   "/packages/extension-italic/",
   "/packages/extension-font-family/",
@@ -51,13 +56,17 @@ const editorCorePackages = [
   "/packages/extension-table/",
   "/packages/extension-table-of-contents/",
   "/packages/extension-typography/",
+  "/packages/extension-twitch/",
+  "/packages/extension-youtube/",
   "/packages/list-kit/",
   "/packages/table-kit/",
   "/packages/text-style-kit/",
 ];
 const editorFeaturePackages = [
   "/packages/extension-callout/",
+  "/packages/extension-emoji/",
   "/packages/extension-focus/",
+  "/packages/extension-file-handler/",
   "/packages/extension-mention/",
   "/packages/extension-unique-id/",
   "/packages/suggestion/",
@@ -128,6 +137,9 @@ export default defineConfig({
     alias: {
       "@mxm-editor/pm": fromRoot("../../packages/pm/src/index.ts"),
       "@mxm-editor/core": fromRoot("../../packages/core/src/index.ts"),
+      "@mxm-editor/extension-audio": fromRoot(
+        "../../packages/extension-audio/src/index.ts",
+      ),
       "@mxm-editor/extension-blockquote": fromRoot(
         "../../packages/extension-blockquote/src/index.ts",
       ),
@@ -143,6 +155,9 @@ export default defineConfig({
       "@mxm-editor/extension-code-block": fromRoot(
         "../../packages/extension-code-block/src/index.ts",
       ),
+      "@mxm-editor/extension-code-block-lowlight": fromRoot(
+        "../../packages/extension-code-block-lowlight/src/index.ts",
+      ),
       "@mxm-editor/extension-character-count": fromRoot(
         "../../packages/extension-character-count/src/index.ts",
       ),
@@ -152,11 +167,26 @@ export default defineConfig({
       "@mxm-editor/extension-color": fromRoot(
         "../../packages/extension-color/src/index.ts",
       ),
+      "@mxm-editor/extension-details": fromRoot(
+        "../../packages/extension-details/src/index.ts",
+      ),
+      "@mxm-editor/extension-details-content": fromRoot(
+        "../../packages/extension-details-content/src/index.ts",
+      ),
+      "@mxm-editor/extension-details-summary": fromRoot(
+        "../../packages/extension-details-summary/src/index.ts",
+      ),
       "@mxm-editor/extension-document": fromRoot(
         "../../packages/extension-document/src/index.ts",
       ),
       "@mxm-editor/extension-dropcursor": fromRoot(
         "../../packages/extension-dropcursor/src/index.ts",
+      ),
+      "@mxm-editor/extension-emoji": fromRoot(
+        "../../packages/extension-emoji/src/index.ts",
+      ),
+      "@mxm-editor/extension-file-handler": fromRoot(
+        "../../packages/extension-file-handler/src/index.ts",
       ),
       "@mxm-editor/extension-focus": fromRoot(
         "../../packages/extension-focus/src/index.ts",
@@ -274,6 +304,12 @@ export default defineConfig({
       ),
       "@mxm-editor/extension-unique-id": fromRoot(
         "../../packages/extension-unique-id/src/index.ts",
+      ),
+      "@mxm-editor/extension-twitch": fromRoot(
+        "../../packages/extension-twitch/src/index.ts",
+      ),
+      "@mxm-editor/extension-youtube": fromRoot(
+        "../../packages/extension-youtube/src/index.ts",
       ),
       "@mxm-editor/list-kit": fromRoot(
         "../../packages/list-kit/src/index.ts",

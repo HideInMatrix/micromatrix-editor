@@ -5,6 +5,7 @@ import {
   Slice,
   type EditorState,
   type MarkType,
+  type NodeType,
   type Node as ProseMirrorNode,
 } from "@mxm-editor/pm";
 import type { PasteRule } from "./types";
@@ -267,6 +268,30 @@ export function markPasteRule({
       const { text } = getMarksRange(match);
 
       return state.schema.text(text, [type.create(attributes)]);
+    },
+  };
+}
+
+export function nodePasteRule({
+  find,
+  type,
+  getAttributes,
+}: {
+  find: RegExp;
+  type: NodeType;
+  getAttributes?:
+    | Record<string, any>
+    | ((match: RegExpMatchArray) => Record<string, any>);
+}): PasteRule {
+  return {
+    find,
+    replace: ({ match }) => {
+      const attributes =
+        typeof getAttributes === "function"
+          ? getAttributes(match)
+          : (getAttributes ?? {});
+
+      return type.create(attributes);
     },
   };
 }
