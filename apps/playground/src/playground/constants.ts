@@ -2,7 +2,7 @@ import type { Editor } from "@mxm-editor/core";
 import type { MentionItem } from "@mxm-editor/extension-mention";
 
 export const sampleImageUrl =
-  "https://placehold.co/960x480/201a15/f7efe4?text=mxm-editor";
+  "/tiptap-placeholder-image.svg";
 
 export const accentRoseColor = "#d9485f";
 export const accentOceanColor = "#2f7cf6";
@@ -16,19 +16,20 @@ export const mentionDirectory: MentionItem[] = [
 ];
 
 export const initialContent = [
-  "<h2>P0 正在对齐 Tiptap 常用 API</h2>",
-  "<p>现在已经把 <strong>code</strong>、<strong>strike</strong>、<strong>underline</strong>、<strong>horizontal rule</strong>、<strong>hard break</strong>、table、task list 以及 slash / bubble / floating menu 一起接进 playground。</p>",
-  '<blockquote><p>试试输入 <strong>/bullet</strong>、<strong>/task</strong>、<strong>/code</strong>。</p></blockquote>',
-  "<ul><li><p>普通 bullet list</p></li><li><p>支持 Markdown 互转</p></li></ul>",
-  '<ul data-type="taskList"><li data-type="taskItem" data-checked="true"><div><p>完成 starter-kit 第四层</p></div></li><li data-type="taskItem" data-checked="false"><div><p>继续补 table 或 task item node view</p></div></li></ul>',
-  "<p>也可以试试 <code>inline code</code>、<s>strike</s>、<u>underline</u>、<mark>highlight</mark> 和 <span style=\"color:#d9485f\">text color</span>。</p>",
-  '<pre><code class="language-ts">const message = "mxm-editor";\nconsole.log(message);</code></pre>',
-  '<p style="text-align: center;">TextAlign 已接入 paragraph / heading，支持 left / center / right / justify。</p>',
+  "<h1>Getting started</h1>",
+  '<p>Welcome to the <em><mark data-color="var(--tt-color-highlight-yellow)" style="background-color: var(--tt-color-highlight-yellow); color: inherit;">mxm-editor Playground</mark></em> template! This version showcases <strong>mxm-editor</strong> packages, editor commands, and UI patterns that are built in this monorepo.</p>',
+  '<p>Use it as a branded starting point for demos, package verification, and product-facing editor flows. You can also explore the <a target="_blank" rel="noopener noreferrer nofollow" href="https://github.com/micromatrix/mxm-editor#readme">mxm-editor README</a> to understand how the workspace is organized.</p>',
+  "<pre><code>pnpm --filter @mxm-editor/playground dev</code></pre>",
+  "<h2>Features</h2>",
+  "<blockquote><p><em>A focused rich text workspace with slash commands, markdown shortcuts, floating menus, and first-party mxm-editor extensions. Type markdown <code>**</code> or use keyboard shortcuts <code>⌘+B</code> for <s>most</s> all common text marks. 🪄</em></p></blockquote>",
+  '<p>Mix images, alignment, and <mark data-color="var(--tt-color-highlight-blue)" style="background-color: var(--tt-color-highlight-blue); color: inherit;">advanced formatting</mark> to validate real product content, not just isolated editor APIs.</p>',
   `<img src="${sampleImageUrl}" alt="mxm-editor preview" title="mxm-editor preview" />`,
+  "<ul><li><p><strong>Superscript</strong> (x<sup>2</sup>) and <strong>Subscript</strong> (H<sub>2</sub>O) for precision.</p></li><li><p><strong>Typographic conversion</strong>: automatically convert <code>-&gt;</code> into an arrow <strong>→</strong>.</p></li></ul>",
+  '<p><em>→ </em><a target="_blank" rel="noopener noreferrer nofollow" href="https://github.com/micromatrix/mxm-editor#readme">Learn more about mxm-editor</a></p>',
   "<hr />",
-  "<p>Shift+Enter 会插入 hard break。这里先放一段<br />同段落换行的示例。</p>",
-  '<table><tbody><tr><th><p>Layer</p></th><th><p>Status</p></th><th><p>Note</p></th></tr><tr><td><p>List</p></td><td><p>Done</p></td><td><p>Markdown round-trip</p></td></tr><tr><td><p>Table</p></td><td><p>Done</p></td><td><p>Resizable columns</p></td></tr></tbody></table>',
-  '<div data-callout="" data-variant="tip"><p>输入 @ 可以触发 mention，输入 *italic* 或 **bold** 仍然会自动转成 mark。</p></div>',
+  "<h2>Make it your own</h2>",
+  "<p>Switch between light and dark modes, tune the chrome with Tailwind v4 and UnoCSS, and adapt the editor shell to match the mxm-editor brand language.</p>",
+  '<ul data-type="taskList"><li data-type="taskItem" data-checked="true"><div><p>Test the mxm-editor branded template</p></div></li><li data-type="taskItem" data-checked="false"><div><p><a target="_blank" rel="noopener noreferrer nofollow" href="https://github.com/micromatrix/mxm-editor#readme">Integrate the branded playground into your app</a></p></div></li></ul>',
   "<p></p>",
 ].join("");
 
@@ -92,7 +93,7 @@ export const collaborationContent = [
 ].join("\n");
 
 export const heroCopy =
-  "这一轮开始把 API 和默认扩展往 Tiptap 官方语义靠拢：除了 heading、blockquote、bullet / ordered list、task list、code block、table 之外，还补上了 code mark、strike、underline、highlight、text style + color、horizontal rule、hard break、floating menu、placeholder、character count、text align、image、list keymap 和 collaboration caret，以及更完整的 editor commands。";
+  "这一轮的 playground 现在以 mxm-editor 品牌为中心：除了 heading、blockquote、bullet / ordered list、task list、code block、table 之外，还补上了 code mark、strike、underline、highlight、text style + color、horizontal rule、hard break、floating menu、placeholder、character count、text align、image、list keymap 和 collaboration caret，以及更完整的 editor commands。";
 
 export function bubbleMenuShouldShow({
   state,

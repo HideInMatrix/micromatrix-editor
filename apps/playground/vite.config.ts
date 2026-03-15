@@ -1,6 +1,8 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
+import tailwindcss from "@tailwindcss/vite";
 import tsconfigPaths from "vite-tsconfig-paths";
+import UnoCSS from "unocss/vite";
 
 const fromRoot = (path: string) => new URL(path, import.meta.url).pathname;
 const editorCorePackages = [
@@ -85,7 +87,14 @@ function includesAny(id: string, patterns: string[]) {
 }
 
 export default defineConfig({
-  plugins: [react(), tsconfigPaths()],
+  plugins: [
+    react(),
+    tailwindcss(),
+    UnoCSS({
+      configFile: fromRoot("./uno.config.ts"),
+    }),
+    tsconfigPaths(),
+  ],
   build: {
     rollupOptions: {
       output: {

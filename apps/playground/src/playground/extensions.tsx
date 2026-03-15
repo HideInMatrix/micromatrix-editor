@@ -16,11 +16,14 @@ import {
   type MentionItem,
 } from "@mxm-editor/extension-mention";
 import { Placeholder } from "@mxm-editor/extension-placeholder";
+import { Subscript } from "@mxm-editor/extension-subscript";
+import { Superscript } from "@mxm-editor/extension-superscript";
 import { Table } from "@mxm-editor/extension-table";
 import { TaskItem } from "@mxm-editor/extension-task-item";
 import { TaskList } from "@mxm-editor/extension-task-list";
 import { TextAlign } from "@mxm-editor/extension-text-align";
 import { TextStyle } from "@mxm-editor/extension-text-style";
+import { Typography } from "@mxm-editor/extension-typography";
 import { Markdown, MarkdownManager } from "@mxm-editor/markdown";
 import { PluginKey, type EditorView } from "@mxm-editor/pm";
 import {
@@ -588,7 +591,12 @@ export function createPlaygroundExtensions(
   const interactive = options.interactive ?? true;
 
   return [
-    StarterKit.configure(options.collaborative ? { undoRedo: false } : {}),
+    StarterKit.configure({
+      ...(options.collaborative ? { undoRedo: false } : {}),
+      link: {
+        openOnClick: false,
+      },
+    }),
     ...(interactive ? [ListKeymap] : []),
     TaskItem,
     TaskList,
@@ -603,6 +611,9 @@ export function createPlaygroundExtensions(
     Markdown,
     TextStyle,
     Color,
+    Superscript,
+    Subscript,
+    Typography,
     Highlight.configure({
       multicolor: true,
     }),

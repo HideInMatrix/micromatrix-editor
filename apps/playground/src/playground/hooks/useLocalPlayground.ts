@@ -3,14 +3,13 @@ import { useEditor } from "@mxm-editor/react";
 import {
   initialContent,
   sampleImageUrl,
-  sampleMarkdown,
 } from "../constants";
 import { localExtensions } from "../extensions";
 
 export interface LocalPlaygroundController {
   editor: Editor;
   insertImage: () => void;
-  loadMarkdown: () => void;
+  resetTemplate: () => void;
   setLink: () => void;
 }
 
@@ -55,16 +54,14 @@ export function useLocalPlayground(): LocalPlaygroundController {
     });
   };
 
-  const loadMarkdown = () => {
-    editor.setContent(sampleMarkdown, {
-      contentType: "markdown",
-    });
+  const resetTemplate = () => {
+    editor.setContent(initialContent);
   };
 
   return {
     editor,
     insertImage,
-    loadMarkdown,
+    resetTemplate,
     setLink,
   };
 }

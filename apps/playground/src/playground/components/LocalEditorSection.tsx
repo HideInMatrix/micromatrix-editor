@@ -1,6 +1,32 @@
 import type { MouseEventHandler } from "react";
-import { Fragment } from "react";
 import type { CharacterCountStorage } from "@mxm-editor/extension-character-count";
+import {
+  AlignCenter,
+  AlignLeft,
+  AlignRight,
+  Bold,
+  Code2,
+  Heading1,
+  Heading2,
+  Highlighter,
+  ImagePlus,
+  Italic,
+  Link2,
+  List,
+  ListOrdered,
+  ListTodo,
+  Moon,
+  Pilcrow,
+  Quote,
+  Redo2,
+  Strikethrough,
+  Subscript as SubscriptIcon,
+  Sun,
+  Superscript as SuperscriptIcon,
+  Underline,
+  Undo2,
+  type LucideIcon,
+} from "lucide-react";
 import {
   BubbleMenu,
   EditorContent,
@@ -10,22 +36,36 @@ import {
   useEditorState,
 } from "@mxm-editor/react";
 import {
-  accentOceanColor,
-  accentRoseColor,
   bubbleMenuShouldShow,
   floatingMenuShouldShow,
 } from "../constants";
 import { useLocalPlayground } from "../hooks/useLocalPlayground";
-import { InspectorPanel } from "./InspectorPanel";
+
+type PlaygroundTheme = "dark" | "light";
 
 interface LocalEditorPanelProps {
   insertImage: () => void;
-  loadMarkdown: () => void;
+  resetTemplate: () => void;
   setLink: () => void;
+  theme: PlaygroundTheme;
+  onToggleTheme: () => void;
 }
 
-interface ToolbarButtonProps {
+interface LocalEditorSectionProps {
+  theme: PlaygroundTheme;
+  onToggleTheme: () => void;
+}
+
+interface ToolbarIconButtonProps {
   active?: boolean;
+  disabled?: boolean;
+  icon: LucideIcon;
+  label: string;
+  onClick: () => void;
+}
+
+interface ToolbarTextButtonProps {
+  icon: LucideIcon;
   label: string;
   onClick: () => void;
 }
@@ -34,47 +74,79 @@ const preventMouseDown: MouseEventHandler<HTMLButtonElement> = (event) => {
   event.preventDefault();
 };
 
-function ToolbarButton({
+function ToolbarIconButton({
   active = false,
+  disabled = false,
+  icon: Icon,
   label,
   onClick,
-}: ToolbarButtonProps) {
+}: ToolbarIconButtonProps) {
   return (
     <button
-      className={active ? "is-active" : ""}
+      aria-label={label}
+      className={`ui-icon-button${active ? " is-active" : ""}`}
+      disabled={disabled}
       onMouseDown={preventMouseDown}
       onClick={onClick}
+      title={label}
       type="button"
     >
-      {label}
+      <Icon size={17} strokeWidth={2} />
     </button>
   );
 }
 
+function ToolbarTextButton({
+  icon: Icon,
+  label,
+  onClick,
+}: ToolbarTextButtonProps) {
+  return (
+    <button
+      className="ui-add-button"
+      onMouseDown={preventMouseDown}
+      onClick={onClick}
+      title={label}
+      type="button"
+    >
+      <Icon size={16} strokeWidth={2} />
+      <span>{label}</span>
+    </button>
+  );
+}
+
+function ToolbarDivider() {
+  return <div aria-hidden="true" className="ui-divider" />;
+}
+
 function EditorToolbar({
   insertImage,
-  loadMarkdown,
   setLink,
-}: LocalEditorPanelProps) {
+  theme,
+  onToggleTheme,
+}: Omit<LocalEditorPanelProps, "resetTemplate">) {
   const { editor } = useCurrentEditor();
   const state = useEditorState({
     selector: ({ editor: currentEditor }) => ({
       alignCenter: currentEditor?.isActive({ textAlign: "center" }) ?? false,
       alignLeft: currentEditor?.isActive({ textAlign: "left" }) ?? false,
       alignRight: currentEditor?.isActive({ textAlign: "right" }) ?? false,
+      blockquote: currentEditor?.isActive("blockquote") ?? false,
       bold: currentEditor?.isActive("bold") ?? false,
       bulletList: currentEditor?.isActive("bulletList") ?? false,
+      canRedo: currentEditor?.can().redo() ?? false,
+      canUndo: currentEditor?.can().undo() ?? false,
       code: currentEditor?.isActive("code") ?? false,
-      codeBlock: currentEditor?.isActive("codeBlock") ?? false,
       h1: currentEditor?.isActive("heading", { level: 1 }) ?? false,
       h2: currentEditor?.isActive("heading", { level: 2 }) ?? false,
       highlight: currentEditor?.isActive("highlight") ?? false,
       italic: currentEditor?.isActive("italic") ?? false,
       link: currentEditor?.isActive("link") ?? false,
       orderedList: currentEditor?.isActive("orderedList") ?? false,
-      rose: currentEditor?.isActive({ color: accentRoseColor }) ?? false,
-      ocean: currentEditor?.isActive({ color: accentOceanColor }) ?? false,
+      paragraph: currentEditor?.isActive("paragraph") ?? false,
       strike: currentEditor?.isActive("strike") ?? false,
+      subscript: currentEditor?.isActive("subscript") ?? false,
+      superscript: currentEditor?.isActive("superscript") ?? false,
       taskList: currentEditor?.isActive("taskList") ?? false,
       underline: currentEditor?.isActive("underline") ?? false,
     }),
@@ -84,95 +156,206 @@ function EditorToolbar({
     return null;
   }
 
-  const actions = [
-    { label: "Bold", active: state.bold, onClick: () => editor.commands.toggleBold() },
-    { label: "Italic", active: state.italic, onClick: () => editor.commands.toggleItalic() },
-    { label: "Code", active: state.code, onClick: () => editor.commands.toggleCode() },
-    { label: "Strike", active: state.strike, onClick: () => editor.commands.toggleStrike() },
-    { label: "Underline", active: state.underline, onClick: () => editor.commands.toggleUnderline() },
-    { label: "Highlight", active: state.highlight, onClick: () => editor.commands.toggleHighlight() },
-    { label: "Rose", active: state.rose, onClick: () => editor.commands.setColor(accentRoseColor) },
-    { label: "Ocean", active: state.ocean, onClick: () => editor.commands.setColor(accentOceanColor) },
-    { label: "Reset Color", onClick: () => editor.commands.unsetColor() },
-    { label: "H1", active: state.h1, onClick: () => editor.commands.setHeading({ level: 1 }) },
-    { label: "H2", active: state.h2, onClick: () => editor.commands.setHeading({ level: 2 }) },
-    { label: "Quote", onClick: () => editor.commands.toggleBlockquote() },
-    { label: "Bullet List", active: state.bulletList, onClick: () => editor.commands.toggleBulletList() },
-    { label: "Ordered List", active: state.orderedList, onClick: () => editor.commands.toggleOrderedList() },
-    { label: "Task List", active: state.taskList, onClick: () => editor.commands.toggleTaskList() },
-    { label: "Toggle Task", onClick: () => editor.commands.toggleTaskItemChecked() },
-    { label: "Code Block", active: state.codeBlock, onClick: () => editor.commands.toggleCodeBlock() },
-    { label: "HR", onClick: () => editor.commands.setHorizontalRule() },
-    { label: "Hard Break", onClick: () => editor.commands.setHardBreak() },
-    { label: "Left", active: state.alignLeft, onClick: () => editor.commands.setTextAlign("left") },
-    { label: "Center", active: state.alignCenter, onClick: () => editor.commands.setTextAlign("center") },
-    { label: "Right", active: state.alignRight, onClick: () => editor.commands.setTextAlign("right") },
-    { label: "Reset Align", onClick: () => editor.commands.unsetTextAlign() },
-    { label: "Image", onClick: insertImage },
-    {
-      label: "Insert Table",
-      onClick: () =>
-        editor.commands.insertTable({
-          rows: 3,
-          cols: 3,
-          withHeaderRow: true,
-        }),
-    },
-    { label: "Add Row", onClick: () => editor.commands.addRowAfter() },
-    { label: "Add Column", onClick: () => editor.commands.addColumnAfter() },
-    { label: "Header Row", onClick: () => editor.commands.toggleHeaderRow() },
-    { label: "Delete Table", onClick: () => editor.commands.deleteTable() },
-    { label: "Link", active: state.link, onClick: setLink },
-    { label: "Tip Callout", onClick: () => editor.commands.insertCallout("tip") },
-    { label: "Warning Callout", onClick: () => editor.commands.insertCallout("warning") },
-    { label: "Undo", onClick: () => editor.commands.undo() },
-    { label: "Redo", onClick: () => editor.commands.redo() },
-    { label: "Load Markdown", onClick: loadMarkdown },
-  ];
-
   return (
-    <div className="toolbar">
-      {actions.map((action) => (
-        <ToolbarButton
-          key={action.label}
-          active={action.active}
-          label={action.label}
-          onClick={action.onClick}
-        />
-      ))}
+    <div className="border-b border-[var(--panel-border)] bg-[var(--toolbar-bg)] px-3 py-2 sm:px-4">
+      <div className="flex items-center justify-between gap-3 overflow-x-auto">
+        <div className="ui-toolbar-strip">
+          <div className="ui-toolbar-group">
+            <ToolbarIconButton
+              disabled={!state.canUndo}
+              icon={Undo2}
+              label="Undo"
+              onClick={() => editor.commands.undo()}
+            />
+            <ToolbarIconButton
+              disabled={!state.canRedo}
+              icon={Redo2}
+              label="Redo"
+              onClick={() => editor.commands.redo()}
+            />
+          </div>
+
+          <ToolbarDivider />
+
+          <div className="ui-toolbar-group">
+            <ToolbarIconButton
+              active={state.paragraph}
+              icon={Pilcrow}
+              label="Paragraph"
+              onClick={() => editor.commands.setParagraph()}
+            />
+            <ToolbarIconButton
+              active={state.h1}
+              icon={Heading1}
+              label="Heading 1"
+              onClick={() => editor.commands.setHeading({ level: 1 })}
+            />
+            <ToolbarIconButton
+              active={state.h2}
+              icon={Heading2}
+              label="Heading 2"
+              onClick={() => editor.commands.setHeading({ level: 2 })}
+            />
+            <ToolbarIconButton
+              active={state.bulletList}
+              icon={List}
+              label="Bullet list"
+              onClick={() => editor.commands.toggleBulletList()}
+            />
+            <ToolbarIconButton
+              active={state.orderedList}
+              icon={ListOrdered}
+              label="Ordered list"
+              onClick={() => editor.commands.toggleOrderedList()}
+            />
+            <ToolbarIconButton
+              active={state.taskList}
+              icon={ListTodo}
+              label="Task list"
+              onClick={() => editor.commands.toggleTaskList()}
+            />
+            <ToolbarIconButton
+              active={state.blockquote}
+              icon={Quote}
+              label="Blockquote"
+              onClick={() => editor.commands.toggleBlockquote()}
+            />
+          </div>
+
+          <ToolbarDivider />
+
+          <div className="ui-toolbar-group">
+            <ToolbarIconButton
+              active={state.bold}
+              icon={Bold}
+              label="Bold"
+              onClick={() => editor.commands.toggleBold()}
+            />
+            <ToolbarIconButton
+              active={state.italic}
+              icon={Italic}
+              label="Italic"
+              onClick={() => editor.commands.toggleItalic()}
+            />
+            <ToolbarIconButton
+              active={state.strike}
+              icon={Strikethrough}
+              label="Strike"
+              onClick={() => editor.commands.toggleStrike()}
+            />
+            <ToolbarIconButton
+              active={state.code}
+              icon={Code2}
+              label="Inline code"
+              onClick={() => editor.commands.toggleCode()}
+            />
+            <ToolbarIconButton
+              active={state.underline}
+              icon={Underline}
+              label="Underline"
+              onClick={() => editor.commands.toggleUnderline()}
+            />
+            <ToolbarIconButton
+              active={state.highlight}
+              icon={Highlighter}
+              label="Highlight"
+              onClick={() => editor.commands.toggleHighlight()}
+            />
+            <ToolbarIconButton
+              active={state.link}
+              icon={Link2}
+              label="Link"
+              onClick={setLink}
+            />
+            <ToolbarIconButton
+              active={state.superscript}
+              icon={SuperscriptIcon}
+              label="Superscript"
+              onClick={() => editor.commands.toggleSuperscript()}
+            />
+            <ToolbarIconButton
+              active={state.subscript}
+              icon={SubscriptIcon}
+              label="Subscript"
+              onClick={() => editor.commands.toggleSubscript()}
+            />
+          </div>
+
+          <ToolbarDivider />
+
+          <div className="ui-toolbar-group">
+            <ToolbarIconButton
+              active={state.alignLeft}
+              icon={AlignLeft}
+              label="Align left"
+              onClick={() => editor.commands.setTextAlign("left")}
+            />
+            <ToolbarIconButton
+              active={state.alignCenter}
+              icon={AlignCenter}
+              label="Align center"
+              onClick={() => editor.commands.setTextAlign("center")}
+            />
+            <ToolbarIconButton
+              active={state.alignRight}
+              icon={AlignRight}
+              label="Align right"
+              onClick={() => editor.commands.setTextAlign("right")}
+            />
+          </div>
+        </div>
+
+        <div className="flex shrink-0 items-center gap-2">
+          <ToolbarTextButton
+            icon={ImagePlus}
+            label="Add"
+            onClick={insertImage}
+          />
+          <ToolbarIconButton
+            icon={theme === "dark" ? Moon : Sun}
+            label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+            onClick={onToggleTheme}
+          />
+        </div>
+      </div>
     </div>
   );
 }
 
-function EditorMeta() {
+function EditorFooter({
+  resetTemplate,
+}: Pick<LocalEditorPanelProps, "resetTemplate">) {
   const meta = useEditorState({
     selector: ({ editor }) => {
       const characterCountStorage = editor?.storage.characterCount as
         | CharacterCountStorage
         | undefined;
-      const paragraphAttributes = editor?.getAttributes("paragraph") ?? {};
-      const headingAttributes = editor?.getAttributes("heading") ?? {};
-      const textStyleAttributes = editor?.getAttributes("textStyle") ?? {};
 
       return {
-        align: String(
-          headingAttributes.textAlign
-          ?? paragraphAttributes.textAlign
-          ?? "default",
-        ),
         characters: characterCountStorage?.characters() ?? 0,
-        color: String(textStyleAttributes.color ?? "default"),
         words: characterCountStorage?.words() ?? 0,
       };
     },
   });
 
   return (
-    <div className="editor-meta">
-      <span className="editor-meta__stat">Characters {meta.characters}</span>
-      <span className="editor-meta__stat">Words {meta.words}</span>
-      <span className="editor-meta__stat">Align {meta.align}</span>
-      <span className="editor-meta__stat">Color {meta.color}</span>
+    <div className="flex flex-wrap items-center justify-between gap-3 border-t border-[var(--panel-border)] px-4 py-3 text-xs text-[var(--muted-text)]">
+      <p className="m-0">
+        Type <code>/</code> for commands, <code>@</code> for mentions, and markdown
+        shortcuts like <code>**bold**</code>.
+      </p>
+      <div className="flex items-center gap-4">
+        <span>{meta.words} words</span>
+        <span>{meta.characters} characters</span>
+        <button
+          className="text-[var(--link-color)] transition hover:opacity-80"
+          onMouseDown={preventMouseDown}
+          onClick={resetTemplate}
+          type="button"
+        >
+          Reset template
+        </button>
+      </div>
     </div>
   );
 }
@@ -197,49 +380,54 @@ function SelectionBubbleMenu({ setLink }: Pick<LocalEditorPanelProps, "setLink">
 
   return (
     <BubbleMenu
-      editor={editor}
       className="bubble-menu"
+      editor={editor}
       shouldShow={bubbleMenuShouldShow}
     >
-      <ToolbarButton
-        active={state.bold}
-        label="Bold"
-        onClick={() => editor.commands.toggleBold()}
-      />
-      <ToolbarButton
-        active={state.italic}
-        label="Italic"
-        onClick={() => editor.commands.toggleItalic()}
-      />
-      <ToolbarButton
-        active={state.code}
-        label="Code"
-        onClick={() => editor.commands.toggleCode()}
-      />
-      <ToolbarButton
-        active={state.strike}
-        label="Strike"
-        onClick={() => editor.commands.toggleStrike()}
-      />
-      <ToolbarButton
-        active={state.highlight}
-        label="Highlight"
-        onClick={() => editor.commands.toggleHighlight()}
-      />
-      <ToolbarButton
-        active={state.link}
-        label="Link"
-        onClick={setLink}
-      />
-      <ToolbarButton
-        active={state.alignCenter}
-        label="Center"
-        onClick={() => editor.commands.setTextAlign("center")}
-      />
-      <ToolbarButton
-        label="Code Block"
-        onClick={() => editor.commands.toggleCodeBlock()}
-      />
+      <div className="ui-toolbar-group">
+        <ToolbarIconButton
+          active={state.bold}
+          icon={Bold}
+          label="Bold"
+          onClick={() => editor.commands.toggleBold()}
+        />
+        <ToolbarIconButton
+          active={state.italic}
+          icon={Italic}
+          label="Italic"
+          onClick={() => editor.commands.toggleItalic()}
+        />
+        <ToolbarIconButton
+          active={state.code}
+          icon={Code2}
+          label="Code"
+          onClick={() => editor.commands.toggleCode()}
+        />
+        <ToolbarIconButton
+          active={state.strike}
+          icon={Strikethrough}
+          label="Strike"
+          onClick={() => editor.commands.toggleStrike()}
+        />
+        <ToolbarIconButton
+          active={state.highlight}
+          icon={Highlighter}
+          label="Highlight"
+          onClick={() => editor.commands.toggleHighlight()}
+        />
+        <ToolbarIconButton
+          active={state.link}
+          icon={Link2}
+          label="Link"
+          onClick={setLink}
+        />
+        <ToolbarIconButton
+          active={state.alignCenter}
+          icon={AlignCenter}
+          label="Center"
+          onClick={() => editor.commands.setTextAlign("center")}
+        />
+      </div>
     </BubbleMenu>
   );
 }
@@ -255,34 +443,42 @@ function EmptyLineFloatingMenu({
 
   return (
     <FloatingMenu
-      editor={editor}
       className="floating-menu"
+      editor={editor}
       shouldShow={floatingMenuShouldShow}
     >
-      <ToolbarButton
-        label="H2"
-        onClick={() => editor.commands.setHeading({ level: 2 })}
-      />
-      <ToolbarButton
-        label="Bullet"
-        onClick={() => editor.commands.toggleBulletList()}
-      />
-      <ToolbarButton
-        label="Rule"
-        onClick={() => editor.commands.setHorizontalRule()}
-      />
-      <ToolbarButton
-        label="Image"
-        onClick={insertImage}
-      />
+      <div className="ui-toolbar-group">
+        <ToolbarIconButton
+          icon={Heading2}
+          label="Heading 2"
+          onClick={() => editor.commands.setHeading({ level: 2 })}
+        />
+        <ToolbarIconButton
+          icon={List}
+          label="Bullet list"
+          onClick={() => editor.commands.toggleBulletList()}
+        />
+        <ToolbarIconButton
+          icon={Quote}
+          label="Blockquote"
+          onClick={() => editor.commands.toggleBlockquote()}
+        />
+        <ToolbarIconButton
+          icon={ImagePlus}
+          label="Insert image"
+          onClick={insertImage}
+        />
+      </div>
     </FloatingMenu>
   );
 }
 
 function LocalEditorPanel({
   insertImage,
-  loadMarkdown,
+  resetTemplate,
   setLink,
+  theme,
+  onToggleTheme,
 }: LocalEditorPanelProps) {
   const { editor } = useCurrentEditor();
 
@@ -291,44 +487,41 @@ function LocalEditorPanel({
   }
 
   return (
-    <div className="editor-panel">
-      <div className="panel-heading">
-        <div>
-          <div className="panel-eyebrow">Local Editor</div>
-          <h2>Slash + Bubble + Rich Blocks</h2>
-        </div>
-        <p>
-          在空段落开头输入 <code>/</code>，或选中文字观察上方的
-          bubble menu。最后一个空段落会直接展示 placeholder，协同区则会显示远端 caret。
-        </p>
-      </div>
-
+    <div className="ui-shell flex h-[calc(100vh-2rem)] w-full flex-col border border-[var(--panel-border)]">
       <EditorToolbar
         insertImage={insertImage}
-        loadMarkdown={loadMarkdown}
+        onToggleTheme={onToggleTheme}
         setLink={setLink}
+        theme={theme}
       />
-      <EditorMeta />
       <SelectionBubbleMenu setLink={setLink} />
       <EmptyLineFloatingMenu insertImage={insertImage} />
-      <EditorContent editor={editor} className="editor-surface" />
+      <EditorContent
+        className="editor-surface min-h-0 flex-1 overscroll-contain"
+        editor={editor}
+      />
+      <EditorFooter resetTemplate={resetTemplate} />
     </div>
   );
 }
 
-export function LocalEditorSection() {
+export function LocalEditorSection({
+  theme,
+  onToggleTheme,
+}: LocalEditorSectionProps) {
   const playground = useLocalPlayground();
 
   return (
-    <section className="workspace-grid">
+    <section className="w-full">
       <EditorContext.Provider value={{ editor: playground.editor }}>
         <LocalEditorPanel
           insertImage={playground.insertImage}
-          loadMarkdown={playground.loadMarkdown}
+          onToggleTheme={onToggleTheme}
+          resetTemplate={playground.resetTemplate}
           setLink={playground.setLink}
+          theme={theme}
         />
       </EditorContext.Provider>
-      <InspectorPanel editor={playground.editor} />
     </section>
   );
 }
