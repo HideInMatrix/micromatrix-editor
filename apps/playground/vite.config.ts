@@ -31,6 +31,7 @@ const editorCorePackages = [
   "/packages/extension-line-height/",
   "/packages/extension-link/",
   "/packages/extension-list-keymap/",
+  "/packages/extension-mathematics/",
   "/packages/extension-selection/",
   "/packages/extension-strike/",
   "/packages/extension-subscript/",
@@ -117,6 +118,10 @@ export default defineConfig({
 
           if (id.includes("/node_modules/marked/")) {
             return "markdown-vendor";
+          }
+
+          if (id.includes("/node_modules/katex/")) {
+            return "math-vendor";
           }
 
           if (
@@ -241,6 +246,9 @@ export default defineConfig({
       ),
       "@mxm-editor/extension-list-keymap": fromRoot(
         "../../packages/extension-list-keymap/src/index.ts",
+      ),
+      "@mxm-editor/extension-mathematics": fromRoot(
+        "../../packages/extension-mathematics/src/index.ts",
       ),
       "@mxm-editor/extension-paragraph": fromRoot(
         "../../packages/extension-paragraph/src/index.ts",

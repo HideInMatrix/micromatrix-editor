@@ -62,6 +62,7 @@
       "@mxm-editor/extension-trailing-node": ["packages/extension-trailing-node/src/index.ts"],
       "@mxm-editor/extension-list-item": ["packages/extension-list-item/src/index.ts"],
       "@mxm-editor/extension-list-keymap": ["packages/extension-list-keymap/src/index.ts"],
+      "@mxm-editor/extension-mathematics": ["packages/extension-mathematics/src/index.ts"],
       "@mxm-editor/extension-ordered-list": ["packages/extension-ordered-list/src/index.ts"],
       "@mxm-editor/extension-task-item": ["packages/extension-task-item/src/index.ts"],
       "@mxm-editor/extension-task-list": ["packages/extension-task-list/src/index.ts"],

@@ -10,6 +10,7 @@ import { DragHandle } from "@mxm-editor/extension-drag-handle";
 import { Highlight } from "@mxm-editor/extension-highlight";
 import { Image } from "@mxm-editor/extension-image";
 import { ListKeymap } from "@mxm-editor/extension-list-keymap";
+import { Mathematics } from "@mxm-editor/extension-mathematics";
 import {
   Mention,
   type MentionItem,
@@ -276,6 +277,17 @@ const slashItems: SlashItem[] = [
     keywords: ["code", "pre", "snippet"],
     execute: (editor) => {
       editor.commands.toggleCodeBlock();
+    },
+  },
+  {
+    id: "block-math",
+    label: "Block Math",
+    description: "插入一个 KaTeX block math 节点",
+    keywords: ["math", "latex", "equation", "katex"],
+    execute: (editor) => {
+      editor.commands.insertBlockMath({
+        latex: String.raw`\sum_{i=1}^{n} x_i = X`,
+      });
     },
   },
   {
@@ -581,6 +593,11 @@ export function createPlaygroundExtensions(
     TaskItem,
     TaskList,
     Table,
+    Mathematics.configure({
+      katexOptions: {
+        throwOnError: false,
+      },
+    }),
     Image,
     ...(interactive ? [DragHandle] : []),
     Markdown,

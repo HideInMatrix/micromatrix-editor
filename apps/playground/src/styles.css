@@ -275,6 +275,45 @@ code {
   line-height: 1.7;
 }
 
+.editor-surface .ProseMirror .tiptap-mathematics-render {
+  max-width: 100%;
+}
+
+.editor-surface .ProseMirror span.tiptap-mathematics-render {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.12rem 0.42rem;
+  border-radius: 0.75rem;
+  background: rgba(46, 56, 68, 0.08);
+}
+
+.editor-surface .ProseMirror div.tiptap-mathematics-render {
+  display: block;
+  margin: 1rem 0;
+  padding: 1rem 1.1rem;
+  border-radius: 18px;
+  background: rgba(46, 56, 68, 0.06);
+  overflow-x: auto;
+}
+
+.editor-surface .ProseMirror .tiptap-mathematics-render--editable {
+  cursor: pointer;
+}
+
+.editor-surface .ProseMirror .block-math-inner {
+  min-width: fit-content;
+}
+
+.editor-surface .ProseMirror .inline-math-error,
+.editor-surface .ProseMirror .block-math-error {
+  color: #b14f2b;
+  font-family:
+    "SFMono-Regular",
+    "Menlo",
+    "Monaco",
+    monospace;
+}
+
 .editor-surface .ProseMirror img {
   display: block;
   width: 100%;
