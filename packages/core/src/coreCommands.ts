@@ -14,6 +14,7 @@ import type {
   FocusPosition,
   InsertContentAtPosition,
   InsertContentOptions,
+  PluginKeySource,
   RawCommands,
   SetContentOptions,
   TextSelectionPosition,
@@ -252,6 +253,12 @@ export function createCoreCommands(editor: Editor): RawCommands {
       () =>
       ({ tr }) => {
         tr.scrollIntoView();
+        return true;
+      },
+    setMeta:
+      (key: PluginKeySource, value: unknown) =>
+      ({ tr }) => {
+        tr.setMeta(key, value);
         return true;
       },
     focus:

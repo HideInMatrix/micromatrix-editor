@@ -325,6 +325,18 @@ importers:
         specifier: workspace:*
         version: link:../core
 
+  packages/extension-drag-handle:
+    dependencies:
+      '@floating-ui/dom':
+        specifier: ^1.7.4
+        version: 1.7.6
+      '@mxm-editor/core':
+        specifier: workspace:*
+        version: link:../core
+      '@mxm-editor/pm':
+        specifier: workspace:*
+        version: link:../pm
+
   packages/extension-dropcursor:
     dependencies:
       '@mxm-editor/core':

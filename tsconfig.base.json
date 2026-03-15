@@ -32,6 +32,7 @@
       "@mxm-editor/extension-details-summary": ["packages/extension-details-summary/src/index.ts"],
       "@mxm-editor/extension-document": ["packages/extension-document/src/index.ts"],
       "@mxm-editor/extension-dropcursor": ["packages/extension-dropcursor/src/index.ts"],
+      "@mxm-editor/extension-drag-handle": ["packages/extension-drag-handle/src/index.ts"],
       "@mxm-editor/extension-emoji": ["packages/extension-emoji/src/index.ts"],
       "@mxm-editor/extension-file-handler": ["packages/extension-file-handler/src/index.ts"],
       "@mxm-editor/extension-gapcursor": ["packages/extension-gapcursor/src/index.ts"],

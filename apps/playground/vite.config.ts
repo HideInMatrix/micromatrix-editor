@@ -65,6 +65,7 @@ const editorCorePackages = [
 ];
 const editorFeaturePackages = [
   "/packages/extension-callout/",
+  "/packages/extension-drag-handle/",
   "/packages/extension-emoji/",
   "/packages/extension-focus/",
   "/packages/extension-file-handler/",
@@ -186,6 +187,9 @@ export default defineConfig({
       ),
       "@mxm-editor/extension-dropcursor": fromRoot(
         "../../packages/extension-dropcursor/src/index.ts",
+      ),
+      "@mxm-editor/extension-drag-handle": fromRoot(
+        "../../packages/extension-drag-handle/src/index.ts",
       ),
       "@mxm-editor/extension-emoji": fromRoot(
         "../../packages/extension-emoji/src/index.ts",

@@ -6,6 +6,7 @@ import { CharacterCount } from "@mxm-editor/extension-character-count";
 import { Collaboration } from "@mxm-editor/extension-collaboration";
 import { CollaborationCaret } from "@mxm-editor/extension-collaboration-caret";
 import { Color } from "@mxm-editor/extension-color";
+import { DragHandle } from "@mxm-editor/extension-drag-handle";
 import { Highlight } from "@mxm-editor/extension-highlight";
 import { Image } from "@mxm-editor/extension-image";
 import { ListKeymap } from "@mxm-editor/extension-list-keymap";
@@ -581,6 +582,7 @@ export function createPlaygroundExtensions(
     TaskList,
     Table,
     Image,
+    ...(interactive ? [DragHandle] : []),
     Markdown,
     TextStyle,
     Color,
