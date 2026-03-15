@@ -1,0 +1,19 @@
+{
+  "name": "@mxm-editor/extension-collaboration",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "build": "tsc --project tsconfig.json --noEmit",
+    "typecheck": "tsc --project tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@mxm-editor/core": "workspace:*",
+    "@mxm-editor/pm": "workspace:*",
+    "y-prosemirror": "^1.2.17",
+    "yjs": "^13.6.23"
+  }
+}

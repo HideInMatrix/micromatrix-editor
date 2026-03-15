@@ -1,0 +1,47 @@
+{
+  "name": "@mxm-editor/playground",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "typecheck": "tsc --project tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@mxm-editor/core": "workspace:*",
+    "@mxm-editor/extension-blockquote": "workspace:*",
+    "@mxm-editor/extension-callout": "workspace:*",
+    "@mxm-editor/extension-character-count": "workspace:*",
+    "@mxm-editor/extension-collaboration": "workspace:*",
+    "@mxm-editor/extension-collaboration-caret": "workspace:*",
+    "@mxm-editor/extension-color": "workspace:*",
+    "@mxm-editor/extension-heading": "workspace:*",
+    "@mxm-editor/extension-highlight": "workspace:*",
+    "@mxm-editor/extension-image": "workspace:*",
+    "@mxm-editor/extension-list-keymap": "workspace:*",
+    "@mxm-editor/extension-mention": "workspace:*",
+    "@mxm-editor/extension-placeholder": "workspace:*",
+    "@mxm-editor/extension-table": "workspace:*",
+    "@mxm-editor/extension-task-item": "workspace:*",
+    "@mxm-editor/extension-task-list": "workspace:*",
+    "@mxm-editor/extension-text-align": "workspace:*",
+    "@mxm-editor/extension-text-style": "workspace:*",
+    "@mxm-editor/markdown": "workspace:*",
+    "@mxm-editor/react": "workspace:*",
+    "@mxm-editor/suggestion": "workspace:*",
+    "@mxm-editor/starter-kit": "workspace:*",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "y-prosemirror": "^1.3.7",
+    "y-protocols": "^1.0.6",
+    "yjs": "^13.6.23"
+  },
+  "devDependencies": {
+    "@types/react": "^19.0.12",
+    "@types/react-dom": "^19.0.5",
+    "@vitejs/plugin-react": "^4.4.1",
+    "vite": "^6.2.0",
+    "vite-tsconfig-paths": "^5.1.4"
+  }
+}

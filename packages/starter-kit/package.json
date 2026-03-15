@@ -1,0 +1,38 @@
+{
+  "name": "@mxm-editor/starter-kit",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "build": "tsc --project tsconfig.json --noEmit",
+    "typecheck": "tsc --project tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@mxm-editor/core": "workspace:*",
+    "@mxm-editor/extension-blockquote": "workspace:*",
+    "@mxm-editor/extension-bold": "workspace:*",
+    "@mxm-editor/extension-bullet-list": "workspace:*",
+    "@mxm-editor/extension-code": "workspace:*",
+    "@mxm-editor/extension-code-block": "workspace:*",
+    "@mxm-editor/extension-document": "workspace:*",
+    "@mxm-editor/extension-dropcursor": "workspace:*",
+    "@mxm-editor/extension-gapcursor": "workspace:*",
+    "@mxm-editor/extension-heading": "workspace:*",
+    "@mxm-editor/extension-hard-break": "workspace:*",
+    "@mxm-editor/extension-history": "workspace:*",
+    "@mxm-editor/extension-horizontal-rule": "workspace:*",
+    "@mxm-editor/extension-italic": "workspace:*",
+    "@mxm-editor/extension-list-item": "workspace:*",
+    "@mxm-editor/extension-link": "workspace:*",
+    "@mxm-editor/extension-ordered-list": "workspace:*",
+    "@mxm-editor/extension-paragraph": "workspace:*",
+    "@mxm-editor/extension-strike": "workspace:*",
+    "@mxm-editor/extension-text": "workspace:*",
+    "@mxm-editor/extension-underline": "workspace:*",
+    "@mxm-editor/extension-undo-redo": "workspace:*",
+    "@mxm-editor/pm": "workspace:*"
+  }
+}

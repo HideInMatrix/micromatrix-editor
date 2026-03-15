@@ -1,0 +1,18 @@
+{
+  "name": "@mxm-editor/extension-task-item",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "build": "tsc --project tsconfig.json --noEmit",
+    "typecheck": "tsc --project tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@mxm-editor/core": "workspace:*",
+    "@mxm-editor/extension-list-item": "workspace:*",
+    "@mxm-editor/pm": "workspace:*"
+  }
+}
