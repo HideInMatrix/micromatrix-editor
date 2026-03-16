@@ -1,5 +1,7 @@
 import defaultDicts from './dicts'
 
+import { buildAiPrompt, buildAiSystemPrompt } from '@/utils/ai-actions'
+
 // 默认配置
 export default {
   editorKey: 'default',
@@ -75,6 +77,7 @@ export default {
   },
   ai: {
     enabled: false,
+    apiUrl: '/api/ai/generate',
     title: {
       zh_CN: 'AI 助手',
       en_US: 'AI Assistant',
@@ -95,11 +98,10 @@ export default {
     autoSave: false,
     showConfigTip: true,
     maxMessages: 20,
-    async onChat() {
-      return await new Promise((_, reject) => {
-        reject(new Error('Key "ai.onChat": Please set the AI chat method'))
-      })
-    },
+    prompt: buildAiPrompt,
+    system: buildAiSystemPrompt,
+    temperature: 0.6,
+    maxOutputTokens: 12000,
   },
   webPages: [
     {

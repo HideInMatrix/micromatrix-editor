@@ -12,6 +12,7 @@
 import { CellSelection } from '@tiptap/pm/tables'
 
 import { createSelectionAiNodePayload } from '@/composables/ai-node'
+import { canUseAiChat } from '@/utils/ai-actions'
 import { getSelectionText } from '@/utils/selection'
 
 const editor = inject('editor')
@@ -19,10 +20,7 @@ const options = inject('options')
 
 const aiOptions = computed(() => options.value.ai || {})
 const aiEnabled = computed(() => {
-  return (
-    aiOptions.value.enabled &&
-    typeof aiOptions.value.onChat === 'function'
-  )
+  return aiOptions.value.enabled && canUseAiChat(aiOptions.value)
 })
 const hasTextSelection = computed(() => {
   const editorIns = editor.value

@@ -6,6 +6,7 @@ import {
   getAiApplyMeta,
   getAiErrorMessage,
   normalizeAiResult,
+  requestAiChat,
 } from '@/utils/ai-actions'
 import { getSelectionText } from '@/utils/selection'
 
@@ -171,7 +172,10 @@ export const useAiRequest = ({
     isSubmitting.value = true
 
     try {
-      const response = await aiOptions.value.onChat(requestContext.payload)
+      const response = await requestAiChat(requestContext.payload, {
+        ...aiOptions.value,
+        locale: options.value.locale,
+      })
       const normalized = normalizeAiResult(
         response,
         requestContext.fallbackScope || 'selection',

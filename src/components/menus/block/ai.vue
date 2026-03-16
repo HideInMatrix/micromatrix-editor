@@ -12,6 +12,7 @@
 
 <script setup>
 import { createBlockAiNodePayload } from '@/composables/ai-node'
+import { canUseAiChat } from '@/utils/ai-actions'
 
 const props = defineProps({
   node: {
@@ -29,10 +30,7 @@ const options = inject('options')
 
 const aiOptions = computed(() => options.value.ai || {})
 const aiEnabled = computed(() => {
-  return (
-    aiOptions.value.enabled &&
-    typeof aiOptions.value.onChat === 'function'
-  )
+  return aiOptions.value.enabled && canUseAiChat(aiOptions.value)
 })
 
 const insertAiNode = () => {

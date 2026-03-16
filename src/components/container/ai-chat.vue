@@ -146,8 +146,8 @@ const resetButtonText = computed(() =>
 )
 const configTipText = computed(() => {
   return locale.value === 'zh-CN'
-    ? '通过 ai.onChat 接入你的大模型服务，返回结果后会自动写回文档。'
-    : 'Connect your model with ai.onChat. Returned content will be written back into the document automatically.'
+    ? '默认会请求 ai.apiUrl 对应的 AI 服务并自动写回文档；如需完全自定义流程，也可以提供 ai.onChat。'
+    : 'The editor will request the AI service at ai.apiUrl and apply the result automatically. Use ai.onChat only when you need a fully custom flow.'
 })
 const showConfigTip = computed(() => aiOptions.value.showConfigTip !== false)
 const panelSubtitle = computed(() => {

@@ -20,6 +20,9 @@ const NODE_INSERT_ACTION_TYPES = new Set([
   'insert_mermaid',
   'insert_diagrams',
 ])
+const DEFAULT_AI_API_URL = '/api/ai/generate'
+const DEFAULT_AI_TEMPERATURE = 0.6
+const DEFAULT_AI_MAX_OUTPUT_TOKENS = 12000
 
 const resolveValue = (value) => value?.value ?? value
 
@@ -122,6 +125,356 @@ export const buildAiPrompt = ({
     document.html || '<p></p>',
     '</current-document-html>',
   ].join('\n')
+}
+
+const resolveAiOptionValue = (value, payload, fallback) => {
+  const next = typeof value === 'function' ? value(payload) : value
+  return next ?? fallback
+}
+
+const toFiniteNumber = (value) => {
+  const next = Number(value)
+  return Number.isFinite(next) ? next : null
+}
+
+const stripCodeFence = (value = '') => {
+  return value
+    .trim()
+    .replace(/^```(?:json|html)?\s*/i, '')
+    .replace(/\s*```$/, '')
+    .trim()
+}
+
+const isEscapedQuote = (value = '', index = 0) => {
+  let slashCount = 0
+  for (let cursor = index - 1; cursor >= 0; cursor -= 1) {
+    if (value[cursor] !== '\\') {
+      break
+    }
+    slashCount += 1
+  }
+  return slashCount % 2 === 1
+}
+
+const repairJsonString = (value = '') => {
+  let result = ''
+  let inString = false
+
+  for (let index = 0; index < value.length; index += 1) {
+    const char = value[index]
+    const next = value[index + 1]
+
+    if (char === '"' && !isEscapedQuote(value, index)) {
+      inString = !inString
+      result += char
+      continue
+    }
+
+    if (!inString || char !== '\\') {
+      result += char
+      continue
+    }
+
+    const isValidEscape =
+      next === '"' ||
+      next === '\\' ||
+      next === '/' ||
+      next === 'b' ||
+      next === 'f' ||
+      next === 'n' ||
+      next === 'r' ||
+      next === 't' ||
+      next === 'u'
+
+    result += isValidEscape ? char : '\\\\'
+  }
+
+  return result
+}
+
+const tryParseJson = (value = '') => {
+  if (!value) {
+    return null
+  }
+  try {
+    return JSON.parse(value)
+  } catch {
+    return null
+  }
+}
+
+const parseAiJson = (value = '') => {
+  const normalized = stripCodeFence(value)
+  if (!normalized) {
+    return null
+  }
+  const attempts = [normalized]
+  const start = normalized.indexOf('{')
+  const end = normalized.lastIndexOf('}')
+  if (start !== -1 && end !== -1 && end > start) {
+    attempts.push(normalized.slice(start, end + 1))
+  }
+  for (const item of attempts) {
+    const direct = tryParseJson(item)
+    if (direct) {
+      return direct
+    }
+    const repaired = tryParseJson(repairJsonString(item))
+    if (repaired) {
+      return repaired
+    }
+  }
+  return null
+}
+
+const looksLikeAiJson = (value = '') => {
+  const normalized = stripCodeFence(value)
+  if (!normalized.startsWith('{')) {
+    return false
+  }
+  return /"(message|actions|action|content|html|text)"/.test(normalized)
+}
+
+const parseAiError = async (response) => {
+  try {
+    const text = await response.text()
+    const data = tryParseJson(text)
+    if (data && typeof data === 'object') {
+      return data.message || data.error || text || `HTTP ${response.status}`
+    }
+    return text || `HTTP ${response.status}`
+  } catch {
+    return `HTTP ${response.status}`
+  }
+}
+
+const resolveAiScope = (payload = {}) => {
+  const hasSelection = !!payload.selection?.text?.trim()
+  return payload.scope === 'selection' && hasSelection ? 'selection' : 'document'
+}
+
+const getAiSuccessMessage = (scope, config = {}) => {
+  return isZh(config)
+    ? scope === 'selection'
+      ? '已通过本地 AI 服务完成选区修改。'
+      : '已通过本地 AI 服务完成全文修改。'
+    : scope === 'selection'
+      ? 'Updated the current selection with the AI service.'
+      : 'Updated the full document with the AI service.'
+}
+
+const hasChartPayload = (value = {}) => {
+  return !!(
+    value.chart ||
+    value.chartOptions ||
+    value.options ||
+    value.option
+  )
+}
+
+const hasStructuredTextPayload = (value = {}) => {
+  return (
+    value.text !== undefined &&
+    (value.message ||
+      value.reply ||
+      value.answer ||
+      value.format ||
+      value.target ||
+      value.mode ||
+      value.operation ||
+      value.applyMode ||
+      value.apply !== undefined ||
+      value.autoApply !== undefined)
+  )
+}
+
+const toStructuredAiResponse = (value, scope, config = {}) => {
+  if (!value || typeof value !== 'object') {
+    return null
+  }
+
+  if (Array.isArray(value.actions) || value.action) {
+    return value
+  }
+
+  if (hasChartPayload(value)) {
+    return {
+      message:
+        value.message ||
+        (scope === 'selection'
+          ? isZh(config)
+            ? '已根据当前选区插入图表。'
+            : 'Inserted a chart for the current selection.'
+          : isZh(config)
+            ? '已在文档中插入图表。'
+            : 'Inserted a chart into the document.'),
+      actions: [
+        {
+          type: 'insert_echarts',
+          target: scope,
+          chart: value.chart || value,
+        },
+      ],
+    }
+  }
+
+  if (
+    value.content !== undefined ||
+    value.html !== undefined ||
+    hasStructuredTextPayload(value)
+  ) {
+    return {
+      message: value.message || getAiSuccessMessage(scope, config),
+      actions: [
+        {
+          type: scope === 'selection' ? 'replace_selection' : 'replace_document',
+          content: value.content ?? value.html ?? value.text,
+          format:
+            value.format ||
+            (value.html !== undefined ? 'html' : 'text'),
+        },
+      ],
+    }
+  }
+
+  return null
+}
+
+const buildAiFallbackResponse = (content, scope, config = {}) => {
+  if (!content) {
+    return {
+      message: isZh(config)
+        ? 'AI 没有返回可用内容。'
+        : 'AI did not return usable content.',
+      actions: [],
+    }
+  }
+
+  return {
+    message: getAiSuccessMessage(scope, config),
+    actions: [
+      {
+        type: scope === 'selection' ? 'replace_selection' : 'replace_document',
+        content,
+        format: content.startsWith('<') ? 'html' : 'text',
+      },
+    ],
+  }
+}
+
+const normalizeAiServiceResponse = (rawResponse, payload, config = {}) => {
+  const scope = resolveAiScope(payload)
+
+  if (
+    rawResponse &&
+    typeof rawResponse === 'object' &&
+    !Array.isArray(rawResponse)
+  ) {
+    const directResponse = toStructuredAiResponse(rawResponse, scope, config)
+    if (directResponse) {
+      return directResponse
+    }
+  }
+
+  const rawText =
+    typeof rawResponse === 'string'
+      ? rawResponse
+      : typeof rawResponse?.text === 'string'
+        ? rawResponse.text
+        : ''
+  const parsed = parseAiJson(rawText)
+
+  if (parsed && typeof parsed === 'object') {
+    const directResponse = toStructuredAiResponse(parsed, scope, config)
+    if (directResponse) {
+      return directResponse
+    }
+
+    if (
+      parsed.text &&
+      typeof parsed.text === 'string' &&
+      parsed.text !== rawText
+    ) {
+      return normalizeAiServiceResponse(parsed.text, payload, config)
+    }
+
+    return parsed
+  }
+
+  const content = stripCodeFence(rawText)
+  if (looksLikeAiJson(content)) {
+    throw new Error(
+      isZh(config)
+        ? 'AI 返回了无法解析的 JSON，请重试。'
+        : 'AI returned malformed JSON. Please try again.',
+    )
+  }
+
+  return buildAiFallbackResponse(content, scope, config)
+}
+
+const buildAiRequestBody = (payload, config = {}) => {
+  const prompt = resolveAiOptionValue(config.prompt, payload, buildAiPrompt(payload))
+  const system = resolveAiOptionValue(
+    config.system,
+    payload,
+    buildAiSystemPrompt(),
+  )
+
+  return {
+    prompt: typeof prompt === 'string' ? prompt : `${prompt ?? ''}`,
+    system: typeof system === 'string' ? system : `${system ?? ''}`,
+    temperature:
+      toFiniteNumber(config.temperature) ?? DEFAULT_AI_TEMPERATURE,
+    maxOutputTokens:
+      toFiniteNumber(config.maxOutputTokens) ?? DEFAULT_AI_MAX_OUTPUT_TOKENS,
+  }
+}
+
+export const canUseAiChat = (config = {}) => {
+  if (typeof config?.onChat === 'function') {
+    return true
+  }
+  const apiUrl = `${config?.apiUrl || config?.url || DEFAULT_AI_API_URL}`.trim()
+  return apiUrl.length > 0
+}
+
+export const callLocalAiService = async (payload, config = {}) => {
+  const apiUrl = `${config.apiUrl || config.url || DEFAULT_AI_API_URL}`.trim()
+  const response = await fetch(apiUrl || DEFAULT_AI_API_URL, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(buildAiRequestBody(payload, config)),
+  })
+
+  if (!response.ok) {
+    throw new Error(await parseAiError(response))
+  }
+
+  const rawResponse = await response.text()
+  const parsedResponse = parseAiJson(rawResponse) ?? tryParseJson(rawResponse)
+
+  return normalizeAiServiceResponse(
+    parsedResponse ?? rawResponse,
+    payload,
+    config,
+  )
+}
+
+export const requestAiChat = async (payload, config = {}) => {
+  if (typeof config?.onChat === 'function') {
+    return await config.onChat(payload)
+  }
+  if (!canUseAiChat(config)) {
+    throw new Error(
+      isZh(config)
+        ? 'AI 服务未配置，请设置 ai.apiUrl 或 ai.onChat。'
+        : 'AI service is not configured. Please set ai.apiUrl or ai.onChat.',
+    )
+  }
+  return await callLocalAiService(payload, config)
 }
 
 const normalizeObjectInput = (value) => {

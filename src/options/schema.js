@@ -599,6 +599,43 @@ export default new ObjectSchema({
         },
         required: false,
       },
+      apiUrl: {
+        merge: 'replace',
+        validate: 'string',
+        required: false,
+      },
+      prompt: {
+        merge: 'replace',
+        validate(value) {
+          if (!isString(value) && !isFunction(value)) {
+            throw new Error(
+              'Key "ai": Key "prompt" must be a string or function.',
+            )
+          }
+        },
+        required: false,
+      },
+      system: {
+        merge: 'replace',
+        validate(value) {
+          if (!isString(value) && !isFunction(value)) {
+            throw new Error(
+              'Key "ai": Key "system" must be a string or function.',
+            )
+          }
+        },
+        required: false,
+      },
+      temperature: {
+        merge: 'replace',
+        validate: 'number',
+        required: false,
+      },
+      maxOutputTokens: {
+        merge: 'replace',
+        validate: 'number',
+        required: false,
+      },
       autoApply: {
         merge: 'replace',
         validate: 'boolean',
@@ -622,7 +659,7 @@ export default new ObjectSchema({
       onChat: {
         merge: 'replace',
         validate(value) {
-          if (!isAsyncFunction(value)) {
+          if (value !== undefined && !isAsyncFunction(value)) {
             throw new Error('Key "ai": Key "onChat" must be a async function.')
           }
         },

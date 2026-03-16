@@ -126,9 +126,11 @@ import { nodeViewProps, NodeViewWrapper } from '@tiptap/vue-3'
 
 import {
   applyAiActions,
+  canUseAiChat,
   getAiApplyMeta,
   getAiErrorMessage,
   normalizeAiResult,
+  requestAiChat,
 } from '@/utils/ai-actions'
 
 const props = defineProps(nodeViewProps)
@@ -323,7 +325,7 @@ const canSubmit = computed(() => {
     !isReadonly.value &&
     !isThinking.value &&
     aiOptions.value.enabled &&
-    typeof aiOptions.value.onChat === 'function'
+    canUseAiChat(aiOptions.value)
   )
 })
 const showDecisionActions = computed(() => {
@@ -457,7 +459,10 @@ const submitPrompt = async () => {
   })
 
   try {
-    const response = await aiOptions.value.onChat(buildPayload(userPrompt))
+    const response = await requestAiChat(buildPayload(userPrompt), {
+      ...aiOptions.value,
+      locale: options.value.locale,
+    })
     const normalized = normalizeAiResult(response, 'selection', {
       locale: options.value.locale,
       autoApply: false,
