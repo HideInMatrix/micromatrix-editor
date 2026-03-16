@@ -231,7 +231,8 @@ const getActionPreviewText = (action) => {
     const chart = action.chart || {}
     const title =
       chart?.name ||
-      chart?.title ||
+      chart?.title?.text ||
+      (Array.isArray(chart?.title) ? chart.title[0]?.text : chart?.title) ||
       chart?.describe ||
       chart?.description ||
       ''

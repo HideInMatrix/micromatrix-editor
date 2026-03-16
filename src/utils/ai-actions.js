@@ -739,7 +739,7 @@ const normalizePatchAction = (patch, fallbackScope) => {
     return null
   }
   const format = inferPatchFormat(patch)
-  const target = patch.target || fallbackScope
+  const target = normalizeActionTarget(patch.target, fallbackScope)
   const mode = patch.mode || 'replace'
   const standaloneMath =
     target === 'selection' && mode === 'replace'
@@ -764,10 +764,32 @@ const normalizePatchAction = (patch, fallbackScope) => {
   }
 }
 
+const normalizeActionTarget = (target, fallbackScope = 'document') => {
+  const normalized = `${target || fallbackScope}`.trim().toLowerCase()
+  const map = {
+    document: 'document',
+    doc: 'document',
+    page: 'document',
+    full: 'document',
+    full_document: 'document',
+    selection: 'selection',
+    selected: 'selection',
+    selected_text: 'selection',
+    range: 'selection',
+    cursor: 'selection',
+    caret: 'selection',
+    block: 'selection',
+    current: 'selection',
+    current_block: 'selection',
+    currentblock: 'selection',
+  }
+  return map[normalized] || fallbackScope
+}
+
 const normalizeChartAction = (action, fallbackScope) => {
   return {
     type: 'insert_echarts',
-    target: action.target || fallbackScope,
+    target: normalizeActionTarget(action.target, fallbackScope),
     position: action.position || 'after',
     chart:
       action.chart ||
@@ -785,7 +807,7 @@ const normalizeMathAction = (action, fallbackScope) => {
     action.equation !== undefined
   return {
     type: 'insert_math',
-    target: action.target || fallbackScope,
+    target: normalizeActionTarget(action.target, fallbackScope),
     position: action.position || 'after',
     math: hasStructuredMath
       ? action.math ?? action.formula ?? action.equation
@@ -804,7 +826,7 @@ const normalizeMermaidAction = (action, fallbackScope) => {
     action.mermaid !== undefined || action.mermaidNode !== undefined
   return {
     type: 'insert_mermaid',
-    target: action.target || fallbackScope,
+    target: normalizeActionTarget(action.target, fallbackScope),
     position: action.position || 'after',
     mermaid: hasStructuredMermaid
       ? action.mermaid ?? action.mermaidNode
@@ -831,7 +853,7 @@ const normalizeDiagramsAction = (action, fallbackScope) => {
     action.flowchart !== undefined
   return {
     type: 'insert_diagrams',
-    target: action.target || fallbackScope,
+    target: normalizeActionTarget(action.target, fallbackScope),
     position: action.position || 'after',
     diagram: hasStructuredDiagram
       ? action.diagram ?? action.diagrams ?? action.flowchart
@@ -915,7 +937,10 @@ const normalizeTextAction = (action, fallbackScope) => {
     (typeof action.content === 'string' && action.content.trim().startsWith('<')
       ? 'html'
       : 'text')
-  const target = action.target || targetMap[type] || fallbackScope
+  const target = normalizeActionTarget(
+    action.target || targetMap[type],
+    fallbackScope,
+  )
   const mode = action.mode || modeMap[type] || 'replace'
   const standaloneMath =
     target === 'selection' && mode === 'replace'
@@ -1163,11 +1188,36 @@ const normalizeEchartsAttrs = (chart) => {
   if (!normalizedChart) {
     return null
   }
+  const looksLikeEchartsOption =
+    normalizedChart &&
+    typeof normalizedChart === 'object' &&
+    !Array.isArray(normalizedChart) &&
+    !!(
+      normalizedChart.series ||
+      normalizedChart.xAxis ||
+      normalizedChart.yAxis ||
+      normalizedChart.dataset ||
+      normalizedChart.legend ||
+      normalizedChart.tooltip ||
+      normalizedChart.grid ||
+      normalizedChart.radar ||
+      normalizedChart.polar ||
+      normalizedChart.geo ||
+      normalizedChart.angleAxis ||
+      normalizedChart.radiusAxis ||
+      normalizedChart.parallel ||
+      normalizedChart.singleAxis ||
+      normalizedChart.calendar ||
+      normalizedChart.visualMap ||
+      normalizedChart.graphic ||
+      normalizedChart.title ||
+      normalizedChart.toolbox
+    )
   const chartOptions =
     normalizedChart.chartOptions ||
     normalizedChart.options ||
     normalizedChart.option ||
-    null
+    (looksLikeEchartsOption ? normalizedChart : null)
   const chartConfig = normalizedChart.chartConfig || null
   const normalizedChartOptions = normalizeObjectInput(chartOptions)
   const normalizedChartConfig = normalizeObjectInput(chartConfig)
@@ -1186,7 +1236,12 @@ const normalizeEchartsAttrs = (chart) => {
   return {
     vnode: true,
     id: normalizedChart.id || shortId(),
-    name: normalizedChart.name || normalizedChart.title || '',
+    name:
+      normalizedChart.name ||
+      normalizedChart.title?.text ||
+      (Array.isArray(normalizedChart.title)
+        ? normalizedChart.title[0]?.text || ''
+        : normalizedChart.title || ''),
     width:
       Number.isFinite(parsedWidth) && parsedWidth > 0 ? parsedWidth : 640,
     height:
