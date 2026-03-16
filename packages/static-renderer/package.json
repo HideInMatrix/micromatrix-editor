@@ -1,0 +1,26 @@
+{
+  "name": "@mxm-editor/static-renderer",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./json/html-string": "./src/json/html-string/index.ts",
+    "./json/react": "./src/json/react/index.ts",
+    "./pm/html-string": "./src/pm/html-string/index.ts",
+    "./pm/markdown": "./src/pm/markdown/index.ts",
+    "./pm/react": "./src/pm/react/index.ts"
+  },
+  "scripts": {
+    "build": "tsc --project tsconfig.json --noEmit",
+    "typecheck": "tsc --project tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@mxm-editor/core": "workspace:*",
+    "@mxm-editor/pm": "workspace:*"
+  },
+  "peerDependencies": {
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  }
+}

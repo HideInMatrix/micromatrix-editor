@@ -98,6 +98,9 @@ importers:
       '@mxm-editor/extension-text-style':
         specifier: workspace:*
         version: link:../../packages/extension-text-style
+      '@mxm-editor/html':
+        specifier: workspace:*
+        version: link:../../packages/html
       '@mxm-editor/markdown':
         specifier: workspace:*
         version: link:../../packages/markdown
@@ -107,6 +110,9 @@ importers:
       '@mxm-editor/starter-kit':
         specifier: workspace:*
         version: link:../../packages/starter-kit
+      '@mxm-editor/static-renderer':
+        specifier: workspace:*
+        version: link:../../packages/static-renderer
       '@mxm-editor/suggestion':
         specifier: workspace:*
         version: link:../../packages/suggestion
@@ -772,6 +778,21 @@ importers:
         specifier: workspace:*
         version: link:../core
 
+  packages/html:
+    dependencies:
+      '@mxm-editor/core':
+        specifier: workspace:*
+        version: link:../core
+      '@mxm-editor/pm':
+        specifier: workspace:*
+        version: link:../pm
+      '@mxm-editor/static-renderer':
+        specifier: workspace:*
+        version: link:../static-renderer
+      jsdom:
+        specifier: ^26.1.0
+        version: 26.1.0
+
   packages/list-kit:
     dependencies:
       '@mxm-editor/core':
@@ -948,6 +969,21 @@ importers:
       '@mxm-editor/pm':
         specifier: workspace:*
         version: link:../pm
+
+  packages/static-renderer:
+    dependencies:
+      '@mxm-editor/core':
+        specifier: workspace:*
+        version: link:../core
+      '@mxm-editor/pm':
+        specifier: workspace:*
+        version: link:../pm
+      react:
+        specifier: ^19.0.0
+        version: 19.2.4
+      react-dom:
+        specifier: ^19.0.0
+        version: 19.2.4(react@19.2.4)
 
   packages/suggestion:
     dependencies:

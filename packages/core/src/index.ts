@@ -8,5 +8,6 @@ export * from "./Mark";
 export * from "./Node";
 export * from "./NodeView";
 export * from "./PasteRule";
+export * from "./schema";
 export * from "./types";
 export * from "./utils";

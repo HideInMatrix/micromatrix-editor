@@ -1,0 +1,20 @@
+{
+  "name": "@mxm-editor/html",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./server": "./src/server/index.ts"
+  },
+  "scripts": {
+    "build": "tsc --project tsconfig.json --noEmit",
+    "typecheck": "tsc --project tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@mxm-editor/core": "workspace:*",
+    "@mxm-editor/pm": "workspace:*",
+    "@mxm-editor/static-renderer": "workspace:*",
+    "jsdom": "^26.1.0"
+  }
+}
