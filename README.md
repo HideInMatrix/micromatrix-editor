@@ -29,6 +29,18 @@ pnpm test
 pnpm build
 ```
 
+## 在线预览
+
+仓库已经包含 GitHub Pages 自动部署工作流：
+
+- Workflow 文件：`.github/workflows/deploy-playground-pages.yml`
+- 触发方式：推送到 `master`，或手动执行 `workflow_dispatch`
+- 构建目标：`apps/playground`
+
+首次启用时，请在 GitHub 仓库设置中把 Pages 的 Source 设为 `GitHub Actions`。之后每次推送到 `master`，Actions 都会自动构建并发布 playground，方便开发者在线预览。
+
+默认情况下，`apps/playground/vite.config.ts` 会根据 `GITHUB_REPOSITORY` 自动推导 Pages 的 `base` 路径；如果你使用自定义域名或想手动覆盖路径，可以在仓库的 GitHub Variables 里设置 `VITE_BASE_PATH`。
+
 ## 项目架构
 
 当前仓库可以按下面的方式理解：

@@ -1,10 +1,51 @@
-import { defineConfig } from "vite";
+import { defineConfig, loadEnv } from "vite";
 import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
 import tsconfigPaths from "vite-tsconfig-paths";
 import UnoCSS from "unocss/vite";
 
 const fromRoot = (path: string) => new URL(path, import.meta.url).pathname;
+
+function normalizeBasePath(basePath: string) {
+  if (!basePath || basePath === "/") {
+    return "/";
+  }
+
+  const withLeadingSlash = basePath.startsWith("/") ? basePath : `/${basePath}`;
+
+  return withLeadingSlash.endsWith("/")
+    ? withLeadingSlash
+    : `${withLeadingSlash}/`;
+}
+
+function resolveGitHubPagesBase(env: Record<string, string>) {
+  const explicitBasePath = env.VITE_BASE_PATH?.trim();
+
+  if (explicitBasePath) {
+    return normalizeBasePath(explicitBasePath);
+  }
+
+  if (!env.GITHUB_ACTIONS) {
+    return "/";
+  }
+
+  const repository = env.GITHUB_REPOSITORY;
+
+  if (!repository) {
+    return "/";
+  }
+
+  const [owner, repo] = repository.split("/");
+
+  if (!owner || !repo) {
+    return "/";
+  }
+
+  return repo === `${owner}.github.io`
+    ? "/"
+    : `/${repo}/`;
+}
+
 const editorCorePackages = [
   "/packages/pm/",
   "/packages/core/",
@@ -86,75 +127,79 @@ function includesAny(id: string, patterns: string[]) {
   return patterns.some((pattern) => id.includes(pattern));
 }
 
-export default defineConfig({
-  plugins: [
-    react(),
-    tailwindcss(),
-    UnoCSS({
-      configFile: fromRoot("./uno.config.ts"),
-    }),
-    tsconfigPaths(),
-  ],
-  build: {
-    rollupOptions: {
-      output: {
-        manualChunks(id) {
-          if (
-            id.includes("/node_modules/react/")
-            || id.includes("/node_modules/react-dom/")
-            || id.includes("/node_modules/scheduler/")
-          ) {
-            return "react-vendor";
-          }
+export default defineConfig(({ mode }) => {
+  const env = loadEnv(mode, fromRoot("."), "");
 
-          if (
-            id.includes("/node_modules/yjs/")
-            || id.includes("/node_modules/y-prosemirror/")
-            || id.includes("/node_modules/y-protocols/")
-            || id.includes("/node_modules/lib0/")
-          ) {
-            return "collab-vendor";
-          }
+  return {
+    base: resolveGitHubPagesBase(env),
+    plugins: [
+      react(),
+      tailwindcss(),
+      UnoCSS({
+        configFile: fromRoot("./uno.config.ts"),
+      }),
+      tsconfigPaths(),
+    ],
+    build: {
+      rollupOptions: {
+        output: {
+          manualChunks(id) {
+            if (
+              id.includes("/node_modules/react/")
+              || id.includes("/node_modules/react-dom/")
+              || id.includes("/node_modules/scheduler/")
+            ) {
+              return "react-vendor";
+            }
 
-          if (
-            id.includes("/node_modules/prosemirror-")
-            || id.includes("/node_modules/orderedmap/")
-            || id.includes("/node_modules/rope-sequence/")
-            || id.includes("/node_modules/w3c-keyname/")
-          ) {
-            return "prosemirror-vendor";
-          }
+            if (
+              id.includes("/node_modules/yjs/")
+              || id.includes("/node_modules/y-prosemirror/")
+              || id.includes("/node_modules/y-protocols/")
+              || id.includes("/node_modules/lib0/")
+            ) {
+              return "collab-vendor";
+            }
 
-          if (id.includes("/node_modules/marked/")) {
-            return "markdown-vendor";
-          }
+            if (
+              id.includes("/node_modules/prosemirror-")
+              || id.includes("/node_modules/orderedmap/")
+              || id.includes("/node_modules/rope-sequence/")
+              || id.includes("/node_modules/w3c-keyname/")
+            ) {
+              return "prosemirror-vendor";
+            }
 
-          if (id.includes("/node_modules/katex/")) {
-            return "math-vendor";
-          }
+            if (id.includes("/node_modules/marked/")) {
+              return "markdown-vendor";
+            }
 
-          if (
-            id.includes("/packages/extension-collaboration/")
-            || id.includes("/packages/extension-collaboration-caret/")
-          ) {
-            return "editor-collaboration";
-          }
+            if (id.includes("/node_modules/katex/")) {
+              return "math-vendor";
+            }
 
-          if (includesAny(id, editorFeaturePackages)) {
-            return "editor-features";
-          }
+            if (
+              id.includes("/packages/extension-collaboration/")
+              || id.includes("/packages/extension-collaboration-caret/")
+            ) {
+              return "editor-collaboration";
+            }
 
-          if (includesAny(id, editorCorePackages)) {
-            return "editor-core";
-          }
+            if (includesAny(id, editorFeaturePackages)) {
+              return "editor-features";
+            }
 
-          return undefined;
+            if (includesAny(id, editorCorePackages)) {
+              return "editor-core";
+            }
+
+            return undefined;
+          },
         },
       },
     },
-  },
-  resolve: {
-    alias: {
+    resolve: {
+      alias: {
       "@mxm-editor/pm": fromRoot("../../packages/pm/src/index.ts"),
       "@mxm-editor/core": fromRoot("../../packages/core/src/index.ts"),
       "@mxm-editor/extension-audio": fromRoot(
@@ -370,6 +415,7 @@ export default defineConfig({
       "@mxm-editor/text-style-kit": fromRoot(
         "../../packages/text-style-kit/src/index.ts",
       ),
+      },
     },
-  },
+  };
 });
