@@ -21,8 +21,8 @@ const NODE_INSERT_ACTION_TYPES = new Set([
   'insert_diagrams',
 ])
 const DEFAULT_AI_API_URL = '/api/ai/generate'
-const DEFAULT_AI_TEMPERATURE = 0.6
 const DEFAULT_AI_MAX_OUTPUT_TOKENS = 12000
+const DEFAULT_AI_OUTPUT_MODE = 'sync'
 
 const resolveValue = (value) => value?.value ?? value
 
@@ -32,6 +32,14 @@ const getLocale = (config = {}) => {
   }
   const options = resolveValue(config.options)
   return options?.locale || 'zh-CN'
+}
+
+const resolveAiOutputMode = (config = {}) => {
+  return config.outputMode === 'stream' ? 'stream' : DEFAULT_AI_OUTPUT_MODE
+}
+
+const shouldUseAiStream = (config = {}) => {
+  return resolveAiOutputMode(config) === 'stream'
 }
 
 const isZh = (config = {}) => getLocale(config) === 'zh-CN'
@@ -424,11 +432,224 @@ const buildAiRequestBody = (payload, config = {}) => {
   return {
     prompt: typeof prompt === 'string' ? prompt : `${prompt ?? ''}`,
     system: typeof system === 'string' ? system : `${system ?? ''}`,
-    temperature:
-      toFiniteNumber(config.temperature) ?? DEFAULT_AI_TEMPERATURE,
     maxOutputTokens:
       toFiniteNumber(config.maxOutputTokens) ?? DEFAULT_AI_MAX_OUTPUT_TOKENS,
+    outputMode: resolveAiOutputMode(config),
+    stream: shouldUseAiStream(config),
   }
+}
+
+const readResponseChunk = async (reader, decoder) => {
+  const { done, value } = await reader.read()
+  if (done) {
+    return {
+      done: true,
+      chunk: decoder.decode(),
+    }
+  }
+  return {
+    done: false,
+    chunk: decoder.decode(value, { stream: true }),
+  }
+}
+
+const emitAiStreamText = async (handlers, text, delta) => {
+  if (typeof handlers?.onText !== 'function' || !delta) {
+    return
+  }
+  await handlers.onText(text, delta)
+}
+
+const isEventStreamResponse = (response) => {
+  const contentType = response.headers.get('content-type') || ''
+  return (
+    contentType.includes('text/event-stream') ||
+    response.headers.get('x-vercel-ai-ui-message-stream') === 'v1'
+  )
+}
+
+const extractTextDeltaFromStreamPayload = (payload) => {
+  if (!payload) {
+    return ''
+  }
+  if (payload === '[DONE]') {
+    return ''
+  }
+
+  const parsed = tryParseJson(payload)
+  if (!parsed) {
+    return payload
+  }
+
+  if (typeof parsed === 'string') {
+    return parsed
+  }
+
+  if (Array.isArray(parsed)) {
+    return parsed.map((item) => extractTextDeltaFromStreamPayload(item)).join('')
+  }
+
+  if (typeof parsed.delta === 'string') {
+    return parsed.delta
+  }
+  if (typeof parsed.text === 'string') {
+    return parsed.text
+  }
+  if (typeof parsed.content === 'string') {
+    return parsed.content
+  }
+  if (typeof parsed.token === 'string') {
+    return parsed.token
+  }
+  if (typeof parsed.outputText === 'string') {
+    return parsed.outputText
+  }
+  if (typeof parsed.response === 'string') {
+    return parsed.response
+  }
+  if (Array.isArray(parsed.content)) {
+    return parsed.content
+      .map((item) => {
+        if (typeof item === 'string') {
+          return item
+        }
+        return (
+          item?.text ||
+          item?.content ||
+          item?.delta ||
+          item?.token ||
+          ''
+        )
+      })
+      .join('')
+  }
+  if (Array.isArray(parsed.choices)) {
+    return parsed.choices
+      .map((choice) => {
+        if (typeof choice?.text === 'string') {
+          return choice.text
+        }
+        if (typeof choice?.delta?.content === 'string') {
+          return choice.delta.content
+        }
+        if (Array.isArray(choice?.delta?.content)) {
+          return choice.delta.content
+            .map((item) => item?.text || item?.content || '')
+            .join('')
+        }
+        return ''
+      })
+      .join('')
+  }
+  return ''
+}
+
+const readTextStreamResponse = async (response, handlers = {}) => {
+  if (!response.body) {
+    return await response.text()
+  }
+
+  const reader = response.body.getReader()
+  const decoder = new TextDecoder()
+  let text = ''
+
+  while (true) {
+    const { done, chunk } = await readResponseChunk(reader, decoder)
+    if (chunk) {
+      text += chunk
+      await emitAiStreamText(handlers, text, chunk)
+    }
+    if (done) {
+      break
+    }
+  }
+
+  return text
+}
+
+const flushSseEvent = async (lines, state, handlers = {}) => {
+  if (!lines.length) {
+    return
+  }
+
+  const data = lines
+    .filter((line) => line.startsWith('data:'))
+    .map((line) => line.slice(5).trimStart())
+    .join('\n')
+
+  if (!data || data === '[DONE]') {
+    return
+  }
+
+  const delta = extractTextDeltaFromStreamPayload(data)
+  if (!delta) {
+    return
+  }
+
+  state.text += delta
+  await emitAiStreamText(handlers, state.text, delta)
+}
+
+const readSseStreamResponse = async (response, handlers = {}) => {
+  if (!response.body) {
+    return await response.text()
+  }
+
+  const reader = response.body.getReader()
+  const decoder = new TextDecoder()
+  const state = { text: '' }
+  let buffer = ''
+  let eventLines = []
+
+  while (true) {
+    const { done, chunk } = await readResponseChunk(reader, decoder)
+    if (chunk) {
+      buffer += chunk
+      let newlineIndex = buffer.indexOf('\n')
+      while (newlineIndex !== -1) {
+        const rawLine = buffer.slice(0, newlineIndex)
+        buffer = buffer.slice(newlineIndex + 1)
+        const line = rawLine.replace(/\r$/, '')
+
+        if (!line) {
+          await flushSseEvent(eventLines, state, handlers)
+          eventLines = []
+        } else {
+          eventLines.push(line)
+        }
+
+        newlineIndex = buffer.indexOf('\n')
+      }
+    }
+
+    if (done) {
+      break
+    }
+  }
+
+  if (buffer) {
+    eventLines.push(buffer.replace(/\r$/, ''))
+  }
+  await flushSseEvent(eventLines, state, handlers)
+
+  return state.text
+}
+
+const readAiResponseText = async (response, config = {}, handlers = {}) => {
+  if (!response.body) {
+    return await response.text()
+  }
+
+  const prefersStream = shouldUseAiStream(config)
+  if (!prefersStream && !isEventStreamResponse(response)) {
+    return await response.text()
+  }
+
+  if (isEventStreamResponse(response)) {
+    return await readSseStreamResponse(response, handlers)
+  }
+
+  return await readTextStreamResponse(response, handlers)
 }
 
 export const canUseAiChat = (config = {}) => {
@@ -439,7 +660,7 @@ export const canUseAiChat = (config = {}) => {
   return apiUrl.length > 0
 }
 
-export const callLocalAiService = async (payload, config = {}) => {
+export const callLocalAiService = async (payload, config = {}, handlers = {}) => {
   const apiUrl = `${config.apiUrl || config.url || DEFAULT_AI_API_URL}`.trim()
   const response = await fetch(apiUrl || DEFAULT_AI_API_URL, {
     method: 'POST',
@@ -453,7 +674,7 @@ export const callLocalAiService = async (payload, config = {}) => {
     throw new Error(await parseAiError(response))
   }
 
-  const rawResponse = await response.text()
+  const rawResponse = await readAiResponseText(response, config, handlers)
   const parsedResponse = parseAiJson(rawResponse) ?? tryParseJson(rawResponse)
 
   return normalizeAiServiceResponse(
@@ -463,7 +684,7 @@ export const callLocalAiService = async (payload, config = {}) => {
   )
 }
 
-export const requestAiChat = async (payload, config = {}) => {
+export const requestAiChat = async (payload, config = {}, handlers = {}) => {
   if (typeof config?.onChat === 'function') {
     return await config.onChat(payload)
   }
@@ -474,7 +695,7 @@ export const requestAiChat = async (payload, config = {}) => {
         : 'AI service is not configured. Please set ai.apiUrl or ai.onChat.',
     )
   }
-  return await callLocalAiService(payload, config)
+  return await callLocalAiService(payload, config, handlers)
 }
 
 const normalizeObjectInput = (value) => {

@@ -599,6 +599,17 @@ export default new ObjectSchema({
         },
         required: false,
       },
+      outputMode: {
+        merge: 'replace',
+        validate(value) {
+          if (value && !['sync', 'stream'].includes(value)) {
+            throw new Error(
+              'Key "ai": Key "outputMode" must be one of "sync" or "stream".',
+            )
+          }
+        },
+        required: false,
+      },
       apiUrl: {
         merge: 'replace',
         validate: 'string',
@@ -626,11 +637,7 @@ export default new ObjectSchema({
         },
         required: false,
       },
-      temperature: {
-        merge: 'replace',
-        validate: 'number',
-        required: false,
-      },
+
       maxOutputTokens: {
         merge: 'replace',
         validate: 'number',

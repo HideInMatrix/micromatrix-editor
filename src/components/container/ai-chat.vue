@@ -135,8 +135,12 @@ const panelTitle = computed(() => {
 })
 const loadingMessage = computed(() =>
   locale.value === 'zh-CN'
-    ? 'AI 正在生成修改建议...'
-    : 'AI is drafting changes...',
+    ? aiOptions.value.outputMode === 'stream'
+      ? 'AI 正在流式生成修改建议...'
+      : 'AI 正在生成修改建议...'
+    : aiOptions.value.outputMode === 'stream'
+      ? 'AI is streaming draft changes...'
+      : 'AI is drafting changes...',
 )
 const submitButtonText = computed(() =>
   locale.value === 'zh-CN' ? '发送并修改' : 'Send and apply',
@@ -146,8 +150,8 @@ const resetButtonText = computed(() =>
 )
 const configTipText = computed(() => {
   return locale.value === 'zh-CN'
-    ? '默认会请求 ai.apiUrl 对应的 AI 服务并自动写回文档；如需完全自定义流程，也可以提供 ai.onChat。'
-    : 'The editor will request the AI service at ai.apiUrl and apply the result automatically. Use ai.onChat only when you need a fully custom flow.'
+    ? '默认会请求 ai.apiUrl 对应的 AI 服务并自动写回文档；可通过 ai.outputMode 配置同步输出或流式输出，如需完全自定义流程，也可以提供 ai.onChat。'
+    : 'The editor will request the AI service at ai.apiUrl and apply the result automatically. Use ai.outputMode to switch between sync and streaming output, or provide ai.onChat for a fully custom flow.'
 })
 const showConfigTip = computed(() => aiOptions.value.showConfigTip !== false)
 const panelSubtitle = computed(() => {
