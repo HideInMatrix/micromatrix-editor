@@ -1,7 +1,5 @@
 import { defineConfig, loadEnv } from "vite";
 import react from "@vitejs/plugin-react";
-import tailwindcss from "@tailwindcss/vite";
-import tsconfigPaths from "vite-tsconfig-paths";
 import UnoCSS from "unocss/vite";
 
 const fromRoot = (path: string) => new URL(path, import.meta.url).pathname;
@@ -46,7 +44,7 @@ function resolveGitHubPagesBase(env: Record<string, string>) {
     : `/${repo}/`;
 }
 
-const editorCorePackages = [
+const editorPackages = [
   "/packages/pm/",
   "/packages/core/",
   "/packages/react/",
@@ -109,8 +107,6 @@ const editorCorePackages = [
   "/packages/list-kit/",
   "/packages/table-kit/",
   "/packages/text-style-kit/",
-];
-const editorFeaturePackages = [
   "/packages/extension-callout/",
   "/packages/extension-drag-handle/",
   "/packages/extension-emoji/",
@@ -134,11 +130,9 @@ export default defineConfig(({ mode }) => {
     base: resolveGitHubPagesBase(env),
     plugins: [
       react(),
-      tailwindcss(),
       UnoCSS({
         configFile: fromRoot("./uno.config.ts"),
       }),
-      tsconfigPaths(),
     ],
     build: {
       rollupOptions: {
@@ -185,12 +179,8 @@ export default defineConfig(({ mode }) => {
               return "editor-collaboration";
             }
 
-            if (includesAny(id, editorFeaturePackages)) {
-              return "editor-features";
-            }
-
-            if (includesAny(id, editorCorePackages)) {
-              return "editor-core";
+            if (includesAny(id, editorPackages)) {
+              return "editor-bundle";
             }
 
             return undefined;
@@ -199,6 +189,7 @@ export default defineConfig(({ mode }) => {
       },
     },
     resolve: {
+      tsconfigPaths: true,
       alias: {
       "@mxm-editor/pm": fromRoot("../../packages/pm/src/index.ts"),
       "@mxm-editor/core": fromRoot("../../packages/core/src/index.ts"),

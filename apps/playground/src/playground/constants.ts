@@ -2,7 +2,7 @@ import type { Editor } from "@mxm-editor/core";
 import type { MentionItem } from "@mxm-editor/extension-mention";
 
 export const sampleImageUrl =
-  "/tiptap-placeholder-image.svg";
+  `${import.meta.env.BASE_URL}tiptap-placeholder-image.svg`;
 
 export const accentRoseColor = "#d9485f";
 export const accentOceanColor = "#2f7cf6";
