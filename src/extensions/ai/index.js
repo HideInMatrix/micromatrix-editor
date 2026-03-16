@@ -17,6 +17,21 @@ const parseJsonAttribute = (element, attributeName, defaultValue) => {
   }
 }
 
+const renderJsonAttribute = (attributeName, value) => {
+  if (
+    value === null ||
+    value === undefined ||
+    (Array.isArray(value) && value.length === 0)
+  ) {
+    return {
+      [attributeName]: null,
+    }
+  }
+  return {
+    [attributeName]: JSON.stringify(value),
+  }
+}
+
 export default Node.create({
   name: 'ai',
   inline: false,
@@ -38,6 +53,12 @@ export default Node.create({
       prompt: {
         default: '',
       },
+      targetType: {
+        default: 'selection',
+      },
+      contextText: {
+        default: '',
+      },
       response: {
         default: '',
       },
@@ -45,7 +66,7 @@ export default Node.create({
         default: '',
       },
       status: {
-        default: 'done',
+        default: 'idle',
       },
       error: {
         default: '',
@@ -54,11 +75,32 @@ export default Node.create({
         default: [],
         parseHTML: (element) =>
           parseJsonAttribute(element, 'data-actions', []),
+        renderHTML: (attributes) =>
+          renderJsonAttribute('data-actions', attributes.actions),
+      },
+      selectionRange: {
+        default: null,
+        parseHTML: (element) =>
+          parseJsonAttribute(element, 'data-selection-range', null),
+        renderHTML: (attributes) =>
+          renderJsonAttribute(
+            'data-selection-range',
+            attributes.selectionRange,
+          ),
+      },
+      block: {
+        default: null,
+        parseHTML: (element) => parseJsonAttribute(element, 'data-block', null),
+        renderHTML: (attributes) =>
+          renderJsonAttribute('data-block', attributes.block),
+      },
+      insertPos: {
+        default: 0,
+        parseHTML: (element) => Number(element.getAttribute('data-insert-pos') || 0),
         renderHTML: (attributes) => ({
-          'data-actions':
-            Array.isArray(attributes.actions) && attributes.actions.length > 0
-              ? JSON.stringify(attributes.actions)
-              : null,
+          'data-insert-pos': Number.isFinite(attributes.insertPos)
+            ? attributes.insertPos
+            : 0,
         }),
       },
       createdAt: {
@@ -124,6 +166,28 @@ export default Node.create({
             dispatch(tr)
           }
           return updated
+        },
+      deleteAiById:
+        (id) =>
+        ({ editor, tr, dispatch }) => {
+          if (!id) {
+            return false
+          }
+
+          let deleted = false
+          editor.state.doc.descendants((node, pos) => {
+            if (node.type.name === this.name && node.attrs.id === id) {
+              tr.delete(pos, pos + node.nodeSize)
+              deleted = true
+              return false
+            }
+            return true
+          })
+
+          if (deleted && dispatch) {
+            dispatch(tr)
+          }
+          return deleted
         },
     }
   },

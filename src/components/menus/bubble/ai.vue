@@ -3,12 +3,7 @@
     <menus-button
       ico="ai"
       :tooltip="t('bubbleMenu.ai')"
-      @menu-click="dialogVisible = true"
-    />
-    <menus-ai-dialog
-      :visible="dialogVisible"
-      target-type="selection"
-      @close="dialogVisible = false"
+      @menu-click="insertAiNode"
     />
   </template>
 </template>
@@ -16,6 +11,7 @@
 <script setup>
 import { CellSelection } from '@tiptap/pm/tables'
 
+import { createSelectionAiNodePayload } from '@/composables/ai-node'
 import { getSelectionText } from '@/utils/selection'
 
 const editor = inject('editor')
@@ -40,5 +36,13 @@ const hasTextSelection = computed(() => {
   return !!getSelectionText(editorIns).trim()
 })
 
-let dialogVisible = $ref(false)
+const insertAiNode = () => {
+  const payload = createSelectionAiNodePayload({
+    editor: editor.value,
+  })
+  if (!payload) {
+    return
+  }
+  editor.value?.commands.setAi(payload.attrs, payload.position)
+}
 </script>

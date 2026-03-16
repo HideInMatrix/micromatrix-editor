@@ -733,18 +733,35 @@
   },
   "node": {
     "ai": {
-      "title": "AI 修改记录",
+      "title": "AI 修改助手",
+      "context": "当前上下文",
       "prompt": "用户要求",
       "response": "AI 响应",
+      "preview": "结果预览",
+      "placeholder": "描述你希望 AI 如何修改当前位置内容，例如：润色这段文字并补充一个结论。",
+      "generate": "生成结果",
+      "regenerate": "重新生成",
+      "discard": "放弃本次操作",
+      "idle": "待输入",
       "thinking": "思考中",
       "done": "已完成",
       "failed": "已失败",
       "emptyPrompt": "暂无提问内容",
       "emptyResponse": "AI 暂未返回内容",
       "error": "AI 执行失败",
+      "apply": {
+        "append": "新增到下方",
+        "replace": "替换当前位置",
+        "cancel": "放弃操作",
+        "empty": "AI 没有生成可应用的内容。",
+        "success": "AI 结果已应用到文档中。"
+      },
       "action": {
         "chart": "插入图表",
         "rewrite": "改写内容",
+        "math": "插入公式",
+        "mermaid": "插入 Mermaid",
+        "flowchart": "插入流程图",
         "other": "其他动作"
       }
     },

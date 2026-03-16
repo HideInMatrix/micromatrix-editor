@@ -5,20 +5,15 @@
       ico="ai"
       hide-text
       :tooltip="t('blockMenu.ai')"
-      @menu-click="dialogVisible = true"
-    />
-    <menus-ai-dialog
-      :visible="dialogVisible"
-      target-type="block"
-      :node="node"
-      :pos="pos"
-      @close="dialogVisible = false"
+      @menu-click="insertAiNode"
     />
   </template>
 </template>
 
 <script setup>
-defineProps({
+import { createBlockAiNodePayload } from '@/composables/ai-node'
+
+const props = defineProps({
   node: {
     type: Object,
     default: null,
@@ -29,6 +24,7 @@ defineProps({
   },
 })
 
+const editor = inject('editor')
 const options = inject('options')
 
 const aiOptions = computed(() => options.value.ai || {})
@@ -39,5 +35,16 @@ const aiEnabled = computed(() => {
   )
 })
 
-let dialogVisible = $ref(false)
+const insertAiNode = () => {
+  const payload = createBlockAiNodePayload({
+    editor: editor.value,
+    node: props.node,
+    pos: props.pos,
+    locale: options.value.locale,
+  })
+  if (!payload) {
+    return
+  }
+  editor.value?.commands.setAi(payload.attrs, payload.position)
+}
 </script>

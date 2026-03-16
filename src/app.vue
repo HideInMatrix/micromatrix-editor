@@ -10,6 +10,7 @@
 </template>
 
 <script setup>
+import { buildAiPrompt, buildAiSystemPrompt } from '@/utils/ai-actions'
 import { shortId } from '@/utils/short-id'
 
 const editorRef = $ref(null)
@@ -21,6 +22,64 @@ const stripCodeFence = (value = '') => {
     .replace(/^```(?:json|html)?\s*/i, '')
     .replace(/\s*```$/, '')
     .trim()
+}
+
+const isEscapedQuote = (value = '', index = 0) => {
+  let slashCount = 0
+  for (let cursor = index - 1; cursor >= 0; cursor -= 1) {
+    if (value[cursor] !== '\\') {
+      break
+    }
+    slashCount += 1
+  }
+  return slashCount % 2 === 1
+}
+
+const repairJsonString = (value = '') => {
+  let result = ''
+  let inString = false
+
+  for (let index = 0; index < value.length; index += 1) {
+    const char = value[index]
+    const next = value[index + 1]
+
+    if (char === '"' && !isEscapedQuote(value, index)) {
+      inString = !inString
+      result += char
+      continue
+    }
+
+    if (!inString || char !== '\\') {
+      result += char
+      continue
+    }
+
+    const isValidEscape =
+      next === '"' ||
+      next === '\\' ||
+      next === '/' ||
+      next === 'b' ||
+      next === 'f' ||
+      next === 'n' ||
+      next === 'r' ||
+      next === 't' ||
+      next === 'u'
+
+    result += isValidEscape ? char : '\\\\'
+  }
+
+  return result
+}
+
+const tryParseJson = (value = '') => {
+  if (!value) {
+    return null
+  }
+  try {
+    return JSON.parse(value)
+  } catch {
+    return null
+  }
 }
 
 const parseAiJson = (value = '') => {
@@ -35,57 +94,24 @@ const parseAiJson = (value = '') => {
     attempts.push(normalized.slice(start, end + 1))
   }
   for (const item of attempts) {
-    try {
-      return JSON.parse(item)
-    } catch {}
+    const direct = tryParseJson(item)
+    if (direct) {
+      return direct
+    }
+    const repaired = tryParseJson(repairJsonString(item))
+    if (repaired) {
+      return repaired
+    }
   }
   return null
 }
 
-const buildAiSystemPrompt = () => {
-  return [
-    '你是一个富文本编辑器的文档改写助手。',
-    '你的任务是根据用户要求修改文档，或者生成可以插入文档的 ECharts 图表节点。',
-    '你必须只返回 JSON，不要返回 Markdown 代码块，不要返回解释，不要返回前后说明。',
-    '返回格式必须是：{"message":"给用户的简短说明","actions":[...]}。',
-    'actions 支持以下类型：',
-    '1. replace_document: 用新的完整 HTML 替换全文，字段包含 type、content、format。',
-    '2. replace_selection: 用 HTML 替换当前选区，字段包含 type、content、format。',
-    '3. insert_echarts: 插入图表节点，字段包含 type、target、chart。',
-    'insert_echarts 的 chart 建议使用 mode=0，并提供合法的 ECharts option 对象到 chartOptions 字段。',
-    'chart 可包含 id、name、width、height、describe、mode、chartOptions。',
-    '如果用户要求“生成图表/可视化/趋势图/柱状图/饼图/折线图”，优先返回 insert_echarts 动作。',
-    '如果用户既要求改写文档又要求插入图表，可以返回多个 actions，按执行顺序排列。',
-    '文本改写时保留原有标题、列表、表格、强调等结构，除非用户明确要求调整。',
-    '除 JSON 外不要输出任何其他内容。',
-  ].join('\n')
-}
-
-const buildAiPrompt = ({ prompt, scope, selection, document }) => {
-  const hasSelection = !!selection.text?.trim()
-  const effectiveScope = scope === 'selection' && hasSelection ? '选区' : '全文'
-  return [
-    `用户要求：${prompt}`,
-    '',
-    `修改范围：${effectiveScope}`,
-    hasSelection
-      ? `当前选区文本：\n${selection.text.trim()}`
-      : '当前没有有效选区，请基于全文处理。',
-    '',
-    '请根据用户要求返回前面约定的 JSON。',
-    '如果只是文本改写，请返回 replace_document 或 replace_selection。',
-    '如果需要在文档中展示图表，请返回 insert_echarts，并提供可直接渲染的 chartOptions。',
-    '图表数据请优先从当前选区文本、全文文本、表格或列表中提取；如果数据不完整，可以做合理补全，但要保证图表可展示。',
-    '如果是选区修改，只调整选区相关内容，文档其他部分保持原状。',
-    '',
-    '<current-document-text>',
-    document.text || '',
-    '</current-document-text>',
-    '',
-    '<current-document-html>',
-    document.html || '<p></p>',
-    '</current-document-html>',
-  ].join('\n')
+const looksLikeAiJson = (value = '') => {
+  const normalized = stripCodeFence(value)
+  if (!normalized.startsWith('{')) {
+    return false
+  }
+  return /"(message|actions|action|content|html|text)"/.test(normalized)
 }
 
 const parseAiError = async (response) => {
@@ -106,8 +132,8 @@ const callLocalAiService = async (payload) => {
     body: JSON.stringify({
       prompt: buildAiPrompt(payload),
       system: buildAiSystemPrompt(),
-      temperature: 0.2,
-      maxOutputTokens: 4000,
+      temperature: 0.6,
+      maxOutputTokens: 12000,
     }),
   })
 
@@ -172,6 +198,9 @@ const callLocalAiService = async (payload) => {
   }
 
   const content = stripCodeFence(data.text || '')
+  if (looksLikeAiJson(content)) {
+    throw new Error('AI 返回了无法解析的 JSON，请重试。')
+  }
   const isHtml = content.startsWith('<')
 
   return {
@@ -238,19 +267,8 @@ const options = $ref({
     // ],
   },
   user: {
-    id: 'umoeditor',
-    label: 'Open Editor',
-    avatar: 'https://tdesign.gtimg.com/site/avatar.jpg',
   },
   users: [
-    { id: 'umodoc', label: 'Umo Team' },
-    { id: 'Cassielxd', label: 'Cassielxd' },
-    { id: 'Goldziher', label: "Na'aman Hirschfeld" },
-    { id: 'SerRashin', label: 'SerRashin' },
-    { id: 'ChenErik', label: 'ChenErik' },
-    { id: 'china-wangxu', label: 'china-wangxu' },
-    { id: 'Sherman Xu', label: 'xuzhenjun130' },
-    { id: 'testuser', label: '测试用户' },
   ],
   // https://dev.umodoc.com/cn/docs/options/extensions#disableextensions
   disableExtensions: [],
