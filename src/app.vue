@@ -13,6 +13,182 @@
 import { shortId } from '@/utils/short-id'
 
 const editorRef = $ref(null)
+const AI_API_URL = '/api/ai/generate'
+
+const stripCodeFence = (value = '') => {
+  return value
+    .trim()
+    .replace(/^```(?:json|html)?\s*/i, '')
+    .replace(/\s*```$/, '')
+    .trim()
+}
+
+const parseAiJson = (value = '') => {
+  const normalized = stripCodeFence(value)
+  if (!normalized) {
+    return null
+  }
+  const attempts = [normalized]
+  const start = normalized.indexOf('{')
+  const end = normalized.lastIndexOf('}')
+  if (start !== -1 && end !== -1 && end > start) {
+    attempts.push(normalized.slice(start, end + 1))
+  }
+  for (const item of attempts) {
+    try {
+      return JSON.parse(item)
+    } catch {}
+  }
+  return null
+}
+
+const buildAiSystemPrompt = () => {
+  return [
+    '你是一个富文本编辑器的文档改写助手。',
+    '你的任务是根据用户要求修改文档，或者生成可以插入文档的 ECharts 图表节点。',
+    '你必须只返回 JSON，不要返回 Markdown 代码块，不要返回解释，不要返回前后说明。',
+    '返回格式必须是：{"message":"给用户的简短说明","actions":[...]}。',
+    'actions 支持以下类型：',
+    '1. replace_document: 用新的完整 HTML 替换全文，字段包含 type、content、format。',
+    '2. replace_selection: 用 HTML 替换当前选区，字段包含 type、content、format。',
+    '3. insert_echarts: 插入图表节点，字段包含 type、target、chart。',
+    'insert_echarts 的 chart 建议使用 mode=0，并提供合法的 ECharts option 对象到 chartOptions 字段。',
+    'chart 可包含 id、name、width、height、describe、mode、chartOptions。',
+    '如果用户要求“生成图表/可视化/趋势图/柱状图/饼图/折线图”，优先返回 insert_echarts 动作。',
+    '如果用户既要求改写文档又要求插入图表，可以返回多个 actions，按执行顺序排列。',
+    '文本改写时保留原有标题、列表、表格、强调等结构，除非用户明确要求调整。',
+    '除 JSON 外不要输出任何其他内容。',
+  ].join('\n')
+}
+
+const buildAiPrompt = ({ prompt, scope, selection, document }) => {
+  const hasSelection = !!selection.text?.trim()
+  const effectiveScope = scope === 'selection' && hasSelection ? '选区' : '全文'
+  return [
+    `用户要求：${prompt}`,
+    '',
+    `修改范围：${effectiveScope}`,
+    hasSelection
+      ? `当前选区文本：\n${selection.text.trim()}`
+      : '当前没有有效选区，请基于全文处理。',
+    '',
+    '请根据用户要求返回前面约定的 JSON。',
+    '如果只是文本改写，请返回 replace_document 或 replace_selection。',
+    '如果需要在文档中展示图表，请返回 insert_echarts，并提供可直接渲染的 chartOptions。',
+    '图表数据请优先从当前选区文本、全文文本、表格或列表中提取；如果数据不完整，可以做合理补全，但要保证图表可展示。',
+    '如果是选区修改，只调整选区相关内容，文档其他部分保持原状。',
+    '',
+    '<current-document-text>',
+    document.text || '',
+    '</current-document-text>',
+    '',
+    '<current-document-html>',
+    document.html || '<p></p>',
+    '</current-document-html>',
+  ].join('\n')
+}
+
+const parseAiError = async (response) => {
+  try {
+    const data = await response.json()
+    return data.message || data.error || `HTTP ${response.status}`
+  } catch {
+    return `HTTP ${response.status}`
+  }
+}
+
+const callLocalAiService = async (payload) => {
+  const response = await fetch(AI_API_URL, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      prompt: buildAiPrompt(payload),
+      system: buildAiSystemPrompt(),
+      temperature: 0.2,
+      maxOutputTokens: 4000,
+    }),
+  })
+
+  if (!response.ok) {
+    throw new Error(await parseAiError(response))
+  }
+
+  const data = await response.json()
+  const parsed = parseAiJson(data.text || '')
+  const hasSelection = !!payload.selection.text?.trim()
+  const scope =
+    payload.scope === 'selection' && hasSelection ? 'selection' : 'document'
+
+  if (parsed && typeof parsed === 'object') {
+    if (Array.isArray(parsed.actions) || parsed.action) {
+      return parsed
+    }
+    if (
+      parsed.chart ||
+      parsed.chartOptions ||
+      parsed.options ||
+      parsed.option
+    ) {
+      return {
+        message:
+          parsed.message ||
+          (scope === 'selection'
+            ? '已根据当前选区插入图表。'
+            : '已在文档中插入图表。'),
+        actions: [
+          {
+            type: 'insert_echarts',
+            target: scope,
+            chart: parsed.chart || parsed,
+          },
+        ],
+      }
+    }
+    if (
+      parsed.content !== undefined ||
+      parsed.html !== undefined ||
+      parsed.text !== undefined
+    ) {
+      return {
+        message:
+          parsed.message ||
+          (scope === 'selection'
+            ? '已通过本地 AI 服务完成选区修改。'
+            : '已通过本地 AI 服务完成全文修改。'),
+        actions: [
+          {
+            type: scope === 'selection' ? 'replace_selection' : 'replace_document',
+            content: parsed.content ?? parsed.html ?? parsed.text,
+            format:
+              parsed.format ||
+              (parsed.html !== undefined ? 'html' : 'text'),
+          },
+        ],
+      }
+    }
+    return parsed
+  }
+
+  const content = stripCodeFence(data.text || '')
+  const isHtml = content.startsWith('<')
+
+  return {
+    message:
+      scope === 'selection'
+        ? '已通过本地 AI 服务完成选区修改。'
+        : '已通过本地 AI 服务完成全文修改。',
+    actions: [
+      {
+        type: scope === 'selection' ? 'replace_selection' : 'replace_document',
+        content,
+        format: isHtml ? 'html' : 'text',
+      },
+    ],
+  }
+}
+
 const templates = [
   {
     title: '工作任务',
@@ -43,6 +219,13 @@ const options = $ref({
     layouts: ['page', 'web'],
     showBookmark: true,
   },
+  ai: {
+    enabled: true,
+    showConfigTip: false,
+    async onChat(payload) {
+      return await callLocalAiService(payload)
+    },
+  },
   templates,
   cdnUrl: 'https://cdn.umodoc.com',
   shareUrl: 'https://www.umodoc.com',
@@ -56,7 +239,7 @@ const options = $ref({
   },
   user: {
     id: 'umoeditor',
-    label: 'Umo Editor',
+    label: 'Open Editor',
     avatar: 'https://tdesign.gtimg.com/site/avatar.jpg',
   },
   users: [

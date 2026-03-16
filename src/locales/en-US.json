@@ -525,6 +525,14 @@
   "blockMenu": {
     "insert": "Insert Content",
     "template": "Insert Template",
+    "ai": "AI Assistant",
+    "aiDialog": {
+      "title": "AI Block Chat",
+      "placeholder": "Describe how AI should revise the current block, for example: polish this paragraph and add a conclusion.",
+      "send": "Send and apply",
+      "context": "Current block context",
+      "thinking": "AI is thinking and preparing changes..."
+    },
     "common": "Common actions",
     "clearFormat": "Clear formatting",
     "duplicate": "Duplicate",
@@ -533,6 +541,7 @@
     "delete": "Delete"
   },
   "bubbleMenu": {
+    "ai": "AI Assistant",
     "code": {
       "copy": {
         "text": "Copy Code",
@@ -724,6 +733,22 @@
     "reset": "Back to 100%"
   },
   "node": {
+    "ai": {
+      "title": "AI Revision Record",
+      "prompt": "Prompt",
+      "response": "AI Response",
+      "thinking": "Thinking",
+      "done": "Done",
+      "failed": "Failed",
+      "emptyPrompt": "No prompt yet",
+      "emptyResponse": "AI has not returned content yet",
+      "error": "AI execution failed",
+      "action": {
+        "chart": "Insert chart",
+        "rewrite": "Rewrite content",
+        "other": "Other action"
+      }
+    },
     "codeBlock": {
       "menu": "Menu"
     },

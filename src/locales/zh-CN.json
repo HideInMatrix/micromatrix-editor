@@ -524,6 +524,14 @@
   "blockMenu": {
     "insert": "插入新内容",
     "template": "插入模板",
+    "ai": "AI 助手",
+    "aiDialog": {
+      "title": "AI 块对话",
+      "placeholder": "描述你希望 AI 如何修改当前块内容，例如：润色这段文字并补充一个结论。",
+      "send": "发送并应用",
+      "context": "当前块上下文",
+      "thinking": "AI 正在思考并生成修改..."
+    },
     "common": "常用操作",
     "clearFormat": "清除格式",
     "duplicate": "复制节点",
@@ -532,6 +540,7 @@
     "delete": "删除"
   },
   "bubbleMenu": {
+    "ai": "AI 助手",
     "code": {
       "copy": {
         "text": "复制代码",
@@ -723,6 +732,22 @@
     "reset": "快速设置为 100%"
   },
   "node": {
+    "ai": {
+      "title": "AI 修改记录",
+      "prompt": "用户要求",
+      "response": "AI 响应",
+      "thinking": "思考中",
+      "done": "已完成",
+      "failed": "已失败",
+      "emptyPrompt": "暂无提问内容",
+      "emptyResponse": "AI 暂未返回内容",
+      "error": "AI 执行失败",
+      "action": {
+        "chart": "插入图表",
+        "rewrite": "改写内容",
+        "other": "其他动作"
+      }
+    },
     "codeBlock": {
       "menu": "菜单栏"
     },

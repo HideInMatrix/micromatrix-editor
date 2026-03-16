@@ -73,6 +73,34 @@ export default {
       return null
     },
   },
+  ai: {
+    enabled: false,
+    title: {
+      zh_CN: 'AI 助手',
+      en_US: 'AI Assistant',
+    },
+    placeholder: {
+      zh_CN: '描述你希望 AI 如何修改当前文档，例如：润色当前选区并补充一段总结。',
+      en_US:
+        'Describe how AI should revise the current document, for example: polish the current selection and add a short conclusion.',
+    },
+    welcomeMessage: {
+      zh_CN:
+        '告诉我你希望如何修改文档。我会把你的要求连同当前选区或全文上下文发送给 AI，并把返回结果写回编辑器。',
+      en_US:
+        'Tell me how you want the document changed. I will send your instruction together with the current selection or full-document context to AI, then write the result back into the editor.',
+    },
+    defaultScope: 'auto',
+    autoApply: true,
+    autoSave: false,
+    showConfigTip: true,
+    maxMessages: 20,
+    async onChat() {
+      return await new Promise((_, reject) => {
+        reject(new Error('Key "ai.onChat": Please set the AI chat method'))
+      })
+    },
+  },
   webPages: [
     {
       label: {

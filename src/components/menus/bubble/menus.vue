@@ -158,6 +158,10 @@
       <menus-bubble-node-delete />
     </template>
   </template>
+  <template v-if="hasTextSelection">
+    <div class="umo-bubble-menu-divider"></div>
+    <menus-bubble-ai />
+  </template>
   <template v-if="editor?.state?.selection">
     <slot
       name="bubble_menu"
@@ -169,6 +173,8 @@
 
 <script setup>
 import { CellSelection } from '@tiptap/pm/tables'
+
+import { getSelectionText } from '@/utils/selection'
 
 const editor = inject('editor')
 const options = inject('options')
@@ -190,6 +196,17 @@ const is = (type) => {
 const attrs = (type) => {
   return editor.value.getAttributes(type)
 }
+const hasTextSelection = computed(() => {
+  const editorIns = editor.value
+  const selection = editorIns?.state?.selection
+  if (!editorIns || !selection || selection.empty || selection.node) {
+    return false
+  }
+  if (selection instanceof CellSelection) {
+    return false
+  }
+  return !!getSelectionText(editorIns).trim()
+})
 
 const getCurrentNode = (type) => {
   const { state } = editor.value

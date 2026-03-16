@@ -545,6 +545,91 @@ export default new ObjectSchema({
       },
     },
   },
+  ai: {
+    merge: 'replace',
+    validate: 'object',
+    required: false,
+    schema: {
+      enabled: {
+        merge: 'replace',
+        validate: 'boolean',
+        required: false,
+      },
+      title: {
+        merge: 'replace',
+        validate(value) {
+          if (!isLocale(value)) {
+            throw new Error(
+              'Key "ai": Key "title" must be string, or a object with "en_US" and "zh_CN" properties.',
+            )
+          }
+        },
+        required: false,
+      },
+      placeholder: {
+        merge: 'replace',
+        validate(value) {
+          if (!isLocale(value)) {
+            throw new Error(
+              'Key "ai": Key "placeholder" must be string, or a object with "en_US" and "zh_CN" properties.',
+            )
+          }
+        },
+        required: false,
+      },
+      welcomeMessage: {
+        merge: 'replace',
+        validate(value) {
+          if (!isLocale(value)) {
+            throw new Error(
+              'Key "ai": Key "welcomeMessage" must be string, or a object with "en_US" and "zh_CN" properties.',
+            )
+          }
+        },
+        required: false,
+      },
+      defaultScope: {
+        merge: 'replace',
+        validate(value) {
+          if (value && !['auto', 'selection', 'document'].includes(value)) {
+            throw new Error(
+              'Key "ai": Key "defaultScope" must be one of "auto", "selection" or "document".',
+            )
+          }
+        },
+        required: false,
+      },
+      autoApply: {
+        merge: 'replace',
+        validate: 'boolean',
+        required: false,
+      },
+      autoSave: {
+        merge: 'replace',
+        validate: 'boolean',
+        required: false,
+      },
+      showConfigTip: {
+        merge: 'replace',
+        validate: 'boolean',
+        required: false,
+      },
+      maxMessages: {
+        merge: 'replace',
+        validate: 'number',
+        required: false,
+      },
+      onChat: {
+        merge: 'replace',
+        validate(value) {
+          if (!isAsyncFunction(value)) {
+            throw new Error('Key "ai": Key "onChat" must be a async function.')
+          }
+        },
+        required: false,
+      },
+    },
+  },
   webPages: {
     merge: 'replace',
     validate(value) {

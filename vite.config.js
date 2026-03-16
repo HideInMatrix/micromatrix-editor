@@ -97,6 +97,15 @@ export default defineConfig({
   base: '/umo-editor',
   plugins: [ReactivityTransform(), ...Object.values(vuePlugins)],
   css: cssConfig,
+  server: {
+    proxy: {
+      '/api/ai': {
+        target: 'http://localhost:3000',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api/, ''),
+      },
+    },
+  },
   build: buildConfig,
   esbuild: {
     drop: ['debugger'],

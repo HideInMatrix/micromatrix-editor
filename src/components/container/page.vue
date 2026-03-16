@@ -68,6 +68,7 @@
         </t-watermark>
       </div>
     </div>
+    <container-ai-chat v-if="aiOptions.enabled" />
     <div class="umo-main-floating-actions">
       <t-back-top
         style="position: relative"
@@ -92,7 +93,9 @@
 <script setup>
 const container = inject('container')
 const imageViewer = inject('imageViewer')
+const options = inject('options')
 const pageOptions = inject('page')
+const aiOptions = computed(() => options.value.ai || {})
 
 // 页面大小
 const pageSize = $computed(() => {
@@ -235,6 +238,7 @@ watch(
 
 .umo-zoomable-container {
   flex: 1;
+  min-width: 0;
   scroll-behavior: smooth;
   &.umo-page-container {
     padding: 20px 50px;

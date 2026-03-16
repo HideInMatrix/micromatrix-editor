@@ -15,6 +15,7 @@
         :pos="selectedNodePos"
         @dropdown-visible="dropdownVisible"
       />
+      <menus-block-ai :node="selectedNode" :pos="selectedNodePos" />
       <menus-block-common
         v-if="!editor?.isEmpty"
         :node="selectedNode"
