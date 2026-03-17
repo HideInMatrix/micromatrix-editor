@@ -52,7 +52,7 @@ const options = $ref({
   },
   templates,
   cdnUrl: 'https://cdn.umodoc.com',
-  shareUrl: 'https://www.umodoc.com',
+  shareUrl: 'https://micromatrix.org',
   file: {
     // allowedMimeTypes: [
     //   'application/pdf',

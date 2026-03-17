@@ -92,7 +92,6 @@
     "@tiptap/y-tiptap": "3.0.2",
     "@tool-belt/type-predicates": "1.4.1",
     "@vueuse/core": "14.2.1",
-    "docshift": "^0.0.73",
     "dom-to-image-more": "3.7.2",
     "es-drager": "1.2.11",
     "fast-glob": "3.3.3",

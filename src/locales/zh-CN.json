@@ -340,6 +340,7 @@
       "placeholder": "请输入或粘贴 Mermaid 代码",
       "preview": "预览",
       "notEmpty": "Mermaid 内容不能为空",
+      "renderError": "Mermaid 预览生成失败，请检查代码",
       "keepSize": "保持修改前的大小"
     },
     "echarts": {

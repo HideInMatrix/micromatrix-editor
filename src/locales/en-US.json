@@ -340,6 +340,7 @@
       "placeholder": "Enter or paste Mermaid code",
       "preview": "Preview",
       "notEmpty": "Mermaid content cannot be empty",
+      "renderError": "Failed to generate Mermaid preview. Please check the code.",
       "keepSize": "Keep Original Size"
     },
     "echarts": {

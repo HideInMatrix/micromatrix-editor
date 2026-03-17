@@ -128,12 +128,72 @@ const mermaidInit = () => {
 // 渲染 Mermaid
 let mermaidCode = $ref(props.content)
 let svgCode = $ref('')
+let renderError = $ref(false)
 const mermaidRef = $ref(null)
+
+const extractSvgMarkup = (result) => {
+  if (typeof result === 'string') {
+    return result
+  }
+
+  if (typeof result?.svg === 'string') {
+    return result.svg
+  }
+
+  return ''
+}
+
+const getSvgSizeFromMarkup = (markup = '') => {
+  if (!markup) {
+    return { width: 0, height: 0 }
+  }
+
+  const doc = new DOMParser().parseFromString(markup, 'image/svg+xml')
+  const svg = doc.querySelector('svg')
+
+  if (!svg) {
+    return { width: 0, height: 0 }
+  }
+
+  const width = Number.parseFloat(svg.getAttribute('width') || '')
+  const height = Number.parseFloat(svg.getAttribute('height') || '')
+
+  if (Number.isFinite(width) && Number.isFinite(height)) {
+    return { width, height }
+  }
+
+  const viewBox =
+    svg
+      .getAttribute('viewBox')
+      ?.trim()
+      .split(/[\s,]+/)
+      .map((item) => Number.parseFloat(item)) || []
+
+  if (viewBox.length === 4 && viewBox.every((item) => Number.isFinite(item))) {
+    return {
+      width: viewBox[2],
+      height: viewBox[3],
+    }
+  }
+
+  return { width: 0, height: 0 }
+}
+
 const renderMermaid = async () => {
   try {
-    svgCode = await mermaid.render('mermaid-svg', mermaidCode)
+    renderError = false
+    const result = await mermaid.render(
+      `mermaid-svg-${shortId(6)}`,
+      mermaidCode,
+    )
+    svgCode = extractSvgMarkup(result)
+    await nextTick()
+    if (typeof result?.bindFunctions === 'function' && mermaidRef) {
+      result.bindFunctions(mermaidRef)
+    }
   } catch {
     svgCode = ''
+    renderError = true
   }
 }
 watch(
@@ -142,6 +202,10 @@ watch(
     if (visible) {
       localConfig = { ...props.config }
       mermaidCode = props.content || 'graph TB\na-->b'
+      renderError = false
+    } else {
+      svgCode = ''
+      renderError = false
     }
   },
   { immediate: true },
@@ -149,10 +213,14 @@ watch(
 watch(
   () => [localConfig, mermaidCode],
   async () => {
-    if (!mermaidCode || mermaidCode === '') return
+    if (!mermaidCode || mermaidCode === '') {
+      svgCode = ''
+      renderError = false
+      return
+    }
     await nextTick()
     mermaidInit()
-    renderMermaid()
+    await renderMermaid()
   },
   { deep: true },
 )
@@ -167,14 +235,26 @@ const setMermaid = () => {
     })
     return
   }
+
+  if (!svgCode || renderError) {
+    useMessage('error', {
+      attach: container,
+      content: t('tools.mermaid.renderError'),
+    })
+    return
+  }
+
   if (!props.content || (props.content && props.content !== mermaidCode)) {
-    const svg = mermaidRef.querySelector('svg')
-    const { width, height } = svg.getBoundingClientRect()
+    const svg = mermaidRef?.querySelector?.('svg')
+    const rect = svg?.getBoundingClientRect?.()
+    const fallbackSize = getSvgSizeFromMarkup(svgCode)
+    const width = rect?.width || fallbackSize.width || 600
+    const height = rect?.height || fallbackSize.height || 320
     const { attrs } = getSelectionNode(editor.value) || {}
     const imageOptions = {
       id: shortId(10),
       type: 'mermaid',
-      src: svgToDataURL(svgCode),
+      src: svgToDataURL(svg || svgCode),
       config: JSON.stringify(localConfig),
       content: mermaidCode,
       width: keepSize ? attrs?.width || width : width,
