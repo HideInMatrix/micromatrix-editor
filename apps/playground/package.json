@@ -13,6 +13,7 @@
     "@mxm-editor/extension-blockquote": "workspace:*",
     "@mxm-editor/extension-callout": "workspace:*",
     "@mxm-editor/extension-character-count": "workspace:*",
+    "@mxm-editor/extension-comments": "workspace:*",
     "@mxm-editor/extension-collaboration": "workspace:*",
     "@mxm-editor/extension-collaboration-caret": "workspace:*",
     "@mxm-editor/extension-color": "workspace:*",

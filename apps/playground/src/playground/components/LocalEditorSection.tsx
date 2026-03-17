@@ -15,13 +15,11 @@ import {
   List,
   ListOrdered,
   ListTodo,
-  Moon,
   Pilcrow,
   Quote,
   Redo2,
   Strikethrough,
   Subscript as SubscriptIcon,
-  Sun,
   Superscript as SuperscriptIcon,
   Underline,
   Undo2,
@@ -41,19 +39,10 @@ import {
 } from "../constants";
 import { useLocalPlayground } from "../hooks/useLocalPlayground";
 
-type PlaygroundTheme = "dark" | "light";
-
 interface LocalEditorPanelProps {
   insertImage: () => void;
   resetTemplate: () => void;
   setLink: () => void;
-  theme: PlaygroundTheme;
-  onToggleTheme: () => void;
-}
-
-interface LocalEditorSectionProps {
-  theme: PlaygroundTheme;
-  onToggleTheme: () => void;
 }
 
 interface ToolbarIconButtonProps {
@@ -122,8 +111,6 @@ function ToolbarDivider() {
 function EditorToolbar({
   insertImage,
   setLink,
-  theme,
-  onToggleTheme,
 }: Omit<LocalEditorPanelProps, "resetTemplate">) {
   const { editor } = useCurrentEditor();
   const state = useEditorState({
@@ -311,11 +298,6 @@ function EditorToolbar({
             label="Add"
             onClick={insertImage}
           />
-          <ToolbarIconButton
-            icon={theme === "dark" ? Moon : Sun}
-            label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
-            onClick={onToggleTheme}
-          />
         </div>
       </div>
     </div>
@@ -477,8 +459,6 @@ function LocalEditorPanel({
   insertImage,
   resetTemplate,
   setLink,
-  theme,
-  onToggleTheme,
 }: LocalEditorPanelProps) {
   const { editor } = useCurrentEditor();
 
@@ -487,12 +467,10 @@ function LocalEditorPanel({
   }
 
   return (
-    <div className="ui-shell flex h-[calc(100vh-2rem)] w-full flex-col border border-[var(--panel-border)]">
+    <div className="ui-shell flex h-full min-h-[42rem] w-full flex-col border border-[var(--panel-border)]">
       <EditorToolbar
         insertImage={insertImage}
-        onToggleTheme={onToggleTheme}
         setLink={setLink}
-        theme={theme}
       />
       <SelectionBubbleMenu setLink={setLink} />
       <EmptyLineFloatingMenu insertImage={insertImage} />
@@ -505,21 +483,16 @@ function LocalEditorPanel({
   );
 }
 
-export function LocalEditorSection({
-  theme,
-  onToggleTheme,
-}: LocalEditorSectionProps) {
+export function LocalEditorSection() {
   const playground = useLocalPlayground();
 
   return (
-    <section className="w-full">
+    <section className="h-full w-full">
       <EditorContext.Provider value={{ editor: playground.editor }}>
         <LocalEditorPanel
           insertImage={playground.insertImage}
-          onToggleTheme={onToggleTheme}
           resetTemplate={playground.resetTemplate}
           setLink={playground.setLink}
-          theme={theme}
         />
       </EditorContext.Provider>
     </section>

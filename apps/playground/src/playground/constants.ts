@@ -1,4 +1,5 @@
 import type { Editor } from "@mxm-editor/core";
+import type { CommentsThread } from "@mxm-editor/extension-comments";
 import type { MentionItem } from "@mxm-editor/extension-mention";
 
 export const sampleImageUrl =
@@ -91,6 +92,77 @@ export const collaborationContent = [
   "",
   "在任意一侧输入 `/tip`、`/quote`、`/bullet`、`/table` 或直接编辑内容，另一侧都会同步。",
 ].join("\n");
+
+export const commentsDemoContent = [
+  "<h1>Editorial review in context</h1>",
+  '<p><span data-thread-ids="thread-launch">Anchor discussion directly to the sentence</span>, and let <span data-thread-ids="thread-launch,thread-voice">overlapping reviews</span> travel with the text as it changes.</p>',
+  "<p>Select any phrase to open a fresh thread from the sidebar. Existing discussions can be replied to, resolved, or archived without leaving the writing flow.</p>",
+  "<h2>What this demo shows</h2>",
+  "<ul><li><p>Thread metadata lives in the provider.</p></li><li><p>Inline marks keep document anchors stable.</p></li><li><p>Multiple thread ids can share the same text range.</p></li></ul>",
+  "<blockquote><p>Try selecting a sentence in the editor, write a note in the sidebar, then create an overlapping thread on the same words.</p></blockquote>",
+  "<p></p>",
+].join("");
+
+export const commentsDemoThreads: CommentsThread[] = [
+  {
+    id: "thread-launch",
+    data: {
+      author: "Ava",
+      label: "Launch narrative",
+      quote: "Anchor discussion directly to the sentence",
+    },
+    resolved: false,
+    archived: false,
+    createdAt: "2026-03-17T09:30:00.000Z",
+    updatedAt: "2026-03-17T09:44:00.000Z",
+    comments: [
+      {
+        id: "comment-launch-1",
+        content: "This is the core promise. Let's keep the sentence outcome-led instead of feature-led.",
+        data: {
+          author: "Ava",
+          role: "Content Design",
+        },
+        createdAt: "2026-03-17T09:30:00.000Z",
+        updatedAt: "2026-03-17T09:30:00.000Z",
+      },
+      {
+        id: "comment-launch-2",
+        content: "Agreed. It would help to hint that the anchor survives document edits.",
+        data: {
+          author: "Noah",
+          role: "Product",
+        },
+        createdAt: "2026-03-17T09:44:00.000Z",
+        updatedAt: "2026-03-17T09:44:00.000Z",
+      },
+    ],
+  },
+  {
+    id: "thread-voice",
+    data: {
+      author: "Lin",
+      label: "Voice polish",
+      quote: "overlapping reviews",
+    },
+    resolved: true,
+    archived: false,
+    createdAt: "2026-03-17T10:02:00.000Z",
+    updatedAt: "2026-03-17T10:18:00.000Z",
+    comments: [
+      {
+        id: "comment-voice-1",
+        content: "This phrase is a nice shorthand. Keeping it resolved here makes the overlap behavior easy to inspect.",
+        data: {
+          author: "Lin",
+          role: "Editor",
+        },
+        createdAt: "2026-03-17T10:02:00.000Z",
+        updatedAt: "2026-03-17T10:18:00.000Z",
+      },
+    ],
+  },
+];
 
 export const heroCopy =
   "这一轮的 playground 现在以 mxm-editor 品牌为中心：除了 heading、blockquote、bullet / ordered list、task list、code block、table 之外，还补上了 code mark、strike、underline、highlight、text style + color、horizontal rule、hard break、floating menu、placeholder、character count、text align、image、list keymap 和 collaboration caret，以及更完整的 editor commands。";
