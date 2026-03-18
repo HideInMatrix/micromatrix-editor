@@ -1,29 +1,26 @@
 import {
   inputRules,
   keymap,
-  type ParseRule,
-  type Mark as PMMark,
-  type MarkSpec,
-  type Node as PMNode,
   type NodeViewConstructor,
   Plugin,
   Schema,
-  type NodeSpec,
 } from "@mxm-editor/pm";
 import type { Editor } from "./Editor";
+import {
+  getAttributesForExtensionFromResolvedExtensions,
+  getRenderedAttributes,
+  getSchemaByResolvedExtensions,
+  resolveExtensions,
+} from "./helpers/schema";
 import { pasteRulesPlugin } from "./PasteRule";
 import type {
   AnyExtension,
-  ExtensionAttribute,
   ExtensionConfig,
-  GlobalAttributes,
-  MarkConfig,
   NodeViewRenderer,
   NodeConfig,
   RawCommands,
   ExtensionLike,
 } from "./types";
-import { cleanObject, mergeAttributes } from "./utils";
 
 function includesExtension(
   setting: Editor["options"]["enableInputRules"],
@@ -55,12 +52,18 @@ export class ExtensionManager {
 
   constructor(extensions: AnyExtension[], editor: Editor) {
     this.editor = editor;
-    this.extensions = this.resolveExtensions(extensions);
+    this.extensions = resolveExtensions(
+      extensions,
+      (extension) => extension.createContext(this.editor),
+    );
     this.storage = Object.fromEntries(
       this.extensions.map((extension) => [extension.name, extension.storage]),
     );
     this.onExtensionsResolved();
-    this.schema = this.createSchema();
+    this.schema = getSchemaByResolvedExtensions(
+      this.extensions,
+      (extension) => extension.createContext(this.editor),
+    );
   }
 
   get commands(): RawCommands {
@@ -136,7 +139,11 @@ export class ExtensionManager {
         const renderNodeView = node.config.addNodeView?.call(context) as
           | NodeViewRenderer
           | undefined;
-        const attributes = this.getAttributes(node);
+        const attributes = getAttributesForExtensionFromResolvedExtensions(
+          node,
+          this.extensions,
+          (extension) => extension.createContext(this.editor),
+        );
 
         const nodeView: NodeViewConstructor = (
           pmNode,
@@ -153,7 +160,7 @@ export class ExtensionManager {
             innerDecorations,
             editor: this.editor,
             extension: node,
-            HTMLAttributes: this.getRenderedAttributes(pmNode.attrs, attributes),
+            HTMLAttributes: getRenderedAttributes(pmNode.attrs, attributes),
             selected: false,
             updateAttributes: (nextAttributes) => {
               const position = typeof getPos === "function" ? getPos() : undefined;
@@ -228,253 +235,5 @@ export class ExtensionManager {
         },
       );
     });
-  }
-
-  private resolveExtensions(extensions: AnyExtension[]) {
-    const resolved: AnyExtension[] = [];
-
-    const visit = (items: AnyExtension[]) => {
-      items.forEach((extension) => {
-        resolved.push(extension);
-
-        const nested = extension.config.addExtensions?.call(
-          extension.createContext(this.editor),
-        );
-
-        if (nested?.length) {
-          visit(nested);
-        }
-      });
-    };
-
-    visit(extensions);
-
-    return resolved.sort((a, b) => b.priority - a.priority);
-  }
-
-  private createSchema() {
-    const nodes = this.extensions.filter(
-      (extension): extension is ExtensionLike<any, any, NodeConfig<any, any>> =>
-        extension.type === "node",
-    );
-    const marks = this.extensions.filter(
-      (extension): extension is ExtensionLike<any, any, MarkConfig<any, any>> =>
-        extension.type === "mark",
-    );
-    const topNode = nodes.find((node) => node.config.topNode)?.name;
-
-    return new Schema({
-      topNode,
-      nodes: Object.fromEntries(
-        nodes.map((node) => {
-          const context = node.createContext(this.editor);
-          const attributes = this.getAttributes(node);
-          const group =
-            typeof node.config.group === "function"
-              ? node.config.group.call(context)
-              : node.config.group;
-          const inline =
-            typeof node.config.inline === "function"
-              ? node.config.inline.call(context)
-              : node.config.inline;
-          const spec: NodeSpec = cleanObject({
-            content: node.config.content,
-            marks: node.config.marks,
-            group,
-            inline,
-            atom: node.config.atom,
-            selectable: node.config.selectable,
-            draggable: node.config.draggable,
-            code: node.config.code,
-            defining: node.config.defining,
-            attrs: this.createAttributesSpec(attributes),
-            ...(node.config.extendNodeSchema ?? {}),
-          });
-
-          if (node.config.parseHTML) {
-            spec.parseDOM = this.injectParseAttributes(
-              node.config.parseHTML.call(context),
-              attributes,
-            );
-          }
-
-          if (node.config.renderHTML) {
-            spec.toDOM = (pmNode: PMNode) =>
-              node.config.renderHTML!.call(context, {
-                node: pmNode,
-                HTMLAttributes: this.getRenderedAttributes(
-                  pmNode.attrs,
-                  attributes,
-                ),
-              });
-          }
-
-          return [node.name, spec];
-        }),
-      ),
-      marks: Object.fromEntries(
-        marks.map((mark) => {
-          const context = mark.createContext(this.editor);
-          const attributes = this.getAttributes(mark);
-          const inclusive =
-            typeof mark.config.inclusive === "function"
-              ? mark.config.inclusive.call(context)
-              : mark.config.inclusive;
-          const spec: MarkSpec = cleanObject({
-            inclusive,
-            excludes: mark.config.excludes,
-            group: mark.config.group,
-            code: mark.config.code,
-            attrs: this.createAttributesSpec(attributes),
-          });
-
-          if (mark.config.parseHTML) {
-            spec.parseDOM = this.injectParseAttributes(
-              mark.config.parseHTML.call(context),
-              attributes,
-            );
-          }
-
-          if (mark.config.renderHTML) {
-            spec.toDOM = (pmMark: PMMark) =>
-              mark.config.renderHTML!.call(context, {
-                mark: pmMark,
-                HTMLAttributes: this.getRenderedAttributes(
-                  pmMark.attrs,
-                  attributes,
-                ),
-              });
-          }
-
-          return [mark.name, spec];
-        }),
-      ),
-    });
-  }
-
-  private getAttributes(extension: AnyExtension) {
-    const context = extension.createContext(this.editor);
-    const globalAttributes = this.getGlobalAttributes(extension);
-
-    return {
-      ...globalAttributes,
-      ...(
-        extension.config.addAttributes?.call(context) ?? {}
-      ),
-    } as Record<string, ExtensionAttribute>;
-  }
-
-  private getGlobalAttributes(extension: AnyExtension) {
-    return this.extensions.reduce<Record<string, ExtensionAttribute>>(
-      (attributes, item) => {
-        const context = item.createContext(this.editor);
-        const globalAttributes = item.config.addGlobalAttributes?.call(context) ?? [];
-
-        globalAttributes.forEach((globalAttribute: GlobalAttributes) => {
-          if (!globalAttribute.types.includes(extension.name)) {
-            return;
-          }
-
-          Object.assign(attributes, globalAttribute.attributes);
-        });
-
-        return attributes;
-      },
-      {},
-    );
-  }
-
-  private createAttributesSpec(
-    attributes: Record<string, ExtensionAttribute>,
-  ): Record<string, { default?: any }> {
-    return Object.fromEntries(
-      Object.entries(attributes).map(([name, attribute]) => {
-        const spec: { default?: any } = {};
-
-        if ("default" in attribute) {
-          spec.default = attribute.default;
-        }
-
-        return [name, spec];
-      }),
-    );
-  }
-
-  private injectParseAttributes<T extends ParseRule>(
-    rules: readonly T[] | undefined,
-    attributes: Record<string, ExtensionAttribute>,
-  ) {
-    if (!rules?.length) {
-      return rules;
-    }
-
-    return rules.map((rule) => {
-      const originalGetAttrs = rule.getAttrs;
-      const staticAttrs =
-        "attrs" in rule && rule.attrs && typeof rule.attrs === "object"
-          ? rule.attrs
-          : null;
-
-      return {
-        ...rule,
-        getAttrs: (node: string | Node) => {
-          const derivedAttrs =
-            typeof originalGetAttrs === "function"
-              ? (originalGetAttrs as (value: unknown) => Record<string, any> | false | null)(node)
-              : null;
-
-          const baseAttrs = {
-            ...(staticAttrs ?? {}),
-            ...(derivedAttrs && typeof derivedAttrs === "object" ? derivedAttrs : {}),
-          };
-
-          if (derivedAttrs === false) {
-            return false;
-          }
-
-          if (!(node instanceof HTMLElement)) {
-            return baseAttrs;
-          }
-
-          return {
-            ...baseAttrs,
-            ...Object.fromEntries(
-              Object.entries(attributes).map(([name, attribute]) => [
-                name,
-                attribute.parseHTML
-                  ? attribute.parseHTML(node)
-                  : baseAttrs[name]
-                    ?? node.getAttribute(name)
-                    ?? attribute.default,
-              ]),
-            ),
-          };
-        },
-      };
-    }) as T[];
-  }
-
-  private getRenderedAttributes(
-    attrs: Record<string, any>,
-    attributes: Record<string, ExtensionAttribute>,
-  ) {
-    return Object.entries(attributes).reduce<Record<string, string>>(
-      (rendered, [name, attribute]) => {
-        const value = attrs[name];
-
-        if (attribute.renderHTML) {
-          return mergeAttributes(rendered, attribute.renderHTML(attrs));
-        }
-
-        if (value === undefined || value === null) {
-          return rendered;
-        }
-
-        return mergeAttributes(rendered, {
-          [name]: String(value),
-        });
-      },
-      {},
-    );
   }
 }

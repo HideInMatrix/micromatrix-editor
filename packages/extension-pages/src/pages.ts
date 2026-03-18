@@ -25,6 +25,7 @@ import {
   defaultPageFormat,
   escapeHTML,
   getPagesLayoutMetrics,
+  isHeaderFooterVariants,
   isPagesFormat,
   PAGE_FORMATS,
   resolveHeaderFooterVariant,
@@ -52,8 +53,8 @@ type PagesPluginMeta =
 const pagesPluginKey = new PluginKey<PagesPluginState>("pages");
 const pagesStyleAttribute = "data-mxm-pages";
 const pagesHostClassName = "mxm-pages";
-const pagesEditorClassName = "mxm-pages__editor";
-const pagesPaginationAttribute = "data-mxm-pages-pagination";
+const pagesEditorClassName = "mxm-pages-editor";
+const pagesPaginationAttribute = "data-mxm-pagination";
 
 function createInjectedStyles() {
   return [
@@ -102,24 +103,24 @@ function createInjectedStyles() {
     "  height: 0;",
     "  pointer-events: none;",
     "}",
-    `.${pagesHostClassName} .mxm-pages__page-break {`,
+    `.${pagesHostClassName} .mxm-page-break {`,
     "  display: contents;",
     "}",
-    `.${pagesHostClassName} .mxm-pages__page {`,
+    `.${pagesHostClassName} .page {`,
     "  position: relative;",
     "  float: left;",
     "  clear: both;",
     "  width: 1px;",
     "  height: 0;",
     "}",
-    `.${pagesHostClassName} .mxm-pages__breaker,`,
-    `.${pagesHostClassName} .mxm-pages__footer-final {`,
+    `.${pagesHostClassName} .breaker,`,
+    `.${pagesHostClassName} .mxm-page-footer--final {`,
     "  width: calc(100% + var(--mxm-pages-padding-left) + var(--mxm-pages-padding-right));",
     "  margin-left: calc(var(--mxm-pages-padding-left) * -1);",
     "  margin-right: calc(var(--mxm-pages-padding-right) * -1);",
     "  pointer-events: none;",
     "}",
-    `.${pagesHostClassName} .mxm-pages__breaker {`,
+    `.${pagesHostClassName} .breaker {`,
     "  position: relative;",
     "  float: left;",
     "  clear: both;",
@@ -127,21 +128,21 @@ function createInjectedStyles() {
     "  right: 0;",
     "  z-index: 2;",
     "}",
-    `.${pagesHostClassName} .mxm-pages__breaker--start {`,
+    `.${pagesHostClassName} .breaker--start {`,
     "  height: var(--mxm-pages-padding-top);",
     "}",
-    `.${pagesHostClassName} .mxm-pages__break {`,
+    `.${pagesHostClassName} .breaker--page {`,
     "  display: grid;",
     "  grid-template-rows: var(--mxm-pages-padding-bottom) var(--mxm-pages-gap) var(--mxm-pages-padding-top);",
     "  height: var(--mxm-pages-break-height);",
     "}",
-    `.${pagesHostClassName} .mxm-pages__footer-final {`,
+    `.${pagesHostClassName} .mxm-page-footer--final {`,
     "  position: absolute;",
     "  left: 0;",
     "  right: 0;",
     "  z-index: 2;",
     "}",
-    `.${pagesHostClassName} .mxm-pages__region {`,
+    `.${pagesHostClassName} .mxm-page-region {`,
     "  display: flex;",
     "  box-sizing: border-box;",
     "  width: 100%;",
@@ -151,21 +152,21 @@ function createInjectedStyles() {
     "  font-size: 12px;",
     "  line-height: 1.4;",
     "}",
-    `.${pagesHostClassName} .mxm-pages__region-inner {`,
+    `.${pagesHostClassName} .mxm-page-region-inner {`,
     "  width: 100%;",
     "}",
-    `.${pagesHostClassName} .mxm-pages__region-inner > * {`,
+    `.${pagesHostClassName} .mxm-page-region-inner > * {`,
     "  max-width: 100%;",
     "}",
-    `.${pagesHostClassName} .mxm-pages__region p {`,
+    `.${pagesHostClassName} .mxm-page-region p {`,
     "  margin: 0;",
     "}",
-    `.${pagesHostClassName} .mxm-pages__gap {`,
+    `.${pagesHostClassName} .mxm-pagination-gap {`,
     "  position: relative;",
     "  background: var(--mxm-pages-break-background);",
     "}",
-    `.${pagesHostClassName} .mxm-pages__gap::before,`,
-    `.${pagesHostClassName} .mxm-pages__gap::after {`,
+    `.${pagesHostClassName} .mxm-pagination-gap::before,`,
+    `.${pagesHostClassName} .mxm-pagination-gap::after {`,
     "  content: \"\";",
     "  position: absolute;",
     "  left: 0;",
@@ -173,10 +174,10 @@ function createInjectedStyles() {
     "  height: 1px;",
     "  background: rgba(148, 163, 184, 0.36);",
     "}",
-    `.${pagesHostClassName} .mxm-pages__gap::before {`,
+    `.${pagesHostClassName} .mxm-pagination-gap::before {`,
     "  top: 0;",
     "}",
-    `.${pagesHostClassName} .mxm-pages__gap::after {`,
+    `.${pagesHostClassName} .mxm-pagination-gap::after {`,
     "  bottom: 0;",
     "}",
   ].join("\n");
@@ -265,6 +266,16 @@ function clearHostVariables(host: HTMLElement) {
   host.style.removeProperty("--mxm-pages-break-height");
   delete host.dataset.pageCount;
   delete host.dataset.pageMetrics;
+}
+
+function setEditorVariables(editor: HTMLElement, storage: PagesStorage) {
+  const metrics = resolveMetrics(storage);
+
+  editor.style.setProperty("--page-max-height", `${metrics.availableContentHeight}px`);
+}
+
+function clearEditorVariables(editor: HTMLElement) {
+  editor.style.removeProperty("--page-max-height");
 }
 
 function getHostElement(view: EditorView) {
@@ -429,7 +440,9 @@ function measureConsumedBreakCount(view: EditorView, contentBottom: number) {
   const editorRect = view.dom.getBoundingClientRect();
   const epsilon = 0.5;
 
-  return Array.from(view.dom.querySelectorAll(".mxm-pages__break")).reduce(
+  return Array.from(
+    view.dom.querySelectorAll(".breaker--page[data-page-number]"),
+  ).reduce(
     (count, element) => {
       if (!(element instanceof HTMLElement)) {
         return count;
@@ -631,9 +644,45 @@ function resolveHeaderFooterHTML(options: {
   });
 }
 
+function resolveHeaderFooterType(
+  value: PagesStorage["header"] | PagesStorage["footer"],
+  storage: PagesStorage,
+  page: number,
+): PagesHeaderFooterVariant {
+  if (!isHeaderFooterVariants(value)) {
+    return "default";
+  }
+
+  if (storage.differentFirstPage && page === 1 && value.first !== undefined) {
+    return "first";
+  }
+
+  if (storage.differentOddEven) {
+    if (page % 2 === 0 && value.even !== undefined) {
+      return "even";
+    }
+
+    if (page % 2 === 1 && value.odd !== undefined) {
+      return "odd";
+    }
+  }
+
+  return "default";
+}
+
+function applyDataAttributes(
+  element: HTMLElement,
+  attributes: Record<string, string>,
+) {
+  Object.entries(attributes).forEach(([name, value]) => {
+    element.setAttribute(name, value);
+  });
+}
+
 function buildRegionElement(options: {
   className: string;
   contentHeight: number;
+  dataAttributes?: Record<string, string>;
   height: number;
   html: string;
   inset: number;
@@ -642,13 +691,16 @@ function buildRegionElement(options: {
   const element = document.createElement("div");
   const inner = document.createElement("div");
 
-  element.className = `mxm-pages__region ${options.className}`;
+  element.className = `mxm-page-region ${options.className}`;
   element.style.height = `${options.height}px`;
   element.style.alignItems = options.position === "end" ? "flex-end" : "flex-start";
   element.style.paddingTop = options.position === "start" ? `${options.inset}px` : "0px";
   element.style.paddingBottom = options.position === "end" ? `${options.inset}px` : "0px";
   element.contentEditable = "false";
-  inner.className = "mxm-pages__region-inner";
+  if (options.dataAttributes) {
+    applyDataAttributes(element, options.dataAttributes);
+  }
+  inner.className = "mxm-page-region-inner";
   inner.style.minHeight = `${options.contentHeight}px`;
   inner.innerHTML = options.html;
   element.appendChild(inner);
@@ -658,6 +710,7 @@ function buildRegionElement(options: {
 
 function createBreakerElement(options: {
   className: string;
+  dataAttributes?: Record<string, string>;
   height: number;
 }) {
   const element = document.createElement("div");
@@ -665,6 +718,9 @@ function createBreakerElement(options: {
   element.className = options.className;
   element.style.height = `${options.height}px`;
   element.contentEditable = "false";
+  if (options.dataAttributes) {
+    applyDataAttributes(element, options.dataAttributes);
+  }
 
   return element;
 }
@@ -680,24 +736,38 @@ function createPaginationWidget(options: {
     const breakHeight = getInterPageBreakHeight(options.storage);
 
     pagination.setAttribute(pagesPaginationAttribute, "true");
+    pagination.id = "pages";
     pagination.contentEditable = "false";
 
     const firstPage = document.createElement("div");
     const firstAnchor = document.createElement("div");
     const firstBreaker = createBreakerElement({
-      className: "mxm-pages__breaker mxm-pages__breaker--start",
+      className: "breaker breaker--start",
+      dataAttributes: {
+        "data-page-number": "0",
+      },
       height: metrics.topInset,
     });
+    const firstHeaderType = resolveHeaderFooterType(
+      options.storage.header,
+      options.storage,
+      1,
+    );
 
-    firstPage.className = "mxm-pages__page-break";
+    firstPage.className = "mxm-page-break";
     firstPage.dataset.pageNumber = "0";
-    firstAnchor.className = "mxm-pages__page";
+    firstAnchor.className = "page";
     firstAnchor.dataset.pageNumber = "0";
     firstAnchor.style.marginTop = "0px";
     firstBreaker.appendChild(
       buildRegionElement({
-        className: "mxm-pages__region--header mxm-pages__header mxm-pages__header--first",
+        className: "mxm-page-header",
         contentHeight: options.storage.headerHeight,
+        dataAttributes: {
+          "data-editable": "true",
+          "data-header-page-number": "1",
+          "data-header-type": firstHeaderType,
+        },
         height: metrics.topInset,
         html: resolveHeaderFooterHTML({
           storage: options.storage,
@@ -717,30 +787,50 @@ function createPaginationWidget(options: {
     for (let pageIndex = 1; pageIndex < options.totalPages; pageIndex += 1) {
       const pageBreak = document.createElement("div");
       const pageAnchor = document.createElement("div");
+      const footerPage = pageIndex;
+      const headerPage = pageIndex + 1;
+      const footerType = resolveHeaderFooterType(
+        options.storage.footer,
+        options.storage,
+        footerPage,
+      );
+      const headerType = resolveHeaderFooterType(
+        options.storage.header,
+        options.storage,
+        headerPage,
+      );
       const breakElement = createBreakerElement({
-        className: "mxm-pages__breaker mxm-pages__break",
+        className: "breaker breaker--page",
+        dataAttributes: {
+          "data-page-number": String(pageIndex),
+        },
         height: breakHeight,
       });
       const gap = document.createElement("div");
 
-      pageBreak.className = "mxm-pages__page-break";
+      pageBreak.className = "mxm-page-break";
       pageBreak.dataset.pageNumber = String(pageIndex);
-      pageAnchor.className = "mxm-pages__page";
+      pageAnchor.className = "page";
       pageAnchor.dataset.pageNumber = String(pageIndex);
       pageAnchor.style.marginTop = `${metrics.availableContentHeight}px`;
-      gap.className = "mxm-pages__gap";
+      gap.className = "mxm-pagination-gap";
       gap.style.height = `${options.storage.pageGap}px`;
       gap.contentEditable = "false";
 
       breakElement.appendChild(
         buildRegionElement({
-          className: "mxm-pages__region--footer mxm-pages__footer",
+          className: "mxm-page-footer",
           contentHeight: options.storage.footerHeight,
+          dataAttributes: {
+            "data-editable": "true",
+            "data-footer-page-number": String(footerPage),
+            "data-footer-type": footerType,
+          },
           height: metrics.bottomInset,
           html: resolveHeaderFooterHTML({
             storage: options.storage,
             section: "footer",
-            page: pageIndex,
+            page: footerPage,
             totalPages: options.totalPages,
             extensions: options.extensions,
           }),
@@ -751,13 +841,18 @@ function createPaginationWidget(options: {
       breakElement.appendChild(gap);
       breakElement.appendChild(
         buildRegionElement({
-          className: "mxm-pages__region--header mxm-pages__header",
+          className: "mxm-page-header",
           contentHeight: options.storage.headerHeight,
+          dataAttributes: {
+            "data-editable": "true",
+            "data-header-page-number": String(headerPage),
+            "data-header-type": headerType,
+          },
           height: metrics.topInset,
           html: resolveHeaderFooterHTML({
             storage: options.storage,
             section: "header",
-            page: pageIndex + 1,
+            page: headerPage,
             totalPages: options.totalPages,
             extensions: options.extensions,
           }),
@@ -776,13 +871,23 @@ function createPaginationWidget(options: {
       (options.totalPages - 1)
       * (options.storage.pageFormat.height + options.storage.pageGap)
       + (options.storage.pageFormat.height - metrics.bottomInset);
+    const finalFooterType = resolveHeaderFooterType(
+      options.storage.footer,
+      options.storage,
+      options.totalPages,
+    );
 
-    finalFooter.className = "mxm-pages__footer-final";
+    finalFooter.className = "mxm-page-footer mxm-page-footer--final";
     finalFooter.style.top = `${finalFooterTop}px`;
     finalFooter.contentEditable = "false";
+    applyDataAttributes(finalFooter, {
+      "data-editable": "true",
+      "data-footer-page-number": String(options.totalPages),
+      "data-footer-type": finalFooterType,
+    });
     finalFooter.appendChild(
       buildRegionElement({
-        className: "mxm-pages__region--footer",
+        className: "mxm-page-footer__inner",
         contentHeight: options.storage.footerHeight,
         height: metrics.bottomInset,
         html: resolveHeaderFooterHTML({
@@ -840,6 +945,7 @@ function createPluginView(options: {
       nextHost.classList.add(pagesHostClassName);
       view.dom.classList.add(pagesEditorClassName);
       setHostVariables(nextHost, options.storage);
+      setEditorVariables(view.dom, options.storage);
     };
 
     const resolvePageNumber = (pos: number) => {
@@ -939,6 +1045,7 @@ function createPluginView(options: {
         destroyed = true;
         view.dom.removeEventListener("load", handleLoad, true);
         view.dom.classList.remove(pagesEditorClassName);
+        clearEditorVariables(view.dom);
 
         if (host) {
           clearHostVariables(host);

@@ -1243,19 +1243,12 @@ pre {
   overflow: auto;
 }
 
-.pages-editor-surface.mxm-pages .mxm-pages__editor {
+.pages-editor-surface.mxm-pages .mxm-pages-editor {
   padding-top: 0;
   padding-bottom: 0;
 }
 
-/* Keep top-level spacing stable; clearing the next block's margin makes pagination oscillate. */
-.pages-editor-surface .mxm-pages__editor > .mxm-pages__edge,
-.pages-editor-surface .mxm-pages__editor > .mxm-pages__break,
-.pages-editor-surface .mxm-pages__editor > * + .mxm-pages__break {
-  margin-top: 0;
-}
-
-.pages-editor-surface .mxm-pages__editor .mxm-pages__region {
+.pages-editor-surface .mxm-pages-editor .mxm-page-region {
   color: #475569;
 }
 

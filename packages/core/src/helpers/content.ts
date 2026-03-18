@@ -11,7 +11,7 @@ import type {
   ContentType,
   JSONContent,
   MarkdownParser,
-} from "./types";
+} from "../types";
 
 export interface ContentParseOptions {
   parseOptions?: ParseOptions;

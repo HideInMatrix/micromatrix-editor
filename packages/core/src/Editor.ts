@@ -13,10 +13,10 @@ import {
   type Transaction,
 } from "@mxm-editor/pm";
 import { CommandManager } from "./CommandManager";
-import { createDocumentFromContent } from "./content";
-import { createCoreCommands, resolveFocusSelection } from "./coreCommands";
+import { createCoreCommands, resolveFocusSelection } from "./commands";
 import { EventEmitter } from "./EventEmitter";
 import { ExtensionManager } from "./ExtensionManager";
+import { createDocumentFromContent } from "./helpers/content";
 import type {
   CanCommands,
   ChainedCommands,
@@ -33,7 +33,7 @@ import type {
   SetContentOptions,
   SingleCommands,
 } from "./types";
-import { matchesAttributes } from "./utils";
+import { matchesAttributes } from "./utilities";
 
 function getPluginKeyValue(pluginKey: PluginKeySource) {
   if (typeof pluginKey === "string") {

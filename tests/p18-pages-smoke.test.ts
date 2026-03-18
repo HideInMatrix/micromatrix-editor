@@ -60,8 +60,8 @@ describe("P18 pages smoke", () => {
     await flushPagesLayout();
 
     expect(element.classList.contains("mxm-pages")).toBe(true);
-    expect(element.querySelector(".mxm-pages__editor")).not.toBeNull();
-    expect(element.querySelector("[data-mxm-pages-pagination=\"true\"]")).not.toBeNull();
+    expect(element.querySelector(".mxm-pages-editor")).not.toBeNull();
+    expect(element.querySelector('#pages[data-mxm-pagination="true"]')).not.toBeNull();
     expect(document.head.querySelector('style[data-mxm-pages="true"]')).not.toBeNull();
 
     expect(
@@ -136,18 +136,22 @@ describe("P18 pages smoke", () => {
 
     expect(storage.pageCount).toBe(2);
     expect(storage.pageBreakPositions).toHaveLength(1);
-    expect(element.querySelectorAll(".mxm-pages__break")).toHaveLength(1);
+    expect(element.querySelectorAll(".breaker--page")).toHaveLength(1);
     expect(element.style.getPropertyValue("--mxm-pages-padding-left")).toBe("80px");
     expect(element.style.getPropertyValue("--mxm-pages-padding-right")).toBe("80px");
+    expect(
+      element.querySelector(".mxm-pages-editor")?.style.getPropertyValue("--page-max-height"),
+    ).toBe("760px");
 
     expect(
-      element.querySelector(".mxm-pages__header--first")?.textContent,
+      element.querySelector('.mxm-page-header[data-header-page-number="1"]')?.textContent,
     ).toContain("Cover header");
     expect(
-      element.querySelector(".mxm-pages__break .mxm-pages__header")?.textContent,
+      element.querySelector('.breaker--page .mxm-page-header[data-header-page-number="2"]')
+        ?.textContent,
     ).toContain("Default header");
     expect(
-      element.querySelector(".mxm-pages__footer-final .mxm-pages__region--footer")?.textContent,
+      element.querySelector('.mxm-page-footer--final[data-footer-page-number="2"]')?.textContent,
     ).toContain("Even footer");
 
     editor.destroy();

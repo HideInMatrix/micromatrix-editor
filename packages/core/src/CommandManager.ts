@@ -1,5 +1,5 @@
 import type { EditorState, Transaction } from "@mxm-editor/pm";
-import { createChainableState } from "./createChainableState";
+import { createChainableState } from "./helpers/createChainableState";
 import type {
   CanCommands,
   ChainedCommands,

@@ -6,15 +6,15 @@ import {
   type ParseRule,
   Schema,
 } from "@mxm-editor/pm";
-import type { Editor } from "./Editor";
+import type { Editor } from "../Editor";
 import type {
   AnyExtension,
   ExtensionAttribute,
   GlobalAttributes,
   MarkConfig,
   NodeConfig,
-} from "./types";
-import { cleanObject, mergeAttributes } from "./utils";
+} from "../types";
+import { cleanObject, mergeAttributes } from "../utilities";
 
 export type Extensions = AnyExtension[];
 
@@ -34,35 +34,24 @@ type ResolvedMarkExtension = AnyExtension & {
   config: MarkConfig<any, any>;
 };
 
+type ExtensionContextFactory = (
+  extension: AnyExtension,
+) => ReturnType<AnyExtension["createContext"]>;
+
 const staticEditor = {} as Editor;
 
 function createStaticContext(extension: AnyExtension) {
   return extension.createContext(staticEditor);
 }
 
-function getAttributesForResolvedExtension(
-  extension: AnyExtension,
-  extensions: Extensions,
-) {
-  const context = createStaticContext(extension);
-  const globalAttributes = getGlobalAttributesForResolvedExtension(
-    extension,
-    extensions,
-  );
-
-  return {
-    ...globalAttributes,
-    ...(extension.config.addAttributes?.call(context) ?? {}),
-  } as Record<string, ExtensionAttribute>;
-}
-
 function getGlobalAttributesForResolvedExtension(
   extension: AnyExtension,
   extensions: Extensions,
+  createContext: ExtensionContextFactory,
 ) {
   return extensions.reduce<Record<string, ExtensionAttribute>>(
     (attributes, item) => {
-      const context = createStaticContext(item);
+      const context = createContext(item);
       const globalAttributes = item.config.addGlobalAttributes?.call(context) ?? [];
 
       globalAttributes.forEach((globalAttribute: GlobalAttributes) => {
@@ -79,7 +68,25 @@ function getGlobalAttributesForResolvedExtension(
   );
 }
 
-function createAttributesSpec(
+function getAttributesForResolvedExtension(
+  extension: AnyExtension,
+  extensions: Extensions,
+  createContext: ExtensionContextFactory,
+) {
+  const context = createContext(extension);
+  const globalAttributes = getGlobalAttributesForResolvedExtension(
+    extension,
+    extensions,
+    createContext,
+  );
+
+  return {
+    ...globalAttributes,
+    ...(extension.config.addAttributes?.call(context) ?? {}),
+  } as Record<string, ExtensionAttribute>;
+}
+
+export function createAttributesSpec(
   attributes: Record<string, ExtensionAttribute>,
 ): Record<string, { default?: any }> {
   return Object.fromEntries(
@@ -95,7 +102,7 @@ function createAttributesSpec(
   );
 }
 
-function injectParseAttributes<T extends ParseRule>(
+export function injectParseAttributes<T extends ParseRule>(
   rules: readonly T[] | undefined,
   attributes: Record<string, ExtensionAttribute>,
 ) {
@@ -152,7 +159,10 @@ function injectParseAttributes<T extends ParseRule>(
   }) as T[];
 }
 
-export function resolveExtensions(extensions: Extensions): Extensions {
+export function resolveExtensions(
+  extensions: Extensions,
+  createContext: ExtensionContextFactory = createStaticContext,
+): Extensions {
   const resolved: AnyExtension[] = [];
 
   const visit = (items: Extensions) => {
@@ -160,7 +170,7 @@ export function resolveExtensions(extensions: Extensions): Extensions {
       resolved.push(extension);
 
       const nested = extension.config.addExtensions?.call(
-        createStaticContext(extension),
+        createContext(extension),
       );
 
       if (nested?.length) {
@@ -174,8 +184,11 @@ export function resolveExtensions(extensions: Extensions): Extensions {
   return resolved.sort((a, b) => b.priority - a.priority);
 }
 
-export function splitExtensions(extensions: Extensions) {
-  const resolved = resolveExtensions(extensions);
+export function splitExtensions(
+  extensions: Extensions,
+  createContext: ExtensionContextFactory = createStaticContext,
+) {
+  const resolved = resolveExtensions(extensions, createContext);
 
   return {
     nodeExtensions: resolved.filter(
@@ -190,37 +203,44 @@ export function splitExtensions(extensions: Extensions) {
 export function getAttributesForExtension(
   extension: AnyExtension,
   extensions: Extensions,
+  createContext: ExtensionContextFactory = createStaticContext,
 ) {
-  const resolved = resolveExtensions(extensions);
+  const resolved = resolveExtensions(extensions, createContext);
 
-  return getAttributesForResolvedExtension(extension, resolved);
+  return getAttributesForResolvedExtension(extension, resolved, createContext);
 }
 
 export function getAttributesForExtensionFromResolvedExtensions(
   extension: AnyExtension,
   extensions: Extensions,
+  createContext: ExtensionContextFactory = createStaticContext,
 ) {
-  return getAttributesForResolvedExtension(extension, extensions);
+  return getAttributesForResolvedExtension(extension, extensions, createContext);
 }
 
 export function getAttributesFromResolvedExtensions(
   extensions: Extensions,
+  createContext: ExtensionContextFactory = createStaticContext,
 ): ResolvedExtensionAttribute[] {
   return extensions.flatMap((extension) =>
-    Object.entries(getAttributesForResolvedExtension(extension, extensions)).map(
-      ([name, attribute]) => ({
-        type: extension.name,
-        name,
-        attribute,
-      }),
-    ),
+    Object.entries(
+      getAttributesForResolvedExtension(extension, extensions, createContext),
+    ).map(([name, attribute]) => ({
+      type: extension.name,
+      name,
+      attribute,
+    })),
   );
 }
 
 export function getAttributesFromExtensions(
   extensions: Extensions,
+  createContext: ExtensionContextFactory = createStaticContext,
 ): ResolvedExtensionAttribute[] {
-  return getAttributesFromResolvedExtensions(resolveExtensions(extensions));
+  return getAttributesFromResolvedExtensions(
+    resolveExtensions(extensions, createContext),
+    createContext,
+  );
 }
 
 export function getRenderedAttributes(
@@ -247,7 +267,10 @@ export function getRenderedAttributes(
   );
 }
 
-export function getSchemaByResolvedExtensions(extensions: Extensions) {
+export function getSchemaByResolvedExtensions(
+  extensions: Extensions,
+  createContext: ExtensionContextFactory = createStaticContext,
+) {
   const nodes = extensions.filter(
     (extension): extension is ResolvedNodeExtension => extension.type === "node",
   );
@@ -260,8 +283,12 @@ export function getSchemaByResolvedExtensions(extensions: Extensions) {
     topNode,
     nodes: Object.fromEntries(
       nodes.map((node) => {
-        const context = createStaticContext(node);
-        const attributes = getAttributesForResolvedExtension(node, extensions);
+        const context = createContext(node);
+        const attributes = getAttributesForResolvedExtension(
+          node,
+          extensions,
+          createContext,
+        );
         const group =
           typeof node.config.group === "function"
             ? node.config.group.call(context)
@@ -305,8 +332,12 @@ export function getSchemaByResolvedExtensions(extensions: Extensions) {
     ),
     marks: Object.fromEntries(
       marks.map((mark) => {
-        const context = createStaticContext(mark);
-        const attributes = getAttributesForResolvedExtension(mark, extensions);
+        const context = createContext(mark);
+        const attributes = getAttributesForResolvedExtension(
+          mark,
+          extensions,
+          createContext,
+        );
         const inclusive =
           typeof mark.config.inclusive === "function"
             ? mark.config.inclusive.call(context)
