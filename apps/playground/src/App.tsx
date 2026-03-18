@@ -4,12 +4,14 @@ import {
   FileText,
   MessageSquareText,
   Moon,
+  ScrollText,
   Sun,
   Users,
 } from "lucide-react";
 import { CollaborationSection } from "./playground/components/CollaborationSection";
 import { CommentsSection } from "./playground/components/CommentsSection";
 import { LocalEditorSection } from "./playground/components/LocalEditorSection";
+import { PagesSection } from "./playground/components/PagesSection";
 import {
   getPlaygroundRouteHref,
   usePlaygroundRoute,
@@ -21,6 +23,10 @@ type PlaygroundTheme = "dark" | "light";
 function RouteIcon({ routeId }: { routeId: PlaygroundRouteId }) {
   if (routeId === "comments") {
     return <MessageSquareText size={16} strokeWidth={2} />;
+  }
+
+  if (routeId === "pages") {
+    return <ScrollText size={16} strokeWidth={2} />;
   }
 
   if (routeId === "collaboration") {
@@ -37,6 +43,10 @@ export function App() {
   const renderRoute = () => {
     if (route.id === "comments") {
       return <CommentsSection />;
+    }
+
+    if (route.id === "pages") {
+      return <PagesSection />;
     }
 
     if (route.id === "collaboration") {

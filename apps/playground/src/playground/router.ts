@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 
-export type PlaygroundRouteId = "editor" | "collaboration" | "comments";
+export type PlaygroundRouteId = "editor" | "collaboration" | "comments" | "pages";
 
 export interface PlaygroundRoute {
   id: PlaygroundRouteId;
@@ -28,6 +28,12 @@ export const playgroundRoutes: PlaygroundRoute[] = [
     description: "Inline discussion threads anchored directly to document ranges.",
     path: "/comments",
   },
+  {
+    id: "pages",
+    label: "Pages",
+    description: "Paper-aware layout with page formats, running heads, and paginated flow.",
+    path: "/pages",
+  },
 ];
 
 const routeAliases = new Map<string, PlaygroundRouteId>([
@@ -35,6 +41,7 @@ const routeAliases = new Map<string, PlaygroundRouteId>([
   ["/editor", "editor"],
   ["/collaboration", "collaboration"],
   ["/comments", "comments"],
+  ["/pages", "pages"],
 ]);
 
 function normalizeBasePath(basePath: string) {

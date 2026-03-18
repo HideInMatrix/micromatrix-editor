@@ -23,6 +23,7 @@
     "@mxm-editor/extension-list-keymap": "workspace:*",
     "@mxm-editor/extension-mathematics": "workspace:*",
     "@mxm-editor/extension-mention": "workspace:*",
+    "@mxm-editor/extension-pages": "workspace:*",
     "@mxm-editor/extension-placeholder": "workspace:*",
     "@mxm-editor/extension-table": "workspace:*",
     "@mxm-editor/extension-task-item": "workspace:*",

@@ -103,6 +103,30 @@ export const commentsDemoContent = [
   "<p></p>",
 ].join("");
 
+export const pagesDemoContent = [
+  "<h1>The Field Notes Atlas</h1>",
+  "<p>Pages turns a regular rich text document into a paper-aware layout: every top-level block is measured, page chrome is inserted automatically, and headers plus footers stay aligned to the current sheet.</p>",
+  "<p>This demo is intentionally dense. It mixes headings, paragraphs, lists, and a few wide blocks so you can inspect how the editor behaves when a working draft starts to feel like an actual document instead of a single scrolling canvas.</p>",
+  "<blockquote><p>Try switching between A4, Letter, and Legal, then toggle mirrored headers to see how the same content adopts a new rhythm.</p></blockquote>",
+  "<h2>1. Editorial pacing</h2>",
+  "<p>Long-form documents usually reveal layout problems later than we expect. A hero sentence that feels balanced in a continuous editor can suddenly look cramped once margins, running heads, and page gaps appear. That is why the first page often needs its own quieter treatment.</p>",
+  "<p>When product teams review complex material, they also tend to comment on where an idea lands physically on the page. A transition paragraph at the bottom of page two feels different from the same paragraph sitting comfortably at the top of page three.</p>",
+  "<p>Mirrored headers help readers keep their place in longer drafts. They also provide a natural place to surface chapter titles, section labels, review stages, or timestamps without interrupting the document body.</p>",
+  "<h2>2. Layout as product feedback</h2>",
+  "<p>Pagination is not only about print. Contract review, policy drafting, educational handouts, and internal knowledge bases all benefit from a paper-like preview because authors can catch awkward breaks before shipping the document to downstream workflows.</p>",
+  "<p>That changes the kind of feedback a team can give. Instead of saying “the section feels too long,” reviewers can say “page four needs a stronger opening block” or “the data table would read better if the appendix started on a fresh page.”</p>",
+  "<ul><li><p>Paper size affects perceived density.</p></li><li><p>Margins influence both hierarchy and breathing room.</p></li><li><p>Headers and footers create orientation cues across a long draft.</p></li></ul>",
+  "<h2>3. Draft structure</h2>",
+  "<p>Imagine this document as an internal field guide prepared for a launch review. The opening pages establish the premise, later sections collect evidence, and the closing appendix preserves references for specialists who need the full context.</p>",
+  "<p>The more the content grows, the more useful it becomes to keep page numbers visible. Writers can refer to specific leaves during meetings, while designers can tune the vertical cadence without guessing where content currently lands.</p>",
+  "<p>Tables are also a good stress case for pagination because they consume vertical space quickly and make overflow visually obvious. Even in a lightweight prototype, simply seeing the table inside a paginated frame changes how authors judge whether it belongs here or in an appendix.</p>",
+  "<table><thead><tr><th><p>Section</p></th><th><p>Intent</p></th><th><p>Review cue</p></th></tr></thead><tbody><tr><td><p>Opening</p></td><td><p>Set the narrative and stakes.</p></td><td><p>Should feel calm and spacious.</p></td></tr><tr><td><p>Evidence</p></td><td><p>Support claims with specifics.</p></td><td><p>Needs stable page references.</p></td></tr><tr><td><p>Appendix</p></td><td><p>Preserve detail without crowding the main flow.</p></td><td><p>Can be denser and more technical.</p></td></tr></tbody></table>",
+  "<h2>4. Closing note</h2>",
+  "<p>What matters in practice is not perfect print parity on day one. It is giving editors and product teams a believable canvas for reasoning about final form earlier in the process. Once pagination exists, even a rough prototype invites better discussions.</p>",
+  "<p>Use the controls on the right to swap formats, adjust the page gap, and turn first-page or odd-even variants on and off. The content stays the same, but the document personality changes immediately.</p>",
+  "<p></p>",
+].join("");
+
 export const commentsDemoThreads: CommentsThread[] = [
   {
     id: "thread-launch",

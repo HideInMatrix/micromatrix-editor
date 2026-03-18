@@ -53,16 +53,21 @@ const pagesPluginKey = new PluginKey<PagesPluginState>("pages");
 const pagesStyleAttribute = "data-mxm-pages";
 const pagesHostClassName = "mxm-pages";
 const pagesEditorClassName = "mxm-pages__editor";
+const pagesPaginationAttribute = "data-mxm-pages-pagination";
 
 function createInjectedStyles() {
   return [
     `.${pagesHostClassName} {`,
     "  --mxm-pages-width: 794px;",
     "  --mxm-pages-height: 1123px;",
+    "  --mxm-pages-min-height: var(--mxm-pages-height);",
     "  --mxm-pages-gap: 50px;",
     "  --mxm-pages-break-background: #e5e7eb;",
+    "  --mxm-pages-padding-top: 96px;",
     "  --mxm-pages-padding-left: 96px;",
     "  --mxm-pages-padding-right: 96px;",
+    "  --mxm-pages-padding-bottom: 96px;",
+    "  --mxm-pages-break-height: 242px;",
     "  --mxm-pages-surface: var(--mxm-pages-page-background, #ffffff);",
     "  position: relative;",
     "  background: var(--mxm-pages-break-background);",
@@ -70,11 +75,13 @@ function createInjectedStyles() {
     `.${pagesHostClassName} .${pagesEditorClassName} {`,
     "  position: relative;",
     "  width: min(100%, var(--mxm-pages-width));",
-    "  min-height: var(--mxm-pages-height);",
+    "  min-height: var(--mxm-pages-min-height);",
     "  margin: 0 auto;",
     "  box-sizing: border-box;",
+    "  padding-top: 0;",
     "  padding-left: var(--mxm-pages-padding-left);",
     "  padding-right: var(--mxm-pages-padding-right);",
+    "  padding-bottom: var(--mxm-pages-padding-bottom);",
     "  background-image: linear-gradient(",
     "    to bottom,",
     "    var(--mxm-pages-surface) 0,",
@@ -86,15 +93,53 @@ function createInjectedStyles() {
     "  background-repeat: repeat-y;",
     "  box-shadow: 0 0 0 1px rgba(15, 23, 42, 0.06);",
     "}",
-    `.${pagesHostClassName} .mxm-pages__edge,`,
-    `.${pagesHostClassName} .mxm-pages__break {`,
+    `.${pagesHostClassName} .${pagesEditorClassName} > .ProseMirror-widget:first-child + * {`,
+    "  margin-top: 0 !important;",
+    "}",
+    `.${pagesHostClassName} [${pagesPaginationAttribute}] {`,
     "  display: block;",
+    "  position: relative;",
+    "  height: 0;",
+    "  pointer-events: none;",
+    "}",
+    `.${pagesHostClassName} .mxm-pages__page-break {`,
+    "  display: contents;",
+    "}",
+    `.${pagesHostClassName} .mxm-pages__page {`,
+    "  position: relative;",
+    "  float: left;",
+    "  clear: both;",
+    "  width: 1px;",
+    "  height: 0;",
+    "}",
+    `.${pagesHostClassName} .mxm-pages__breaker,`,
+    `.${pagesHostClassName} .mxm-pages__footer-final {`,
+    "  width: calc(100% + var(--mxm-pages-padding-left) + var(--mxm-pages-padding-right));",
     "  margin-left: calc(var(--mxm-pages-padding-left) * -1);",
     "  margin-right: calc(var(--mxm-pages-padding-right) * -1);",
     "  pointer-events: none;",
     "}",
+    `.${pagesHostClassName} .mxm-pages__breaker {`,
+    "  position: relative;",
+    "  float: left;",
+    "  clear: both;",
+    "  left: 0;",
+    "  right: 0;",
+    "  z-index: 2;",
+    "}",
+    `.${pagesHostClassName} .mxm-pages__breaker--start {`,
+    "  height: var(--mxm-pages-padding-top);",
+    "}",
     `.${pagesHostClassName} .mxm-pages__break {`,
     "  display: grid;",
+    "  grid-template-rows: var(--mxm-pages-padding-bottom) var(--mxm-pages-gap) var(--mxm-pages-padding-top);",
+    "  height: var(--mxm-pages-break-height);",
+    "}",
+    `.${pagesHostClassName} .mxm-pages__footer-final {`,
+    "  position: absolute;",
+    "  left: 0;",
+    "  right: 0;",
+    "  z-index: 2;",
     "}",
     `.${pagesHostClassName} .mxm-pages__region {`,
     "  display: flex;",
@@ -172,13 +217,22 @@ function resolveMetrics(storage: PagesStorage) {
 
 function setHostVariables(host: HTMLElement, storage: PagesStorage) {
   const metrics = resolveMetrics(storage);
+  const minHeight =
+    storage.pageFormat.height * Math.max(storage.pageCount, 1)
+    + storage.pageGap * Math.max(storage.pageCount - 1, 0);
+  const breakHeight = metrics.topInset + metrics.bottomInset + storage.pageGap;
 
   host.style.setProperty("--mxm-pages-width", `${storage.pageFormat.width}px`);
   host.style.setProperty("--mxm-pages-height", `${storage.pageFormat.height}px`);
+  host.style.setProperty("--mxm-pages-min-height", `${minHeight}px`);
   host.style.setProperty("--mxm-pages-gap", `${storage.pageGap}px`);
   host.style.setProperty(
     "--mxm-pages-break-background",
     storage.pageBreakBackground,
+  );
+  host.style.setProperty(
+    "--mxm-pages-padding-top",
+    `${metrics.topInset}px`,
   );
   host.style.setProperty(
     "--mxm-pages-padding-left",
@@ -188,6 +242,11 @@ function setHostVariables(host: HTMLElement, storage: PagesStorage) {
     "--mxm-pages-padding-right",
     `${metrics.rightInset}px`,
   );
+  host.style.setProperty(
+    "--mxm-pages-padding-bottom",
+    `${metrics.bottomInset}px`,
+  );
+  host.style.setProperty("--mxm-pages-break-height", `${breakHeight}px`);
   host.dataset.pageCount = String(storage.pageCount);
   host.dataset.pageMetrics = JSON.stringify(metrics);
 }
@@ -196,10 +255,14 @@ function clearHostVariables(host: HTMLElement) {
   host.classList.remove(pagesHostClassName);
   host.style.removeProperty("--mxm-pages-width");
   host.style.removeProperty("--mxm-pages-height");
+  host.style.removeProperty("--mxm-pages-min-height");
   host.style.removeProperty("--mxm-pages-gap");
   host.style.removeProperty("--mxm-pages-break-background");
+  host.style.removeProperty("--mxm-pages-padding-top");
   host.style.removeProperty("--mxm-pages-padding-left");
   host.style.removeProperty("--mxm-pages-padding-right");
+  host.style.removeProperty("--mxm-pages-padding-bottom");
+  host.style.removeProperty("--mxm-pages-break-height");
   delete host.dataset.pageCount;
   delete host.dataset.pageMetrics;
 }
@@ -217,6 +280,28 @@ function parseNumericStyle(value: string | null | undefined) {
   const parsed = Number.parseFloat(value ?? "");
 
   return Number.isFinite(parsed) ? parsed : 0;
+}
+
+function getInterPageBreakHeight(storage: PagesStorage) {
+  const metrics = resolveMetrics(storage);
+
+  return metrics.topInset + metrics.bottomInset + storage.pageGap;
+}
+
+function isPaginationWidgetWrapper(element: Element) {
+  return (
+    element instanceof HTMLElement
+    && element.classList.contains("ProseMirror-widget")
+    && element.firstElementChild instanceof HTMLElement
+    && element.firstElementChild.hasAttribute(pagesPaginationAttribute)
+  );
+}
+
+function getTopLevelDocumentElements(view: EditorView) {
+  return Array.from(view.dom.children).filter(
+    (child): child is HTMLElement =>
+      child instanceof HTMLElement && !isPaginationWidgetWrapper(child),
+  );
 }
 
 function estimateNodeHeight(node: ProseMirrorNode) {
@@ -269,9 +354,10 @@ function getNodeHeight(view: EditorView, pos: number, node: ProseMirrorNode) {
   );
 }
 
-function measurePageBreakPositions(
+function measureFallbackPageBreakPositions(
   view: EditorView,
   storage: PagesStorage,
+  pageCount?: number,
 ) {
   const { availableContentHeight } = resolveMetrics(storage);
   const pageBreakPositions: number[] = [];
@@ -292,10 +378,183 @@ function measurePageBreakPositions(
     currentPageHeight += nodeHeight;
   });
 
-  return {
-    pageBreakPositions,
-    pageCount: Math.max(pageBreakPositions.length + 1, 1),
-  };
+  return pageBreakPositions.slice(0, Math.max((pageCount ?? pageBreakPositions.length + 1) - 1, 0));
+}
+
+function hasUsableDocumentLayout(view: EditorView) {
+  const elements = getTopLevelDocumentElements(view);
+
+  if (elements.length <= 1) {
+    return true;
+  }
+
+  let previousTop: number | null = null;
+
+  for (const element of elements) {
+    const rect = element.getBoundingClientRect();
+
+    if (previousTop !== null && Math.abs(rect.top - previousTop) > 0.5) {
+      return true;
+    }
+
+    previousTop = rect.top;
+  }
+
+  return false;
+}
+
+function measureContentBottom(view: EditorView) {
+  const editorRect = view.dom.getBoundingClientRect();
+  const elements = getTopLevelDocumentElements(view);
+
+  if (!elements.length) {
+    return 0;
+  }
+
+  return elements.reduce((maxBottom, element) => {
+    const rect = element.getBoundingClientRect();
+    const computedStyle =
+      typeof window !== "undefined"
+        ? window.getComputedStyle(element)
+        : null;
+
+    return Math.max(
+      maxBottom,
+      rect.bottom - editorRect.top + parseNumericStyle(computedStyle?.marginBottom),
+    );
+  }, 0);
+}
+
+function measureConsumedBreakCount(view: EditorView, contentBottom: number) {
+  const editorRect = view.dom.getBoundingClientRect();
+  const epsilon = 0.5;
+
+  return Array.from(view.dom.querySelectorAll(".mxm-pages__break")).reduce(
+    (count, element) => {
+      if (!(element instanceof HTMLElement)) {
+        return count;
+      }
+
+      const rect = element.getBoundingClientRect();
+      const breakBottom = rect.bottom - editorRect.top;
+
+      return breakBottom <= contentBottom + epsilon ? count + 1 : count;
+    },
+    0,
+  );
+}
+
+function measurePageCount(
+  view: EditorView,
+  storage: PagesStorage,
+  renderedPageCount: number,
+) {
+  if (!hasUsableDocumentLayout(view)) {
+    return Math.max(measureFallbackPageBreakPositions(view, storage).length + 1, 1);
+  }
+
+  const metrics = resolveMetrics(storage);
+  const contentBottom = measureContentBottom(view);
+  const renderedBreakCount = Math.max(renderedPageCount - 1, 0);
+  const consumedBreakCount = Math.min(
+    measureConsumedBreakCount(view, contentBottom),
+    renderedBreakCount,
+  );
+  const normalizedFlowHeight = Math.max(
+    contentBottom - metrics.topInset - consumedBreakCount * getInterPageBreakHeight(storage),
+    0,
+  );
+  const epsilon = 0.5;
+
+  return Math.max(
+    1,
+    Math.ceil(Math.max(normalizedFlowHeight - epsilon, 0) / metrics.availableContentHeight),
+  );
+}
+
+function findFirstPositionAfterBoundary(options: {
+  boundaryTop: number;
+  breakHeight: number;
+  metrics: ReturnType<typeof resolveMetrics>;
+  minPos: number;
+  view: EditorView;
+}) {
+  const editorRect = options.view.dom.getBoundingClientRect();
+  const contentWidth =
+    options.view.dom.clientWidth - options.metrics.leftInset - options.metrics.rightInset;
+
+  if (contentWidth <= 0) {
+    return null;
+  }
+
+  const x = Math.min(
+    editorRect.left + options.metrics.leftInset + Math.max(contentWidth / 2, 8),
+    editorRect.right - options.metrics.rightInset - 8,
+  );
+  const startY = options.boundaryTop + options.breakHeight + 1;
+  const endY = startY + options.metrics.availableContentHeight;
+
+  for (let y = startY; y <= endY; y += 4) {
+    const found = options.view.posAtCoords({
+      left: x,
+      top: y,
+    })?.pos;
+
+    if (typeof found === "number" && found > options.minPos) {
+      return found;
+    }
+  }
+
+  const fallback = options.view.posAtCoords({
+    left: x,
+    top: options.boundaryTop - 1,
+  })?.pos;
+
+  if (typeof fallback === "number" && fallback >= options.minPos) {
+    return Math.min(fallback + 1, options.view.state.doc.content.size);
+  }
+
+  return null;
+}
+
+function measurePageBreakPositions(
+  view: EditorView,
+  storage: PagesStorage,
+  pageCount: number,
+) {
+  const metrics = resolveMetrics(storage);
+  const breakHeight = getInterPageBreakHeight(storage);
+  const editorRect = view.dom.getBoundingClientRect();
+  const positions: number[] = [];
+  let minPos = 0;
+
+  for (let pageIndex = 1; pageIndex < pageCount; pageIndex += 1) {
+    const boundaryTop =
+      editorRect.top
+      + metrics.topInset
+      + pageIndex * metrics.availableContentHeight
+      + (pageIndex - 1) * breakHeight;
+    const position = findFirstPositionAfterBoundary({
+      boundaryTop,
+      breakHeight,
+      metrics,
+      minPos,
+      view,
+    });
+
+    if (position === null) {
+      break;
+    }
+
+    positions.push(position);
+    minPos = position;
+  }
+
+  if (positions.length === Math.max(pageCount - 1, 0)) {
+    return positions;
+  }
+
+  return measureFallbackPageBreakPositions(view, storage, pageCount);
 }
 
 function resolveRegionValueToHTML(options: {
@@ -397,21 +656,47 @@ function buildRegionElement(options: {
   return element;
 }
 
-function createStartWidget(options: {
+function createBreakerElement(options: {
+  className: string;
+  height: number;
+}) {
+  const element = document.createElement("div");
+
+  element.className = options.className;
+  element.style.height = `${options.height}px`;
+  element.contentEditable = "false";
+
+  return element;
+}
+
+function createPaginationWidget(options: {
   storage: PagesStorage;
   totalPages: number;
   extensions: Extensions;
 }) {
   return () => {
     const metrics = resolveMetrics(options.storage);
-    const element = document.createElement("div");
+    const pagination = document.createElement("div");
+    const breakHeight = getInterPageBreakHeight(options.storage);
 
-    element.className = "mxm-pages__edge mxm-pages__edge--start";
-    element.style.height = `${metrics.topInset}px`;
-    element.contentEditable = "false";
-    element.appendChild(
+    pagination.setAttribute(pagesPaginationAttribute, "true");
+    pagination.contentEditable = "false";
+
+    const firstPage = document.createElement("div");
+    const firstAnchor = document.createElement("div");
+    const firstBreaker = createBreakerElement({
+      className: "mxm-pages__breaker mxm-pages__breaker--start",
+      height: metrics.topInset,
+    });
+
+    firstPage.className = "mxm-pages__page-break";
+    firstPage.dataset.pageNumber = "0";
+    firstAnchor.className = "mxm-pages__page";
+    firstAnchor.dataset.pageNumber = "0";
+    firstAnchor.style.marginTop = "0px";
+    firstBreaker.appendChild(
       buildRegionElement({
-        className: "mxm-pages__region--header",
+        className: "mxm-pages__region--header mxm-pages__header mxm-pages__header--first",
         contentHeight: options.storage.headerHeight,
         height: metrics.topInset,
         html: resolveHeaderFooterHTML({
@@ -425,24 +710,77 @@ function createStartWidget(options: {
         position: "start",
       }),
     );
+    firstPage.appendChild(firstAnchor);
+    firstPage.appendChild(firstBreaker);
+    pagination.appendChild(firstPage);
 
-    return element;
-  };
-}
+    for (let pageIndex = 1; pageIndex < options.totalPages; pageIndex += 1) {
+      const pageBreak = document.createElement("div");
+      const pageAnchor = document.createElement("div");
+      const breakElement = createBreakerElement({
+        className: "mxm-pages__breaker mxm-pages__break",
+        height: breakHeight,
+      });
+      const gap = document.createElement("div");
 
-function createEndWidget(options: {
-  storage: PagesStorage;
-  totalPages: number;
-  extensions: Extensions;
-}) {
-  return () => {
-    const metrics = resolveMetrics(options.storage);
-    const element = document.createElement("div");
+      pageBreak.className = "mxm-pages__page-break";
+      pageBreak.dataset.pageNumber = String(pageIndex);
+      pageAnchor.className = "mxm-pages__page";
+      pageAnchor.dataset.pageNumber = String(pageIndex);
+      pageAnchor.style.marginTop = `${metrics.availableContentHeight}px`;
+      gap.className = "mxm-pages__gap";
+      gap.style.height = `${options.storage.pageGap}px`;
+      gap.contentEditable = "false";
 
-    element.className = "mxm-pages__edge mxm-pages__edge--end";
-    element.style.height = `${metrics.bottomInset}px`;
-    element.contentEditable = "false";
-    element.appendChild(
+      breakElement.appendChild(
+        buildRegionElement({
+          className: "mxm-pages__region--footer mxm-pages__footer",
+          contentHeight: options.storage.footerHeight,
+          height: metrics.bottomInset,
+          html: resolveHeaderFooterHTML({
+            storage: options.storage,
+            section: "footer",
+            page: pageIndex,
+            totalPages: options.totalPages,
+            extensions: options.extensions,
+          }),
+          inset: options.storage.footerBottomMargin,
+          position: "end",
+        }),
+      );
+      breakElement.appendChild(gap);
+      breakElement.appendChild(
+        buildRegionElement({
+          className: "mxm-pages__region--header mxm-pages__header",
+          contentHeight: options.storage.headerHeight,
+          height: metrics.topInset,
+          html: resolveHeaderFooterHTML({
+            storage: options.storage,
+            section: "header",
+            page: pageIndex + 1,
+            totalPages: options.totalPages,
+            extensions: options.extensions,
+          }),
+          inset: options.storage.headerTopMargin,
+          position: "start",
+        }),
+      );
+
+      pageBreak.appendChild(pageAnchor);
+      pageBreak.appendChild(breakElement);
+      pagination.appendChild(pageBreak);
+    }
+
+    const finalFooter = document.createElement("div");
+    const finalFooterTop =
+      (options.totalPages - 1)
+      * (options.storage.pageFormat.height + options.storage.pageGap)
+      + (options.storage.pageFormat.height - metrics.bottomInset);
+
+    finalFooter.className = "mxm-pages__footer-final";
+    finalFooter.style.top = `${finalFooterTop}px`;
+    finalFooter.contentEditable = "false";
+    finalFooter.appendChild(
       buildRegionElement({
         className: "mxm-pages__region--footer",
         contentHeight: options.storage.footerHeight,
@@ -458,65 +796,9 @@ function createEndWidget(options: {
         position: "end",
       }),
     );
+    pagination.appendChild(finalFooter);
 
-    return element;
-  };
-}
-
-function createBreakWidget(options: {
-  storage: PagesStorage;
-  page: number;
-  totalPages: number;
-  extensions: Extensions;
-}) {
-  return () => {
-    const metrics = resolveMetrics(options.storage);
-    const element = document.createElement("div");
-    const gap = document.createElement("div");
-
-    element.className = "mxm-pages__break";
-    element.style.gridTemplateRows = `${metrics.bottomInset}px ${options.storage.pageGap}px ${metrics.topInset}px`;
-    element.style.height = `${metrics.bottomInset + options.storage.pageGap + metrics.topInset}px`;
-    element.contentEditable = "false";
-    gap.className = "mxm-pages__gap";
-    gap.style.height = `${options.storage.pageGap}px`;
-    gap.contentEditable = "false";
-
-    element.appendChild(
-      buildRegionElement({
-        className: "mxm-pages__region--footer",
-        contentHeight: options.storage.footerHeight,
-        height: metrics.bottomInset,
-        html: resolveHeaderFooterHTML({
-          storage: options.storage,
-          section: "footer",
-          page: options.page,
-          totalPages: options.totalPages,
-          extensions: options.extensions,
-        }),
-        inset: options.storage.footerBottomMargin,
-        position: "end",
-      }),
-    );
-    element.appendChild(gap);
-    element.appendChild(
-      buildRegionElement({
-        className: "mxm-pages__region--header",
-        contentHeight: options.storage.headerHeight,
-        height: metrics.topInset,
-        html: resolveHeaderFooterHTML({
-          storage: options.storage,
-          section: "header",
-          page: options.page + 1,
-          totalPages: options.totalPages,
-          extensions: options.extensions,
-        }),
-        inset: options.storage.headerTopMargin,
-        position: "start",
-      }),
-    );
-
-    return element;
+    return pagination;
   };
 }
 
@@ -527,6 +809,17 @@ function updateStorageLayout(
 ) {
   storage.pageBreakPositions = pageBreakPositions;
   storage.pageCount = pageCount;
+}
+
+function getPageNumberFromVerticalOffset(storage: PagesStorage, offset: number) {
+  const metrics = resolveMetrics(storage);
+  const cycleHeight = metrics.availableContentHeight + getInterPageBreakHeight(storage);
+
+  if (offset <= metrics.topInset) {
+    return 1;
+  }
+
+  return Math.max(1, Math.floor((offset - metrics.topInset) / cycleHeight) + 1);
 }
 
 function createPluginView(options: {
@@ -549,25 +842,40 @@ function createPluginView(options: {
       setHostVariables(nextHost, options.storage);
     };
 
+    const resolvePageNumber = (pos: number) => {
+      try {
+        const coords = view.coordsAtPos(pos);
+        const top = coords.top - view.dom.getBoundingClientRect().top;
+
+        return getPageNumberFromVerticalOffset(options.storage, top);
+      } catch {
+        return getPageNumberFromPosition(options.storage, pos);
+      }
+    };
+
     const measure = () => {
       if (destroyed) {
         return;
       }
 
       applyClasses();
-
-      const { pageBreakPositions, pageCount } = measurePageBreakPositions(
-        view,
-        options.storage,
-      );
-      const pluginState = pagesPluginKey.getState(view.state);
+      const pluginState = pagesPluginKey.getState(view.state) ?? createEmptyPluginState();
+      const pageCount = measurePageCount(view, options.storage, pluginState.pageCount);
+      const pageBreakPositions =
+        pluginState.pageCount === pageCount
+          ? measurePageBreakPositions(
+              view,
+              options.storage,
+              pageCount,
+            )
+          : pluginState.pageBreakPositions.slice(0, Math.max(pageCount - 1, 0));
 
       updateStorageLayout(options.storage, pageBreakPositions, pageCount);
+      options.storage.getPageNumber = resolvePageNumber;
       applyClasses();
 
       if (
-        pluginState
-        && pluginState.pageCount === pageCount
+        pluginState.pageCount === pageCount
         && arePageBreakPositionsEqual(
           pluginState.pageBreakPositions,
           pageBreakPositions,
@@ -614,6 +922,7 @@ function createPluginView(options: {
     }
 
     view.dom.classList.add(pagesEditorClassName);
+    options.storage.getPageNumber = resolvePageNumber;
 
     if (typeof window !== "undefined") {
       window.addEventListener("resize", handleResize);
@@ -639,6 +948,9 @@ function createPluginView(options: {
           window.cancelAnimationFrame(frameHandle);
           window.removeEventListener("resize", handleResize);
         }
+
+        options.storage.getPageNumber = (pos: number) =>
+          getPageNumberFromPosition(options.storage, pos);
       },
     };
   };
@@ -979,42 +1291,14 @@ export const Pages = Extension.create<PagesOptions, PagesStorage>({
             const decorations = [
               Decoration.widget(
                 0,
-                createStartWidget({
+                createPaginationWidget({
                   storage: this.storage,
                   totalPages: pluginState.pageCount,
                   extensions: this.editor.extensionManager.extensions,
                 }),
                 {
-                  key: `mxm-pages-start-${widgetRevision}`,
+                  key: `mxm-pages-pagination-${widgetRevision}`,
                   side: -1,
-                  ignoreSelection: true,
-                },
-              ),
-              ...getPageBreakPositionsFromState(pluginState).map((pos, index) =>
-                Decoration.widget(
-                  pos,
-                  createBreakWidget({
-                    storage: this.storage,
-                    page: index + 1,
-                    totalPages: pluginState.pageCount,
-                    extensions: this.editor.extensionManager.extensions,
-                  }),
-                  {
-                    key: `mxm-pages-break-${index}-${widgetRevision}`,
-                    side: -1,
-                    ignoreSelection: true,
-                  },
-                )),
-              Decoration.widget(
-                state.doc.content.size,
-                createEndWidget({
-                  storage: this.storage,
-                  totalPages: pluginState.pageCount,
-                  extensions: this.editor.extensionManager.extensions,
-                }),
-                {
-                  key: `mxm-pages-end-${widgetRevision}`,
-                  side: 1,
                   ignoreSelection: true,
                 },
               ),
