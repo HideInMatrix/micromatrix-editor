@@ -39,6 +39,7 @@ import Callout from './callout'
 import CodeBlock from './code-block'
 import Columns from './columns'
 import Datetime from './datetime'
+import DocxExport from './docx-export'
 import Echarts from './echarts'
 import File from './file'
 import FileHandler from './file-handler'
@@ -295,6 +296,7 @@ export const getDefaultExtensions = ({ container, options, uploadFileMap }) => {
     }),
     TypeWriter,
     OfficePaste,
+    DocxExport,
   ]
 
   // 合并扩展

@@ -460,6 +460,13 @@
     "locale": "Language"
   },
   "export": {
+    "docx": {
+      "text": "Word Document",
+      "tip": "Export as a Word document",
+      "loading": "Exporting Word document",
+      "success": "Word document exported successfully",
+      "error": "Failed to export Word document"
+    },
     "embed": {
       "text": "Embed",
       "title": "Embed Code",

@@ -459,6 +459,13 @@
     "locale": "语言设置"
   },
   "export": {
+    "docx": {
+      "text": "Word 文档",
+      "tip": "导出为 Word 文档",
+      "loading": "正在导出 Word 文档",
+      "success": "Word 文档导出成功",
+      "error": "导出 Word 文档失败"
+    },
     "embed": {
       "text": "Embed",
       "title": "Embed 嵌入",

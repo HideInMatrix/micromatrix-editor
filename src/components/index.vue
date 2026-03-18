@@ -66,6 +66,7 @@ import cnConfig from 'tdesign-vue-next/esm/locale/zh_CN'
 import { getTypewriterRunState } from '@/extensions/type-writer'
 import { i18n } from '@/i18n'
 import { propsOptions } from '@/options'
+import { createDocxBlob } from '@/extensions/docx-export/serializer'
 import { contentTransform } from '@/utils/content-transform'
 import { consoleCopyright } from '@/utils/copyright'
 import {
@@ -859,6 +860,30 @@ const getImage = async (format = 'blob') => {
 const getText = () => getContent('text')
 const getHTML = () => getContent('html')
 const getJSON = () => getContent('json')
+const exportDocx = async () => {
+  if (!editor.value) {
+    throw new Error('editor is not ready!')
+  }
+
+  const exportOptions = {
+    title: options.value.document?.title,
+    page: page.value,
+  }
+
+  const getBlob = editor.value.storage?.docxExport?.getBlob
+  console.log(editor.value.getJSON())
+  if (typeof getBlob === 'function') {
+    try {
+      return await getBlob(exportOptions)
+    } catch (error) {
+      if (error?.message !== 'editor is not ready!') {
+        throw error
+      }
+    }
+  }
+
+  return await createDocxBlob(editor.value, exportOptions)
+}
 const getVanillaHTML = async () => {
   if (!editor.value) {
     throw new Error('editor is not ready!')
@@ -1249,6 +1274,7 @@ provide('setSkin', setSkin)
 provide('setLocale', setLocale)
 provide('reset', reset)
 provide('getVanillaHTML', getVanillaHTML)
+provide('exportDocxDocument', exportDocx)
 provide('undoHistory', undoHistory)
 provide('redoHistory', redoHistory)
 // Exposing Methods
@@ -1274,6 +1300,7 @@ defineExpose({
   getText,
   getHTML,
   getJSON,
+  exportDocx,
   getVanillaHTML,
   saveContent,
   getContentExcerpt,
