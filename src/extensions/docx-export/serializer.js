@@ -1,4 +1,5 @@
 import { createNodeSerializers } from './serializers'
+import { cmToPixels } from '@/extensions/pages/utils'
 import { loadResource } from '@/utils/load-resource'
 import {
   calbaseConfigData,
@@ -88,14 +89,6 @@ const pxToTwip = (value) => {
     return undefined
   }
   return Math.round(numeric * 15)
-}
-
-const cmToPx = (value) => {
-  const numeric = Number.parseFloat(`${value || 0}`)
-  if (!Number.isFinite(numeric)) {
-    return undefined
-  }
-  return Math.round(numeric * 37.7952755906)
 }
 
 const fontSizeToHalfPoints = (value) => {
@@ -475,7 +468,7 @@ const getPageContentWidthPx = (page = {}) => {
     `${margin.right || DEFAULT_PAGE_MARGIN_CM.right}`,
   )
 
-  return cmToPx(Math.max(1, widthCm - leftCm - rightCm))
+  return cmToPixels(Math.max(1, widthCm - leftCm - rightCm))
 }
 
 const loadEcharts = async (editor) => {
@@ -1000,7 +993,7 @@ const serializerHelpers = {
   DEFAULT_IMAGE_WIDTH,
   buildImageTransformation,
   clamp,
-  cmToPx,
+  cmToPixels,
   cmToTwip,
   createBorder,
   ensureArray,

@@ -59,7 +59,7 @@ import NodeSelect from './node-select'
 import OfficePaste from './office-paste'
 import OptionBox from './option-box'
 import OrderedList from './ordered-list'
-import PageBreak from './page-break'
+import Pages, { PageBreak } from './pages'
 import SearchReplace from './search-replace'
 import Selection from './selection'
 import { Table, TableCell, TableHeader, TableRow } from './table'
@@ -112,8 +112,19 @@ const nodeTypes = [
   'inlineMath',
 ]
 
-export const getDefaultExtensions = ({ container, options, uploadFileMap }) => {
-  const { page, document: doc, users, file, disableExtensions } = options.value
+export const getDefaultExtensions = ({
+  container,
+  options,
+  page,
+  uploadFileMap,
+}) => {
+  const {
+    page: pageOptions,
+    document: doc,
+    users,
+    file,
+    disableExtensions,
+  } = options.value
 
   const extensions = {
     'ordered-list': OrderedList,
@@ -148,7 +159,7 @@ export const getDefaultExtensions = ({ container, options, uploadFileMap }) => {
     bookmark: Bookmark,
     footnote: [Footnotes, FootnoteReference, Footnote],
     'hard-break': BreakMarks.configure({
-      visible: page?.showBreakMarks,
+      visible: pageOptions?.showBreakMarks,
     }),
     'horizontal-rule': HorizontalRule,
     toc: Toc,
@@ -237,6 +248,9 @@ export const getDefaultExtensions = ({ container, options, uploadFileMap }) => {
     Echarts,
 
     // 页面
+    Pages.configure({
+      page,
+    }),
     PageBreak,
 
     // 其他

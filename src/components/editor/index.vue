@@ -59,6 +59,7 @@ const container = inject('container')
 const extensions = getDefaultExtensions({
   container,
   options,
+  page,
   uploadFileMap,
 })
 

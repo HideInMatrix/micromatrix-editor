@@ -54,7 +54,7 @@
 
     >* {
       position: relative;
-      z-index: 1;
+      z-index: -1;
 
       +*:not(.umo-floating-node) {
         margin-top: var(--umo-content-node-bottom);
@@ -120,6 +120,17 @@
           outline: solid 1px var(--umo-primary-color);
         }
       }
+    }
+
+    >[data-tiptap-pagination='true'] {
+      margin-top: 0 !important;
+      z-index: 0;
+      pointer-events: none;
+      user-select: none;
+    }
+
+    >[data-tiptap-pagination='true']+* {
+      margin-top: 0 !important;
     }
   }
 
@@ -510,6 +521,71 @@
 
       &::after {
         display: none;
+      }
+    }
+  }
+
+  .tiptap-pages {
+    >#pages[data-tiptap-pagination='true'] {
+      display: block;
+      width: 0;
+      height: 0;
+      overflow: visible;
+      position: relative;
+      pointer-events: none;
+    }
+
+    .tiptap-page-break {
+      position: relative;
+
+      .page {
+        position: relative;
+      }
+
+      .breaker {
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        box-sizing: border-box;
+      }
+
+      .tiptap-page-header,
+      .tiptap-page-footer {
+        width: 100%;
+        box-sizing: border-box;
+        background-color: var(--umo-page-background);
+        border-left: 1px solid var(--umo-content-node-border);
+        border-right: 1px solid var(--umo-content-node-border);
+        pointer-events: none;
+
+        p {
+          margin: 0;
+        }
+      }
+
+      .tiptap-page-footer {
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-end;
+        border-bottom: 1px solid var(--umo-content-node-border);
+      }
+
+      .tiptap-page-header {
+        display: flex;
+        align-items: flex-start;
+        border-top: 1px solid var(--umo-content-node-border);
+      }
+
+      .tiptap-pagination-gap {
+        width: calc(100% + 2px);
+        margin-left: -1px;
+        background-color: var(--tiptap-page-break-background,
+            var(--umo-container-background));
+        border-left: 1px solid var(--umo-content-node-border);
+        border-right: 1px solid var(--umo-content-node-border);
+        box-sizing: border-box;
+        position: relative;
+
       }
     }
   }

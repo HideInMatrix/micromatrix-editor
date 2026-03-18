@@ -13,12 +13,16 @@ export default Node.create({
     }
   },
   parseHTML() {
-    return [{ tag: 'div[class*="umo-page-break"]' }]
+    return [
+      { tag: 'div[data-page-break="true"]' },
+      { tag: 'div[class*="umo-page-break"]' },
+    ]
   },
   renderHTML({ HTMLAttributes }) {
     return [
       'div',
       mergeAttributes(this.options.HTMLAttributes, HTMLAttributes, {
+        'data-page-break': 'true',
         'data-content': this.options.getContentLabel(),
       }),
     ]
