@@ -528,7 +528,7 @@
   .tiptap-pages {
     >#pages[data-tiptap-pagination='true'] {
       display: block;
-      width: 0;
+      width: 100%;
       height: 0;
       overflow: visible;
       position: relative;
@@ -537,9 +537,11 @@
 
     .tiptap-page-break {
       position: relative;
+      pointer-events: none;
 
       .page {
         position: relative;
+        pointer-events: none;
       }
 
       .breaker {
@@ -547,6 +549,7 @@
         flex-direction: column;
         overflow: hidden;
         box-sizing: border-box;
+        pointer-events: none;
       }
 
       .tiptap-page-header,
@@ -647,6 +650,7 @@
         border-right: 1px solid var(--umo-content-node-border);
         box-sizing: border-box;
         position: relative;
+        pointer-events: none;
 
       }
     }
