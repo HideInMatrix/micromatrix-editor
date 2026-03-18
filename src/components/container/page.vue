@@ -356,7 +356,7 @@ watch(
 .umo-page-node-content {
   position: relative;
   box-sizing: border-box;
-  flex-shrink: 1;
+  flex:1 1 auto;
 }
 
 .umo-main-floating-actions {

@@ -557,6 +557,10 @@
         border-left: 1px solid var(--umo-content-node-border);
         border-right: 1px solid var(--umo-content-node-border);
         pointer-events: none;
+        overflow: hidden;
+        display: flex;
+        justify-content: space-between;
+        align-items: stretch;
 
         p {
           margin: 0;
@@ -564,16 +568,74 @@
       }
 
       .tiptap-page-footer {
-        display: flex;
-        flex-direction: column;
-        justify-content: flex-end;
         border-bottom: 1px solid var(--umo-content-node-border);
       }
 
       .tiptap-page-header {
-        display: flex;
-        align-items: flex-start;
         border-top: 1px solid var(--umo-content-node-border);
+      }
+
+      .tiptap-page-header-content,
+      .tiptap-page-footer-content {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        box-sizing: border-box;
+      }
+
+      .tiptap-page-header-content {
+        justify-content: flex-start;
+      }
+
+      .tiptap-page-footer-content {
+        justify-content: flex-end;
+      }
+
+      .tiptap-page-corner {
+        box-sizing: border-box;
+        position: relative;
+        z-index: 10;
+
+        @media print {
+          opacity: 0;
+        }
+
+        &::after {
+          position: absolute;
+          content: '';
+          display: block;
+          height: 1cm;
+          width: 1cm;
+          border: solid 1px rgba(0, 0, 0, 0.08);
+        }
+
+        &.corner-tl::after {
+          border-top: none;
+          border-left: none;
+          bottom: 0;
+          right: 0;
+        }
+
+        &.corner-tr::after {
+          border-top: none;
+          border-right: none;
+          bottom: 0;
+          left: 0;
+        }
+
+        &.corner-bl::after {
+          border-bottom: none;
+          border-left: none;
+          top: 0;
+          right: 0;
+        }
+
+        &.corner-br::after {
+          border-bottom: none;
+          border-right: none;
+          top: 0;
+          left: 0;
+        }
       }
 
       .tiptap-pagination-gap {

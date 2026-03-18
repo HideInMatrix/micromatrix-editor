@@ -176,6 +176,29 @@ const buildSignature = (settings, metrics, breakOffsets) => {
   })
 }
 
+const createPageCorner = (className, width) => {
+  const corner = document.createElement('div')
+  corner.className = `tiptap-page-corner ${className}`
+  corner.style.width = `${width}px`
+  return corner
+}
+
+const createPageEdgeContent = (className, html, edge, metrics) => {
+  const content = document.createElement('div')
+  content.className = className
+  content.innerHTML = html
+
+  if (edge === 'header') {
+    content.style.justifyContent = 'flex-start'
+    content.style.paddingTop = `${metrics.headerPaddingTop}px`
+  } else {
+    content.style.justifyContent = 'flex-end'
+    content.style.paddingBottom = `${metrics.footerPaddingBottom}px`
+  }
+
+  return content
+}
+
 const createBreakElement = (
   pageNumber,
   totalPages,
@@ -219,8 +242,16 @@ const createBreakElement = (
   footer.dataset.footerType = 'default'
   footer.style.minHeight = `${metrics.footerHeight}px`
   footer.style.height = `${metrics.footerHeight}px`
-  footer.style.padding = `0 ${metrics.marginRight}px ${metrics.footerPaddingBottom}px ${metrics.marginLeft}px`
-  footer.innerHTML = resolveTemplate(settings.footer, pageNumber, totalPages)
+  footer.appendChild(createPageCorner('corner-bl', metrics.marginLeft))
+  footer.appendChild(
+    createPageEdgeContent(
+      'tiptap-page-footer-content',
+      resolveTemplate(settings.footer, pageNumber, totalPages),
+      'footer',
+      metrics,
+    ),
+  )
+  footer.appendChild(createPageCorner('corner-br', metrics.marginRight))
   breaker.appendChild(footer)
 
   const gap = document.createElement('div')
@@ -235,12 +266,16 @@ const createBreakElement = (
   header.dataset.headerType = 'default'
   header.style.minHeight = `${metrics.headerHeight}px`
   header.style.height = `${metrics.headerHeight}px`
-  header.style.padding = `${metrics.headerPaddingTop}px ${metrics.marginRight}px 0 ${metrics.marginLeft}px`
-  header.innerHTML = resolveTemplate(
-    settings.header,
-    pageNumber + 1,
-    totalPages,
+  header.appendChild(createPageCorner('corner-tl', metrics.marginLeft))
+  header.appendChild(
+    createPageEdgeContent(
+      'tiptap-page-header-content',
+      resolveTemplate(settings.header, pageNumber + 1, totalPages),
+      'header',
+      metrics,
+    ),
   )
+  header.appendChild(createPageCorner('corner-tr', metrics.marginRight))
   breaker.appendChild(header)
 
   return pageBreak

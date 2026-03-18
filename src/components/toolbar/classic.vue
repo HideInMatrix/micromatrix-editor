@@ -100,9 +100,7 @@
         <div class="umo-virtual-group">
           <menus-toolbar-insert-hard-break v-if="!disableMenu('hard-break')" />
           <menus-toolbar-insert-hr v-if="!disableMenu('hr')" />
-          <menus-toolbar-insert-bookmark v-if="!disableMenu('bookmark')" />
           <menus-toolbar-insert-footnote v-if="!disableMenu('footnote')" />
-          <menus-toolbar-insert-toc v-if="!disableMenu('toc')" />
         </div>
         <div class="umo-virtual-group">
           <menus-toolbar-insert-template v-if="!disableMenu('template')" />
@@ -110,6 +108,15 @@
         </div>
         <div class="virtual-group is-slot">
           <slot name="toolbar_insert" toolbar-mode="ribbon" />
+        </div>
+      </template>
+      <template v-if="currentMenu === 'reference'">
+        <div class="umo-virtual-group">
+          <menus-toolbar-insert-bookmark v-if="!disableMenu('bookmark')" />
+          <menus-toolbar-insert-toc v-if="!disableMenu('toc')" />
+        </div>
+        <div class="virtual-group is-slot">
+          <slot name="toolbar_reference" toolbar-mode="classic" />
         </div>
       </template>
       <template v-if="currentMenu === 'table'">
