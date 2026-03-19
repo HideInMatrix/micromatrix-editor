@@ -62,6 +62,9 @@ importers:
       '@mxm-editor/extension-color':
         specifier: workspace:*
         version: link:../../packages/extension-color
+      '@mxm-editor/extension-comments':
+        specifier: workspace:*
+        version: link:../../packages/extension-comments
       '@mxm-editor/extension-heading':
         specifier: workspace:*
         version: link:../../packages/extension-heading
@@ -80,6 +83,9 @@ importers:
       '@mxm-editor/extension-mention':
         specifier: workspace:*
         version: link:../../packages/extension-mention
+      '@mxm-editor/extension-pages':
+        specifier: workspace:*
+        version: link:../../packages/extension-pages
       '@mxm-editor/extension-placeholder':
         specifier: workspace:*
         version: link:../../packages/extension-placeholder
@@ -98,9 +104,6 @@ importers:
       '@mxm-editor/extension-text-style':
         specifier: workspace:*
         version: link:../../packages/extension-text-style
-      '@mxm-editor/html':
-        specifier: workspace:*
-        version: link:../../packages/html
       '@mxm-editor/markdown':
         specifier: workspace:*
         version: link:../../packages/markdown
@@ -110,9 +113,6 @@ importers:
       '@mxm-editor/starter-kit':
         specifier: workspace:*
         version: link:../../packages/starter-kit
-      '@mxm-editor/static-renderer':
-        specifier: workspace:*
-        version: link:../../packages/static-renderer
       '@mxm-editor/suggestion':
         specifier: workspace:*
         version: link:../../packages/suggestion
@@ -312,6 +312,18 @@ importers:
       '@mxm-editor/extension-text-style':
         specifier: workspace:*
         version: link:../extension-text-style
+
+  packages/extension-comments:
+    dependencies:
+      '@mxm-editor/core':
+        specifier: workspace:*
+        version: link:../core
+      '@mxm-editor/pm':
+        specifier: workspace:*
+        version: link:../pm
+      yjs:
+        specifier: ^13.6.23
+        version: 13.6.29
 
   packages/extension-details:
     dependencies:
@@ -579,6 +591,18 @@ importers:
       '@mxm-editor/pm':
         specifier: workspace:*
         version: link:../pm
+
+  packages/extension-pages:
+    dependencies:
+      '@mxm-editor/core':
+        specifier: workspace:*
+        version: link:../core
+      '@mxm-editor/pm':
+        specifier: workspace:*
+        version: link:../pm
+      '@mxm-editor/static-renderer':
+        specifier: workspace:*
+        version: link:../static-renderer
 
   packages/extension-paragraph:
     dependencies:
