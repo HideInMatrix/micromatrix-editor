@@ -469,6 +469,7 @@ function createPasteLinkifier(
 export const Link = Mark.create<LinkOptions>({
   name: "link",
   priority: 1000,
+  keepOnSplit: false,
 
   inclusive() {
     return this.options.autolink;

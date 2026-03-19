@@ -7,6 +7,7 @@ import {
   Schema,
 } from "@mxm-editor/pm";
 import type { Editor } from "../Editor";
+import { getExtensionField } from "./getExtensionField";
 import type {
   AnyExtension,
   ExtensionAttribute,
@@ -14,7 +15,11 @@ import type {
   MarkConfig,
   NodeConfig,
 } from "../types";
-import { cleanObject, mergeAttributes } from "../utilities";
+import {
+  callOrReturn,
+  cleanObject,
+  mergeAttributes,
+} from "../utilities";
 
 export type Extensions = AnyExtension[];
 
@@ -52,7 +57,15 @@ function getGlobalAttributesForResolvedExtension(
   return extensions.reduce<Record<string, ExtensionAttribute>>(
     (attributes, item) => {
       const context = createContext(item);
-      const globalAttributes = item.config.addGlobalAttributes?.call(context) ?? [];
+      const addGlobalAttributes = getExtensionField(
+        item,
+        "addGlobalAttributes",
+        {
+          ...context,
+          extensions,
+        },
+      ) as (() => GlobalAttributes[]) | undefined;
+      const globalAttributes = addGlobalAttributes?.() ?? [];
 
       globalAttributes.forEach((globalAttribute: GlobalAttributes) => {
         if (!globalAttribute.types.includes(extension.name)) {
@@ -74,6 +87,11 @@ function getAttributesForResolvedExtension(
   createContext: ExtensionContextFactory,
 ) {
   const context = createContext(extension);
+  const addAttributes = getExtensionField(
+    extension,
+    "addAttributes",
+    context,
+  ) as (() => Record<string, ExtensionAttribute>) | undefined;
   const globalAttributes = getGlobalAttributesForResolvedExtension(
     extension,
     extensions,
@@ -82,7 +100,7 @@ function getAttributesForResolvedExtension(
 
   return {
     ...globalAttributes,
-    ...(extension.config.addAttributes?.call(context) ?? {}),
+    ...(addAttributes?.() ?? {}),
   } as Record<string, ExtensionAttribute>;
 }
 
@@ -169,9 +187,13 @@ export function resolveExtensions(
     items.forEach((extension) => {
       resolved.push(extension);
 
-      const nested = extension.config.addExtensions?.call(
-        createContext(extension),
-      );
+      const nested = (
+        getExtensionField(
+          extension,
+          "addExtensions",
+          createContext(extension),
+        ) as (() => Extensions) | undefined
+      )?.();
 
       if (nested?.length) {
         visit(nested);
@@ -289,39 +311,68 @@ export function getSchemaByResolvedExtensions(
           extensions,
           createContext,
         );
-        const group =
-          typeof node.config.group === "function"
-            ? node.config.group.call(context)
-            : node.config.group;
-        const inline =
-          typeof node.config.inline === "function"
-            ? node.config.inline.call(context)
-            : node.config.inline;
+        const group = callOrReturn(
+          getExtensionField(node, "group", context) as NodeConfig["group"],
+        );
+        const inline = callOrReturn(
+          getExtensionField(node, "inline", context) as NodeConfig["inline"],
+        );
         const spec: NodeSpec = cleanObject({
-          content: node.config.content,
-          marks: node.config.marks,
+          content: callOrReturn(
+            getExtensionField(node, "content", context) as NodeConfig["content"],
+          ),
+          marks: callOrReturn(
+            getExtensionField(node, "marks", context) as NodeConfig["marks"],
+          ),
           group,
           inline,
-          atom: node.config.atom,
-          selectable: node.config.selectable,
-          draggable: node.config.draggable,
-          code: node.config.code,
-          defining: node.config.defining,
-          isolating: node.config.isolating,
+          atom: callOrReturn(
+            getExtensionField(node, "atom", context) as NodeConfig["atom"],
+          ),
+          selectable: callOrReturn(
+            getExtensionField(node, "selectable", context) as NodeConfig["selectable"],
+          ),
+          draggable: callOrReturn(
+            getExtensionField(node, "draggable", context) as NodeConfig["draggable"],
+          ),
+          code: callOrReturn(
+            getExtensionField(node, "code", context) as NodeConfig["code"],
+          ),
+          defining: callOrReturn(
+            getExtensionField(node, "defining", context) as NodeConfig["defining"],
+          ),
+          isolating: callOrReturn(
+            getExtensionField(node, "isolating", context) as NodeConfig["isolating"],
+          ),
           attrs: createAttributesSpec(attributes),
-          ...(node.config.extendNodeSchema ?? {}),
+          ...(getExtensionField(node, "extendNodeSchema", context) ?? {}),
         });
 
-        if (node.config.parseHTML) {
+        const parseHTML = getExtensionField(
+          node,
+          "parseHTML",
+          context,
+        ) as (() => NodeSpec["parseDOM"]) | undefined;
+
+        if (parseHTML) {
           spec.parseDOM = injectParseAttributes(
-            node.config.parseHTML.call(context),
+            parseHTML(),
             attributes,
           );
         }
 
-        if (node.config.renderHTML) {
+        const renderHTML = getExtensionField(
+          node,
+          "renderHTML",
+          context,
+        ) as ((props: {
+          node: ProseMirrorNode;
+          HTMLAttributes: Record<string, string>;
+        }) => any) | undefined;
+
+        if (renderHTML) {
           spec.toDOM = (pmNode: ProseMirrorNode) =>
-            node.config.renderHTML!.call(context, {
+            renderHTML({
               node: pmNode,
               HTMLAttributes: getRenderedAttributes(pmNode.attrs, attributes),
             });
@@ -338,28 +389,48 @@ export function getSchemaByResolvedExtensions(
           extensions,
           createContext,
         );
-        const inclusive =
-          typeof mark.config.inclusive === "function"
-            ? mark.config.inclusive.call(context)
-            : mark.config.inclusive;
+        const inclusive = callOrReturn(
+          getExtensionField(mark, "inclusive", context) as MarkConfig["inclusive"],
+        );
         const spec: MarkSpec = cleanObject({
           inclusive,
-          excludes: mark.config.excludes,
-          group: mark.config.group,
-          code: mark.config.code,
+          excludes: callOrReturn(
+            getExtensionField(mark, "excludes", context) as MarkConfig["excludes"],
+          ),
+          group: callOrReturn(
+            getExtensionField(mark, "group", context) as MarkConfig["group"],
+          ),
+          code: callOrReturn(
+            getExtensionField(mark, "code", context) as MarkConfig["code"],
+          ),
           attrs: createAttributesSpec(attributes),
         });
 
-        if (mark.config.parseHTML) {
+        const parseHTML = getExtensionField(
+          mark,
+          "parseHTML",
+          context,
+        ) as (() => MarkSpec["parseDOM"]) | undefined;
+
+        if (parseHTML) {
           spec.parseDOM = injectParseAttributes(
-            mark.config.parseHTML.call(context),
+            parseHTML(),
             attributes,
           );
         }
 
-        if (mark.config.renderHTML) {
+        const renderHTML = getExtensionField(
+          mark,
+          "renderHTML",
+          context,
+        ) as ((props: {
+          mark: ProseMirrorMark;
+          HTMLAttributes: Record<string, string>;
+        }) => any) | undefined;
+
+        if (renderHTML) {
           spec.toDOM = (pmMark: ProseMirrorMark) =>
-            mark.config.renderHTML!.call(context, {
+            renderHTML({
               mark: pmMark,
               HTMLAttributes: getRenderedAttributes(pmMark.attrs, attributes),
             });

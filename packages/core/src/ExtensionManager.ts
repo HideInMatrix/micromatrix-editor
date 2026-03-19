@@ -6,6 +6,7 @@ import {
   Schema,
 } from "@mxm-editor/pm";
 import type { Editor } from "./Editor";
+import { getExtensionField } from "./helpers/getExtensionField";
 import {
   getAttributesForExtensionFromResolvedExtensions,
   getRenderedAttributes,
@@ -13,12 +14,14 @@ import {
   resolveExtensions,
 } from "./helpers/schema";
 import { pasteRulesPlugin } from "./PasteRule";
+import { callOrReturn } from "./utilities";
 import type {
   AnyExtension,
   ExtensionConfig,
   NodeViewRenderer,
   NodeConfig,
   RawCommands,
+  Storage,
   ExtensionLike,
 } from "./types";
 
@@ -46,7 +49,9 @@ export class ExtensionManager {
 
   readonly schema: Schema;
 
-  readonly storage: Record<string, unknown>;
+  readonly storage: Storage;
+
+  readonly splittableMarks: string[];
 
   private proseMirrorPluginsCache: Plugin[] | null = null;
 
@@ -58,7 +63,22 @@ export class ExtensionManager {
     );
     this.storage = Object.fromEntries(
       this.extensions.map((extension) => [extension.name, extension.storage]),
-    );
+    ) as Storage;
+    this.splittableMarks = this.extensions.flatMap((extension) => {
+      if (extension.type !== "mark") {
+        return [];
+      }
+
+      const keepOnSplit = callOrReturn(
+        getExtensionField(
+          extension,
+          "keepOnSplit",
+          extension.createContext(this.editor),
+        ) ?? true,
+      );
+
+      return keepOnSplit ? [extension.name] : [];
+    });
     this.onExtensionsResolved();
     this.schema = getSchemaByResolvedExtensions(
       this.extensions,
@@ -68,28 +88,39 @@ export class ExtensionManager {
 
   get commands(): RawCommands {
     return this.extensions.reduce<RawCommands>((commands, extension) => {
-      const addCommands = extension.config.addCommands;
+      const addCommands = getExtensionField(
+        extension,
+        "addCommands",
+        extension.createContext(this.editor),
+      ) as (() => Partial<RawCommands>) | undefined;
 
       if (!addCommands) {
         return commands;
       }
 
+      const extensionCommands = addCommands() as RawCommands;
+
       return {
         ...commands,
-        ...addCommands.call(extension.createContext(this.editor)),
-      };
-    }, {});
+        ...extensionCommands,
+      } as RawCommands;
+    }, {} as RawCommands);
   }
 
   get plugins(): Plugin[] {
     const keyboardPlugins = this.extensions.flatMap((extension) => {
       const context = extension.createContext(this.editor);
+      const addKeyboardShortcuts = getExtensionField(
+        extension,
+        "addKeyboardShortcuts",
+        context,
+      ) as (() => Record<string, () => boolean>) | undefined;
 
-      if (!extension.config.addKeyboardShortcuts) {
+      if (!addKeyboardShortcuts) {
         return [];
       }
 
-      return [keymap(extension.config.addKeyboardShortcuts.call(context))];
+      return [keymap(addKeyboardShortcuts())];
     });
     const inputRulePlugins = this.extensions.flatMap((extension) => {
       if (!includesExtension(this.editor.options.enableInputRules, extension)) {
@@ -97,7 +128,12 @@ export class ExtensionManager {
       }
 
       const context = extension.createContext(this.editor);
-      const rules = extension.config.addInputRules?.call(context) ?? [];
+      const addInputRules = getExtensionField(
+        extension,
+        "addInputRules",
+        context,
+      ) as (() => ReturnType<typeof inputRules> extends never ? never[] : any[]) | undefined;
+      const rules = addInputRules?.() ?? [];
 
       return rules.length ? [inputRules({ rules })] : [];
     });
@@ -107,14 +143,24 @@ export class ExtensionManager {
       }
 
       const context = extension.createContext(this.editor);
+      const addPasteRules = getExtensionField(
+        extension,
+        "addPasteRules",
+        context,
+      ) as (() => any[]) | undefined;
 
-      return extension.config.addPasteRules?.call(context) ?? [];
+      return addPasteRules?.() ?? [];
     });
     const proseMirrorPlugins = this.proseMirrorPluginsCache
       ?? this.extensions.flatMap((extension) => {
         const context = extension.createContext(this.editor);
+        const addProseMirrorPlugins = getExtensionField(
+          extension,
+          "addProseMirrorPlugins",
+          context,
+        ) as (() => Plugin[]) | undefined;
 
-        return extension.config.addProseMirrorPlugins?.call(context) ?? [];
+        return addProseMirrorPlugins?.() ?? [];
       });
 
     this.proseMirrorPluginsCache = proseMirrorPlugins;
@@ -136,7 +182,11 @@ export class ExtensionManager {
     return Object.fromEntries(
       nodes.map((node) => {
         const context = node.createContext(this.editor);
-        const renderNodeView = node.config.addNodeView?.call(context) as
+        const renderNodeView = getExtensionField(
+          node,
+          "addNodeView",
+          context,
+        ) as
           | NodeViewRenderer
           | undefined;
         const attributes = getAttributesForExtensionFromResolvedExtensions(
@@ -208,32 +258,121 @@ export class ExtensionManager {
 
   onCreate() {
     this.extensions.forEach((extension) => {
-      extension.config.onCreate?.call(extension.createContext(this.editor));
+      const onCreate = getExtensionField(
+        extension,
+        "onCreate",
+        extension.createContext(this.editor),
+      ) as (() => void) | undefined;
+
+      onCreate?.();
     });
   }
 
   onUpdate(transaction: Parameters<NonNullable<ExtensionConfig["onUpdate"]>>[0]["transaction"]) {
     this.extensions.forEach((extension) => {
-      extension.config.onUpdate?.call(extension.createContext(this.editor), {
+      const onUpdate = getExtensionField(
+        extension,
+        "onUpdate",
+        extension.createContext(this.editor),
+      ) as ((props: { transaction: typeof transaction }) => void) | undefined;
+
+      onUpdate?.({
         transaction,
       });
     });
   }
 
+  onBeforeCreate() {
+    this.extensions.forEach((extension) => {
+      const onBeforeCreate = getExtensionField(
+        extension,
+        "onBeforeCreate",
+        extension.createContext(this.editor),
+      ) as (() => void) | undefined;
+
+      onBeforeCreate?.();
+    });
+  }
+
+  onSelectionUpdate(
+    transaction: Parameters<NonNullable<ExtensionConfig["onUpdate"]>>[0]["transaction"],
+  ) {
+    this.extensions.forEach((extension) => {
+      const onSelectionUpdate = getExtensionField(
+        extension,
+        "onSelectionUpdate",
+        extension.createContext(this.editor),
+      ) as ((props: { transaction: typeof transaction }) => void) | undefined;
+
+      onSelectionUpdate?.({
+        transaction,
+      });
+    });
+  }
+
+  onTransaction(
+    transaction: Parameters<NonNullable<ExtensionConfig["onUpdate"]>>[0]["transaction"],
+  ) {
+    this.extensions.forEach((extension) => {
+      const onTransaction = getExtensionField(
+        extension,
+        "onTransaction",
+        extension.createContext(this.editor),
+      ) as ((props: { transaction: typeof transaction }) => void) | undefined;
+
+      onTransaction?.({
+        transaction,
+      });
+    });
+  }
+
+  onFocus(event: FocusEvent) {
+    this.extensions.forEach((extension) => {
+      const onFocus = getExtensionField(
+        extension,
+        "onFocus",
+        extension.createContext(this.editor),
+      ) as ((props: { event: FocusEvent }) => void) | undefined;
+
+      onFocus?.({ event });
+    });
+  }
+
+  onBlur(event: FocusEvent) {
+    this.extensions.forEach((extension) => {
+      const onBlur = getExtensionField(
+        extension,
+        "onBlur",
+        extension.createContext(this.editor),
+      ) as ((props: { event: FocusEvent }) => void) | undefined;
+
+      onBlur?.({ event });
+    });
+  }
+
   onDestroy() {
     this.extensions.forEach((extension) => {
-      extension.config.onDestroy?.call(extension.createContext(this.editor));
+      const onDestroy = getExtensionField(
+        extension,
+        "onDestroy",
+        extension.createContext(this.editor),
+      ) as (() => void) | undefined;
+
+      onDestroy?.();
     });
   }
 
   private onExtensionsResolved() {
     this.extensions.forEach((extension) => {
-      extension.config.onExtensionsResolved?.call(
+      const onExtensionsResolved = getExtensionField(
+        extension,
+        "onExtensionsResolved",
         extension.createContext(this.editor),
-        {
-          extensions: this.extensions,
-        },
-      );
+      ) as ((props: { extensions: AnyExtension[] }) => void) | undefined;
+
+      onExtensionsResolved?.({
+        extensions: this.extensions,
+      });
     });
   }
 }

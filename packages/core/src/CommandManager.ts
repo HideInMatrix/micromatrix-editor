@@ -31,16 +31,17 @@ export class CommandManager {
       Object.entries(rawCommands).map(([name, command]) => [
         name,
         (...args: any[]) => {
-          const handled = command(...args)(props);
+          const executeCommand = command as (...commandArgs: any[]) => ReturnType<typeof command>;
+          const handled = executeCommand(...args)(props);
 
-          if (handled && this.editor.view) {
+          if (handled && this.editor.view && !this.shouldSkipDispatch(tr)) {
             this.editor.view.dispatch(tr);
           }
 
           return handled;
         },
       ]),
-    );
+    ) as SingleCommands;
   }
 
   chain() {
@@ -61,15 +62,17 @@ export class CommandManager {
         Object.entries(rawCommands).map(([name, command]) => [
           name,
           (...args: any[]) => {
+            const executeCommand = command as (...commandArgs: any[]) => ReturnType<typeof command>;
+
             callbacks.push(
-              command(...args)(this.buildProps(transaction, shouldDispatch)),
+              executeCommand(...args)(this.buildProps(transaction, shouldDispatch)),
             );
             return chain;
           },
         ]),
       ),
       run: () => {
-        if (shouldDispatch && this.editor.view) {
+        if (shouldDispatch && this.editor.view && !this.shouldSkipDispatch(transaction)) {
           this.editor.view.dispatch(transaction);
         }
 
@@ -89,7 +92,11 @@ export class CommandManager {
       ...Object.fromEntries(
         Object.entries(rawCommands).map(([name, command]) => [
           name,
-          (...args: any[]) => command(...args)({ ...props, dispatch: undefined }),
+          (...args: any[]) => {
+            const executeCommand = command as (...commandArgs: any[]) => ReturnType<typeof command>;
+
+            return executeCommand(...args)({ ...props, dispatch: undefined });
+          },
         ]),
       ),
       chain: () => this.createChain(transaction, false),
@@ -115,9 +122,13 @@ export class CommandManager {
         return Object.fromEntries(
           Object.entries(rawCommands).map(([name, command]) => [
             name,
-            (...args: any[]) => command(...args)(props),
+            (...args: any[]) => {
+              const executeCommand = command as (...commandArgs: any[]) => ReturnType<typeof command>;
+
+              return executeCommand(...args)(props);
+            },
           ]),
-        );
+        ) as SingleCommands;
       },
     };
 
@@ -129,5 +140,9 @@ export class CommandManager {
       ...this.editor.coreCommands,
       ...this.editor.extensionManager.commands,
     };
+  }
+
+  private shouldSkipDispatch(transaction: Transaction) {
+    return transaction.getMeta("preventDispatch") === true;
   }
 }

@@ -1,5 +1,6 @@
 export * from "./CommandManager";
 export * from "./Editor";
+export * from "./Extendable";
 export * from "./EventEmitter";
 export * from "./Extension";
 export * from "./ExtensionManager";
@@ -9,6 +10,7 @@ export * from "./Node";
 export * from "./NodeView";
 export * from "./PasteRule";
 export * from "./commands";
+export * from "./extensions";
 export * from "./helpers";
 export * from "./types";
 export * from "./utilities";

@@ -1,6 +1,7 @@
 import {
   NodeSelection,
   Plugin,
+  type DirectEditorProps,
   type PluginKey,
   Selection,
   DOMParser as ProseMirrorDOMParser,
@@ -14,6 +15,7 @@ import {
 } from "@mxm-editor/pm";
 import { CommandManager } from "./CommandManager";
 import { createCoreCommands, resolveFocusSelection } from "./commands";
+import { getCoreExtensions } from "./extensions";
 import { EventEmitter } from "./EventEmitter";
 import { ExtensionManager } from "./ExtensionManager";
 import { createDocumentFromContent } from "./helpers/content";
@@ -21,10 +23,10 @@ import type {
   CanCommands,
   ChainedCommands,
   Content,
-  EditorEventMap,
   EditorGetTextOptions,
   MarkdownParser,
   EditorOptions,
+  EditorEventMap,
   FocusOptions,
   FocusPosition,
   PluginKeySource,
@@ -32,6 +34,7 @@ import type {
   ResolvedEditorOptions,
   SetContentOptions,
   SingleCommands,
+  Storage,
 } from "./types";
 import { matchesAttributes } from "./utilities";
 
@@ -106,19 +109,30 @@ export class Editor extends EventEmitter<EditorEventMap> {
       enableInputRules: true,
       enablePasteRules: true,
       editorProps: {},
+      onBeforeCreate: () => undefined,
       onCreate: () => undefined,
       onUpdate: () => undefined,
+      onSelectionUpdate: () => undefined,
+      onTransaction: () => undefined,
+      onFocus: () => undefined,
+      onBlur: () => undefined,
       onDestroy: () => undefined,
       ...options,
     };
 
     this.extensionManager = new ExtensionManager(
-      this.options.extensions,
+      [
+        ...getCoreExtensions(),
+        ...this.options.extensions,
+      ],
       this,
     );
     this.coreCommands = createCoreCommands(this);
     this.commandManager = new CommandManager({ editor: this });
     this.editorState = this.createState(this.options.content);
+    this.extensionManager.onBeforeCreate();
+    this.emit("beforeCreate", { editor: this });
+    this.options.onBeforeCreate({ editor: this });
 
     if (this.options.element) {
       this.mount(this.options.element);
@@ -129,7 +143,7 @@ export class Editor extends EventEmitter<EditorEventMap> {
     return this.extensionManager.schema;
   }
 
-  get storage() {
+  get storage(): Storage {
     return this.extensionManager.storage;
   }
 
@@ -193,13 +207,10 @@ export class Editor extends EventEmitter<EditorEventMap> {
       plugins: this.extensionManager.plugins,
     });
 
-    this.editorView = new EditorView(element, {
-      ...this.options.editorProps,
-      state: this.editorState,
-      dispatchTransaction: this.dispatchTransaction,
-      editable: () => this.options.editable,
-      nodeViews: this.extensionManager.nodeViews,
-    });
+    this.editorView = new EditorView(
+      element,
+      this.createViewProps(this.editorState),
+    );
 
     this.extensionManager.onCreate();
     this.emit("create", { editor: this });
@@ -231,11 +242,7 @@ export class Editor extends EventEmitter<EditorEventMap> {
     this.reconfigureState();
 
     if (this.editorView) {
-      this.editorView.setProps({
-        ...this.options.editorProps,
-        editable: () => this.options.editable,
-        nodeViews: this.extensionManager.nodeViews,
-      });
+      this.editorView.setProps(this.createViewProps(this.editorView.state));
     }
   }
 
@@ -246,11 +253,7 @@ export class Editor extends EventEmitter<EditorEventMap> {
     };
 
     if (this.editorView) {
-      this.editorView.setProps({
-        ...this.options.editorProps,
-        editable: () => this.options.editable,
-        nodeViews: this.extensionManager.nodeViews,
-      });
+      this.editorView.setProps(this.createViewProps(this.editorView.state));
     }
 
     if (emitUpdate) {
@@ -278,9 +281,11 @@ export class Editor extends EventEmitter<EditorEventMap> {
 
     if (normalizedOptions.emitUpdate !== false) {
       this.extensionManager.onUpdate(nextState.tr);
+      this.extensionManager.onSelectionUpdate(nextState.tr);
       this.emit("update", { editor: this, transaction: nextState.tr });
       this.emit("selectionUpdate", { editor: this, transaction: nextState.tr });
       this.options.onUpdate({ editor: this, transaction: nextState.tr });
+      this.options.onSelectionUpdate({ editor: this, transaction: nextState.tr });
     }
   }
 
@@ -539,6 +544,15 @@ export class Editor extends EventEmitter<EditorEventMap> {
     this.editorView?.updateState(nextState);
   }
 
+  private createViewProps(state: EditorState): DirectEditorProps {
+    return {
+      ...this.options.editorProps,
+      state,
+      dispatchTransaction: this.dispatchTransaction,
+      nodeViews: this.extensionManager.nodeViews,
+    };
+  }
+
   private dispatchTransaction = (transaction: Transaction) => {
     if (!this.editorView) {
       return;
@@ -549,11 +563,16 @@ export class Editor extends EventEmitter<EditorEventMap> {
 
     this.editorState = state;
     this.editorView.updateState(state);
+    this.extensionManager.onTransaction(transaction);
+    this.emit("transaction", { editor: this, transaction });
+    this.options.onTransaction({ editor: this, transaction });
     if (transaction.getMeta("preventUpdate") !== true) {
       this.extensionManager.onUpdate(transaction);
       this.emit("update", { editor: this, transaction });
       if (transaction.selectionSet || !state.selection.eq(previousSelection)) {
+        this.extensionManager.onSelectionUpdate(transaction);
         this.emit("selectionUpdate", { editor: this, transaction });
+        this.options.onSelectionUpdate({ editor: this, transaction });
       }
       this.options.onUpdate({ editor: this, transaction });
     }

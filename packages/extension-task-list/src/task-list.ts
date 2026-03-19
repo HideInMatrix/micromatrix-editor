@@ -1,27 +1,12 @@
 import { Node, mergeAttributes } from "@mxm-editor/core";
 import {
-  liftListItem,
-  type EditorState,
-  wrapInList,
   wrappingInputRule,
 } from "@mxm-editor/pm";
-
-function isInNodeType(state: EditorState, nodeName: string) {
-  const { $from } = state.selection;
-
-  for (let depth = $from.depth; depth > 0; depth -= 1) {
-    if ($from.node(depth).type.name === nodeName) {
-      return true;
-    }
-  }
-
-  return false;
-}
 
 export const TaskList = Node.create({
   name: "taskList",
 
-  group: "block",
+  group: "block list",
   content: "taskItem+",
 
   parseHTML() {
@@ -61,30 +46,12 @@ export const TaskList = Node.create({
     return {
       setTaskList:
         () =>
-        ({ state, dispatch }) => {
-          const type = state.schema.nodes[this.name];
-
-          if (!type) {
-            return false;
-          }
-
-          return wrapInList(type)(state, dispatch);
-        },
+        ({ commands }) =>
+          commands.wrapInList(this.name),
       toggleTaskList:
         () =>
-        ({ state, dispatch, commands }) => {
-          const itemType = state.schema.nodes.taskItem;
-
-          if (!itemType) {
-            return false;
-          }
-
-          if (isInNodeType(state, this.name)) {
-            return liftListItem(itemType)(state, dispatch);
-          }
-
-          return commands.setTaskList();
-        },
+        ({ commands }) =>
+          commands.toggleList(this.name, "taskItem"),
     };
   },
 

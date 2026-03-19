@@ -8,7 +8,11 @@ import {
   type NodeType,
   type Node as ProseMirrorNode,
 } from "@mxm-editor/pm";
-import type { PasteRule } from "./types";
+import type {
+  JSONContent,
+  PasteRule,
+} from "./types";
+import { callOrReturn } from "./utilities";
 
 type Segment =
   | {
@@ -99,6 +103,7 @@ function applyRuleToSegment(
   state: EditorState,
   segment: Segment,
   rule: PasteRule,
+  event: ClipboardEvent,
 ) {
   if (segment.type !== "text" || !segment.text.length) {
     return [segment];
@@ -132,6 +137,7 @@ function applyRuleToSegment(
       range: { from: matchStart, to: matchEnd },
       match,
       text: fullMatch,
+      event,
     });
 
     if (replacement) {
@@ -165,11 +171,16 @@ function applyRuleToSegment(
   return nextSegments;
 }
 
-function buildInlineNodes(state: EditorState, text: string, rules: PasteRule[]) {
+function buildInlineNodes(
+  state: EditorState,
+  text: string,
+  rules: PasteRule[],
+  event: ClipboardEvent,
+) {
   const segments = rules.reduce<Segment[]>(
     (currentSegments, rule) =>
       currentSegments.flatMap((segment) =>
-        applyRuleToSegment(state, segment, rule),
+        applyRuleToSegment(state, segment, rule, event),
       ),
     [
       {
@@ -229,7 +240,7 @@ export function pasteRulesPlugin(rules: PasteRule[]) {
           return false;
         }
 
-        const nodes = buildInlineNodes(view.state, text, rules);
+        const nodes = buildInlineNodes(view.state, text, rules, event);
 
         if (!nodes) {
           return false;
@@ -256,15 +267,19 @@ export function markPasteRule({
   type: MarkType;
   getAttributes?:
     | Record<string, any>
-    | ((match: RegExpMatchArray) => Record<string, any>);
+    | ((match: RegExpMatchArray, event: ClipboardEvent) => Record<string, any> | false | null)
+    | false
+    | null;
 }): PasteRule {
   return {
     find,
-    replace: ({ state, match }) => {
-      const attributes =
-        typeof getAttributes === "function"
-          ? getAttributes(match)
-          : (getAttributes ?? {});
+    replace: ({ state, match, event }) => {
+      const attributes = callOrReturn(getAttributes ?? {}, match, event);
+
+      if (attributes === false || attributes === null) {
+        return null;
+      }
+
       const { text } = getMarksRange(match);
 
       return state.schema.text(text, [type.create(attributes)]);
@@ -272,26 +287,95 @@ export function markPasteRule({
   };
 }
 
+function createNodeContent(
+  type: NodeType,
+  content:
+    | JSONContent
+    | JSONContent[]
+    | ((attributes: Record<string, any>) => JSONContent | JSONContent[] | false | null)
+    | false
+    | null
+    | undefined,
+  attributes: Record<string, any>,
+) {
+  const resolvedContent = callOrReturn(content as any, attributes);
+
+  if (!resolvedContent) {
+    return undefined;
+  }
+
+  const items = Array.isArray(resolvedContent)
+    ? resolvedContent
+    : [resolvedContent];
+
+  return Fragment.fromArray(
+    items.map((item) => type.schema.nodeFromJSON(item)),
+  );
+}
+
 export function nodePasteRule({
   find,
   type,
   getAttributes,
+  getContent,
 }: {
   find: RegExp;
   type: NodeType;
   getAttributes?:
     | Record<string, any>
-    | ((match: RegExpMatchArray) => Record<string, any>);
+    | ((match: RegExpMatchArray, event: ClipboardEvent) => Record<string, any> | false | null)
+    | false
+    | null;
+  getContent?:
+    | JSONContent
+    | JSONContent[]
+    | ((attributes: Record<string, any>) => JSONContent | JSONContent[] | false | null)
+    | false
+    | null;
 }): PasteRule {
   return {
     find,
-    replace: ({ match }) => {
-      const attributes =
-        typeof getAttributes === "function"
-          ? getAttributes(match)
-          : (getAttributes ?? {});
+    replace: ({ match, event }) => {
+      const attributes = callOrReturn(getAttributes ?? {}, match, event);
 
-      return type.create(attributes);
+      if (attributes === false || attributes === null) {
+        return null;
+      }
+
+      const content = createNodeContent(type, getContent, attributes);
+
+      return type.create(attributes, content);
+    },
+  };
+}
+
+export function textPasteRule({
+  find,
+  replace,
+}: {
+  find: RegExp;
+  replace: string;
+}): PasteRule {
+  return {
+    find,
+    replace: ({ state, match }) => {
+      let insert = replace;
+
+      if (match[1]) {
+        const offset = match[0].lastIndexOf(match[1]);
+        let start = offset;
+        const end = match[0].length;
+
+        insert += match[0].slice(offset + match[1].length);
+        const cutOff = start - end;
+
+        if (cutOff > 0) {
+          insert = match[0].slice(offset - cutOff, offset) + insert;
+          start = end;
+        }
+      }
+
+      return state.schema.text(insert);
     },
   };
 }

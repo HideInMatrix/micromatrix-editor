@@ -16,6 +16,8 @@ import type {
   Transaction,
   EditorState,
   EditorView,
+  MarkType,
+  NodeType as ProseMirrorNodeType,
 } from "@mxm-editor/pm";
 import type { Editor } from "./Editor";
 
@@ -42,6 +44,8 @@ export interface ExtensionContext<
   options: Options;
   storage: Storage;
   editor: Editor;
+  type: MarkType | ProseMirrorNodeType | null;
+  parent?: any;
 }
 
 export interface ExtensionAttribute {
@@ -78,6 +82,7 @@ export interface PasteRuleMatchContext {
   range: { from: number; to: number };
   match: RegExpMatchArray;
   text: string;
+  event: ClipboardEvent;
 }
 
 export interface PasteRule {
@@ -96,7 +101,7 @@ export interface ExtensionConfig<
   addOptions?: (this: ExtensionContext<Options, Storage>) => Options;
   addStorage?: (this: ExtensionContext<Options, Storage>) => Storage;
   addExtensions?: (this: ExtensionContext<Options, Storage>) => AnyExtension[];
-  addCommands?: (this: ExtensionContext<Options, Storage>) => RawCommands;
+  addCommands?: (this: ExtensionContext<Options, Storage>) => Partial<RawCommands>;
   addGlobalAttributes?: (
     this: ExtensionContext<Options, Storage>,
   ) => GlobalAttributes[];
@@ -120,10 +125,27 @@ export interface ExtensionConfig<
       parent?: JSONContent;
     },
   ) => string;
+  onBeforeCreate?: (this: ExtensionContext<Options, Storage>) => void;
   onCreate?: (this: ExtensionContext<Options, Storage>) => void;
   onUpdate?: (
     this: ExtensionContext<Options, Storage>,
     props: { transaction: Transaction },
+  ) => void;
+  onSelectionUpdate?: (
+    this: ExtensionContext<Options, Storage>,
+    props: { transaction: Transaction },
+  ) => void;
+  onTransaction?: (
+    this: ExtensionContext<Options, Storage>,
+    props: { transaction: Transaction },
+  ) => void;
+  onFocus?: (
+    this: ExtensionContext<Options, Storage>,
+    props: { event: FocusEvent },
+  ) => void;
+  onBlur?: (
+    this: ExtensionContext<Options, Storage>,
+    props: { event: FocusEvent },
   ) => void;
   onExtensionsResolved?: (
     this: ExtensionContext<Options, Storage>,
@@ -170,6 +192,9 @@ export interface MarkConfig<
   Options = Record<string, never>,
   Storage = Record<string, never>,
 > extends ExtensionConfig<Options, Storage> {
+  keepOnSplit?:
+    | boolean
+    | ((this: ExtensionContext<Options, Storage>) => boolean);
   inclusive?:
     | MarkSpec["inclusive"]
     | ((this: ExtensionContext<Options, Storage>) => MarkSpec["inclusive"]);
@@ -203,11 +228,17 @@ export interface ExtensionLike<
   readonly priority: number;
   readonly options: Options;
   readonly storage: Storage;
+  readonly parent: AnyExtension | null;
   configure(options?: Partial<Options>): ExtensionLike<Options, Storage, Config>;
+  extend(config?: Partial<Config>): ExtensionLike<Options, Storage, Config>;
   createContext(editor: Editor): ExtensionContext<Options, Storage>;
 }
 
 export type AnyExtension = ExtensionLike<any, any, any>;
+
+export interface Storage {
+  [key: string]: any;
+}
 
 export type Content =
   | string
@@ -270,8 +301,13 @@ export interface EditorOptions {
   enableInputRules?: RulesSetting;
   enablePasteRules?: RulesSetting;
   editorProps?: Partial<DirectEditorProps>;
+  onBeforeCreate?: (props: { editor: Editor }) => void;
   onCreate?: (props: { editor: Editor }) => void;
   onUpdate?: (props: { editor: Editor; transaction: Transaction }) => void;
+  onSelectionUpdate?: (props: { editor: Editor; transaction: Transaction }) => void;
+  onTransaction?: (props: { editor: Editor; transaction: Transaction }) => void;
+  onFocus?: (props: { editor: Editor; event: FocusEvent }) => void;
+  onBlur?: (props: { editor: Editor; event: FocusEvent }) => void;
   onDestroy?: (props: { editor: Editor }) => void;
 }
 
@@ -282,21 +318,131 @@ export type ResolvedEditorOptions =
   };
 
 export interface EditorEventMap {
+  beforeCreate: { editor: Editor };
   create: { editor: Editor };
   update: { editor: Editor; transaction: Transaction };
   selectionUpdate: { editor: Editor; transaction: Transaction };
+  transaction: { editor: Editor; transaction: Transaction };
+  focus: { editor: Editor; event: FocusEvent };
+  blur: { editor: Editor; event: FocusEvent };
   destroy: { editor: Editor };
 }
 
 export type Command = (props: CommandProps) => boolean;
 
-export type RawCommands = Record<string, (...args: any[]) => Command>;
+export interface Commands<ReturnType = boolean> {
+  core: {
+    command: (command: Command) => ReturnType;
+    first: (commands: Command[]) => ReturnType;
+    forEach: <Item>(
+      items: Item[],
+      fn: (item: Item, props: CommandProps & { index: number }) => boolean,
+    ) => ReturnType;
+    enter: () => ReturnType;
+    keyboardShortcut: (name: string) => ReturnType;
+    setContent: (content: Content, options?: SetContentOptions | boolean) => ReturnType;
+    clearContent: (emitUpdate?: boolean) => ReturnType;
+    insertContent: (value: Content, options?: InsertContentOptions) => ReturnType;
+    insertContentAt: (
+      position: InsertContentAtPosition,
+      value: Content,
+      options?: InsertContentOptions,
+    ) => ReturnType;
+    setTextSelection: (position: TextSelectionPosition) => ReturnType;
+    setNodeSelection: (position: number) => ReturnType;
+    selectAll: () => ReturnType;
+    selectParentNode: () => ReturnType;
+    deleteSelection: () => ReturnType;
+    deleteRange: (range: { from: number; to: number }) => ReturnType;
+    createParagraphNear: () => ReturnType;
+    scrollIntoView: () => ReturnType;
+    setMeta: (key: PluginKeySource, value: unknown) => ReturnType;
+    focus: (position?: FocusPosition, options?: FocusOptions) => ReturnType;
+    blur: () => ReturnType;
+    newlineInCode: () => ReturnType;
+    liftEmptyBlock: () => ReturnType;
+    exitCode: () => ReturnType;
+    undoInputRule: () => ReturnType;
+    setMark: (name: string, attributes?: Record<string, any>) => ReturnType;
+    toggleMark: (name: string, attributes?: Record<string, any>) => ReturnType;
+    unsetMark: (name: string) => ReturnType;
+    unsetAllMarks: () => ReturnType;
+    extendMarkRange: (
+      nameOrType: string | MarkType,
+      attributes?: Record<string, any>,
+    ) => ReturnType;
+    updateAttributes: (name: string, attributes?: Record<string, any>) => ReturnType;
+    resetAttributes: (
+      nameOrType: string | ProseMirrorNodeType | MarkType,
+      attributes: string | string[],
+    ) => ReturnType;
+    deleteNode: (nameOrType: string | ProseMirrorNodeType) => ReturnType;
+    clearNodes: () => ReturnType;
+    wrapInList: (
+      nameOrType: string | ProseMirrorNodeType,
+      attributes?: Record<string, any>,
+    ) => ReturnType;
+    toggleList: (
+      listTypeOrName: string | ProseMirrorNodeType,
+      itemTypeOrName: string | ProseMirrorNodeType,
+      keepMarks?: boolean,
+      attributes?: Record<string, any>,
+    ) => ReturnType;
+    liftListItem: (nameOrType: string | ProseMirrorNodeType) => ReturnType;
+    sinkListItem: (nameOrType: string | ProseMirrorNodeType) => ReturnType;
+    splitListItem: (nameOrType: string | ProseMirrorNodeType) => ReturnType;
+    setNode: (name: string, attributes?: Record<string, any>) => ReturnType;
+    toggleNode: (
+      name: string,
+      fallbackName: string,
+      attributes?: Record<string, any>,
+    ) => ReturnType;
+    wrapIn: (name: string, attributes?: Record<string, any>) => ReturnType;
+    toggleWrap: (name: string, attributes?: Record<string, any>) => ReturnType;
+    lift: (name?: string) => ReturnType;
+    splitBlock: () => ReturnType;
+  };
+}
 
-export type SingleCommands = Record<string, (...args: any[]) => boolean>;
+export type ValuesOf<T> = T[keyof T];
 
-export type ChainedCommands = SingleCommands & {
-  run: () => boolean;
+export type KeysWithTypeOf<T, Type> = {
+  [Key in keyof T]: T[Key] extends Type ? Key : never;
+}[keyof T];
+
+export type UnionToIntersection<U> =
+  (U extends any ? (value: U) => void : never) extends (value: infer I) => void
+    ? I
+    : never;
+
+export type UnionCommands<ReturnType = Command> = UnionToIntersection<
+  ValuesOf<Pick<Commands<ReturnType>, KeysWithTypeOf<Commands<ReturnType>, object>>>
+>;
+
+type KnownRawCommands = {
+  [Key in keyof UnionCommands]: UnionCommands<Command>[Key];
 };
+
+type KnownSingleCommands = {
+  [Key in keyof UnionCommands]: UnionCommands<boolean>[Key];
+};
+
+type KnownChainedCommands = {
+  [Key in keyof UnionCommands]: UnionCommands<ChainedCommands>[Key];
+};
+
+export type RawCommands = KnownRawCommands & Record<string, (...args: any[]) => Command>;
+
+export type SingleCommands =
+  KnownSingleCommands
+  & Record<string, (...args: any[]) => boolean>;
+
+export type ChainedCommands =
+  KnownChainedCommands
+  & Record<string, (...args: any[]) => ChainedCommands>
+  & {
+    run: () => boolean;
+  };
 
 export type CanCommands = SingleCommands & {
   chain: () => ChainedCommands;

@@ -3,6 +3,8 @@ import {
   NodeSelection,
   Selection,
   TextSelection,
+  createParagraphNear as createParagraphNearCommand,
+  selectParentNode as selectParentNodeCommand,
 } from "@mxm-editor/pm";
 import type {
   RawCommands,
@@ -26,8 +28,10 @@ type SelectionCommands = Pick<
   | "setTextSelection"
   | "setNodeSelection"
   | "selectAll"
+  | "selectParentNode"
   | "deleteSelection"
   | "deleteRange"
+  | "createParagraphNear"
   | "scrollIntoView"
 >;
 
@@ -61,6 +65,10 @@ export function createSelectionCommands(): SelectionCommands {
         tr.setSelection(new AllSelection(tr.doc));
         return true;
       },
+    selectParentNode:
+      () =>
+      ({ state, dispatch }) =>
+        selectParentNodeCommand(state, dispatch),
     deleteSelection:
       () =>
       ({ tr }) => {
@@ -82,5 +90,9 @@ export function createSelectionCommands(): SelectionCommands {
         tr.scrollIntoView();
         return true;
       },
+    createParagraphNear:
+      () =>
+      ({ state, dispatch }) =>
+        createParagraphNearCommand(state, dispatch),
   };
 }

@@ -9,8 +9,12 @@ export class Mark<
 
   declare readonly type: "mark";
 
-  constructor(config: MarkConfig<Options, Storage>, options?: Partial<Options>) {
-    super(config, options);
+  constructor(
+    config: MarkConfig<Options, Storage>,
+    options?: Partial<Options>,
+    parent = null,
+  ) {
+    super(config, options, parent);
     Object.defineProperty(this, "type", {
       value: "mark",
       enumerable: true,
@@ -20,7 +24,27 @@ export class Mark<
   static create<
     Options = Record<string, never>,
     Storage = Record<string, never>,
-  >(config: MarkConfig<Options, Storage>) {
-    return new Mark(config);
+  >(
+    config:
+      | MarkConfig<Options, Storage>
+      | (() => MarkConfig<Options, Storage>),
+  ) {
+    return new Mark(
+      typeof config === "function" ? config() : config,
+    );
+  }
+
+  configure(options?: Partial<Options>) {
+    return super.configure(options) as Mark<Options, Storage>;
+  }
+
+  extend(
+    config?:
+      | Partial<MarkConfig<Options, Storage>>
+      | (() => Partial<MarkConfig<Options, Storage>>),
+  ) {
+    return super.extend(
+      typeof config === "function" ? config() : config,
+    ) as Mark<Options, Storage>;
   }
 }
