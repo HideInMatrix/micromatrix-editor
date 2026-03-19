@@ -12,26 +12,26 @@ export interface PlaygroundRoute {
 export const playgroundRoutes: PlaygroundRoute[] = [
   {
     id: "editor",
-    label: "Editor",
-    description: "Rich text editing with the core mxm-editor extension stack.",
+    label: "编辑器",
+    description: "基于 mxm-editor 核心扩展栈的富文本编辑演示。",
     path: "/",
   },
   {
     id: "collaboration",
-    label: "Collaboration",
-    description: "Two bridged editors sharing document and awareness state.",
+    label: "协同",
+    description: "两个桥接编辑器共享文档与 awareness 状态。",
     path: "/collaboration",
   },
   {
     id: "comments",
-    label: "Comments",
-    description: "Inline discussion threads anchored directly to document ranges.",
+    label: "评论",
+    description: "将讨论串直接锚定到文档范围的行内评论演示。",
     path: "/comments",
   },
   {
     id: "pages",
-    label: "Pages",
-    description: "Paper-aware layout with page formats, running heads, and paginated flow.",
+    label: "分页",
+    description: "支持纸张格式、页眉页脚与分页流式布局的页面演示。",
     path: "/pages",
   },
 ];

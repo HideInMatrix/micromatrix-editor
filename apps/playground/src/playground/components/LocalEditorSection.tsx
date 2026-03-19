@@ -151,13 +151,13 @@ function EditorToolbar({
             <ToolbarIconButton
               disabled={!state.canUndo}
               icon={Undo2}
-              label="Undo"
+              label="撤销"
               onClick={() => editor.commands.undo()}
             />
             <ToolbarIconButton
               disabled={!state.canRedo}
               icon={Redo2}
-              label="Redo"
+              label="重做"
               onClick={() => editor.commands.redo()}
             />
           </div>
@@ -168,43 +168,43 @@ function EditorToolbar({
             <ToolbarIconButton
               active={state.paragraph}
               icon={Pilcrow}
-              label="Paragraph"
+              label="段落"
               onClick={() => editor.commands.setParagraph()}
             />
             <ToolbarIconButton
               active={state.h1}
               icon={Heading1}
-              label="Heading 1"
+              label="一级标题"
               onClick={() => editor.commands.setHeading({ level: 1 })}
             />
             <ToolbarIconButton
               active={state.h2}
               icon={Heading2}
-              label="Heading 2"
+              label="二级标题"
               onClick={() => editor.commands.setHeading({ level: 2 })}
             />
             <ToolbarIconButton
               active={state.bulletList}
               icon={List}
-              label="Bullet list"
+              label="无序列表"
               onClick={() => editor.commands.toggleBulletList()}
             />
             <ToolbarIconButton
               active={state.orderedList}
               icon={ListOrdered}
-              label="Ordered list"
+              label="有序列表"
               onClick={() => editor.commands.toggleOrderedList()}
             />
             <ToolbarIconButton
               active={state.taskList}
               icon={ListTodo}
-              label="Task list"
+              label="任务列表"
               onClick={() => editor.commands.toggleTaskList()}
             />
             <ToolbarIconButton
               active={state.blockquote}
               icon={Quote}
-              label="Blockquote"
+              label="引用"
               onClick={() => editor.commands.toggleBlockquote()}
             />
           </div>
@@ -215,55 +215,55 @@ function EditorToolbar({
             <ToolbarIconButton
               active={state.bold}
               icon={Bold}
-              label="Bold"
+              label="加粗"
               onClick={() => editor.commands.toggleBold()}
             />
             <ToolbarIconButton
               active={state.italic}
               icon={Italic}
-              label="Italic"
+              label="斜体"
               onClick={() => editor.commands.toggleItalic()}
             />
             <ToolbarIconButton
               active={state.strike}
               icon={Strikethrough}
-              label="Strike"
+              label="删除线"
               onClick={() => editor.commands.toggleStrike()}
             />
             <ToolbarIconButton
               active={state.code}
               icon={Code2}
-              label="Inline code"
+              label="行内代码"
               onClick={() => editor.commands.toggleCode()}
             />
             <ToolbarIconButton
               active={state.underline}
               icon={Underline}
-              label="Underline"
+              label="下划线"
               onClick={() => editor.commands.toggleUnderline()}
             />
             <ToolbarIconButton
               active={state.highlight}
               icon={Highlighter}
-              label="Highlight"
+              label="高亮"
               onClick={() => editor.commands.toggleHighlight()}
             />
             <ToolbarIconButton
               active={state.link}
               icon={Link2}
-              label="Link"
+              label="链接"
               onClick={setLink}
             />
             <ToolbarIconButton
               active={state.superscript}
               icon={SuperscriptIcon}
-              label="Superscript"
+              label="上标"
               onClick={() => editor.commands.toggleSuperscript()}
             />
             <ToolbarIconButton
               active={state.subscript}
               icon={SubscriptIcon}
-              label="Subscript"
+              label="下标"
               onClick={() => editor.commands.toggleSubscript()}
             />
           </div>
@@ -274,19 +274,19 @@ function EditorToolbar({
             <ToolbarIconButton
               active={state.alignLeft}
               icon={AlignLeft}
-              label="Align left"
+              label="左对齐"
               onClick={() => editor.commands.setTextAlign("left")}
             />
             <ToolbarIconButton
               active={state.alignCenter}
               icon={AlignCenter}
-              label="Align center"
+              label="居中对齐"
               onClick={() => editor.commands.setTextAlign("center")}
             />
             <ToolbarIconButton
               active={state.alignRight}
               icon={AlignRight}
-              label="Align right"
+              label="右对齐"
               onClick={() => editor.commands.setTextAlign("right")}
             />
           </div>
@@ -295,7 +295,7 @@ function EditorToolbar({
         <div className="flex shrink-0 items-center gap-2">
           <ToolbarTextButton
             icon={ImagePlus}
-            label="Add"
+            label="插入图片"
             onClick={insertImage}
           />
         </div>
@@ -323,19 +323,19 @@ function EditorFooter({
   return (
     <div className="flex flex-wrap items-center justify-between gap-3 border-t border-[var(--panel-border)] px-4 py-3 text-xs text-[var(--muted-text)]">
       <p className="m-0">
-        Type <code>/</code> for commands, <code>@</code> for mentions, and markdown
-        shortcuts like <code>**bold**</code>.
+        输入 <code>/</code> 打开命令，输入 <code>@</code> 提及成员，也可以直接使用
+        <code>**加粗**</code> 这样的 Markdown 快捷语法。
       </p>
       <div className="flex items-center gap-4">
-        <span>{meta.words} words</span>
-        <span>{meta.characters} characters</span>
+        <span>词数 {meta.words}</span>
+        <span>字符 {meta.characters}</span>
         <button
           className="text-[var(--link-color)] transition hover:opacity-80"
           onMouseDown={preventMouseDown}
           onClick={resetTemplate}
           type="button"
         >
-          Reset template
+          重置模板
         </button>
       </div>
     </div>
@@ -370,43 +370,43 @@ function SelectionBubbleMenu({ setLink }: Pick<LocalEditorPanelProps, "setLink">
         <ToolbarIconButton
           active={state.bold}
           icon={Bold}
-          label="Bold"
+          label="加粗"
           onClick={() => editor.commands.toggleBold()}
         />
         <ToolbarIconButton
           active={state.italic}
           icon={Italic}
-          label="Italic"
+          label="斜体"
           onClick={() => editor.commands.toggleItalic()}
         />
         <ToolbarIconButton
           active={state.code}
           icon={Code2}
-          label="Code"
+          label="代码"
           onClick={() => editor.commands.toggleCode()}
         />
         <ToolbarIconButton
           active={state.strike}
           icon={Strikethrough}
-          label="Strike"
+          label="删除线"
           onClick={() => editor.commands.toggleStrike()}
         />
         <ToolbarIconButton
           active={state.highlight}
           icon={Highlighter}
-          label="Highlight"
+          label="高亮"
           onClick={() => editor.commands.toggleHighlight()}
         />
         <ToolbarIconButton
           active={state.link}
           icon={Link2}
-          label="Link"
+          label="链接"
           onClick={setLink}
         />
         <ToolbarIconButton
           active={state.alignCenter}
           icon={AlignCenter}
-          label="Center"
+          label="居中"
           onClick={() => editor.commands.setTextAlign("center")}
         />
       </div>
@@ -432,22 +432,22 @@ function EmptyLineFloatingMenu({
       <div className="ui-toolbar-group">
         <ToolbarIconButton
           icon={Heading2}
-          label="Heading 2"
+          label="二级标题"
           onClick={() => editor.commands.setHeading({ level: 2 })}
         />
         <ToolbarIconButton
           icon={List}
-          label="Bullet list"
+          label="无序列表"
           onClick={() => editor.commands.toggleBulletList()}
         />
         <ToolbarIconButton
           icon={Quote}
-          label="Blockquote"
+          label="引用"
           onClick={() => editor.commands.toggleBlockquote()}
         />
         <ToolbarIconButton
           icon={ImagePlus}
-          label="Insert image"
+          label="插入图片"
           onClick={insertImage}
         />
       </div>

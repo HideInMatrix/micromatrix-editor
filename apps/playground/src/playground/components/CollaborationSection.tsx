@@ -32,7 +32,7 @@ function PresenceChips({ editor }: { editor: Editor | null }) {
             color: user.color ?? "#ffb870",
           }}
         >
-          {user.name ?? `User ${user.clientId}`}
+          {user.name ?? `用户 ${user.clientId}`}
         </span>
       ))}
     </div>
@@ -62,23 +62,23 @@ function ActiveCollaborationSection() {
     <section className="collaboration-card">
       <div className="panel-heading">
         <div>
-          <div className="panel-eyebrow">Collaboration</div>
-          <h2>Shared Doc + Remote Carets</h2>
+          <div className="panel-eyebrow">协同</div>
+          <h2>共享文档与远端光标</h2>
         </div>
         <p>
-          左右编辑器通过独立 Doc 和 Awareness 桥接同步内容与光标，支持
-          slash 命令、列表块和各自本地撤销/重做。
+          左右编辑器通过独立 Doc 与 Awareness 桥接同步内容和光标，支持
+          slash 命令、列表块，以及各自本地撤销 / 重做。
         </p>
       </div>
 
       <div className="collaboration-grid">
         <CollaborationEditorPanel
           editor={leftEditor}
-          label="Editor A"
+          label="编辑器 A"
         />
         <CollaborationEditorPanel
           editor={rightEditor}
-          label="Editor B"
+          label="编辑器 B"
         />
       </div>
     </section>
@@ -96,8 +96,8 @@ export function CollaborationSection() {
     <section className="collaboration-card collaboration-card--standby">
       <div className="panel-heading">
         <div>
-          <div className="panel-eyebrow">Collaboration</div>
-          <h2>Collaboration Demo On Demand</h2>
+          <div className="panel-eyebrow">协同</div>
+          <h2>按需启动的协同演示</h2>
         </div>
         <p>
           协同区包含 `Y.Doc + Awareness + remote caret`，为了避免开发态初始化把整页拖慢，默认按需启动。

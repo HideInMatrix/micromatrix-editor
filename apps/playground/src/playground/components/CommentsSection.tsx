@@ -45,13 +45,13 @@ function getThreadAuthor(thread: CommentsThread) {
     (comment) => typeof comment.data?.author === "string",
   )?.data?.author;
 
-  return threadAuthor ?? commentAuthor ?? "Reviewer";
+  return threadAuthor ?? commentAuthor ?? "审阅者";
 }
 
 function getThreadQuote(thread: CommentsThread) {
   return typeof thread.data?.quote === "string"
     ? thread.data.quote
-    : "No quote stored";
+    : "暂无摘录";
 }
 
 function useCommentsThreads(
@@ -103,10 +103,10 @@ export function CommentsSection() {
     createInMemoryCommentsProvider(commentsDemoThreads),
   );
   const [newThreadDraft, setNewThreadDraft] = useState(
-    "This is a great anchor point. Can we make the user outcome even more explicit?",
+    "这句话已经很接近核心价值了，能不能把用户收益再说得更明确一点？",
   );
   const [replyDraft, setReplyDraft] = useState(
-    "Let's keep this as-is for the demo, but call out the overlap behavior.",
+    "这个示例里先保留当前写法，但要把重叠锚点的行为说清楚。",
   );
   const editor = useEditor({
     extensions: [
@@ -190,12 +190,12 @@ export function CommentsSection() {
       content: draft,
       data: {
         author: "Mika",
-        label: selectedText.slice(0, 42) || "New thread",
+        label: selectedText.slice(0, 42) || "新讨论串",
         quote: selectedText,
       },
       commentData: {
         author: "Mika",
-        role: "Design Review",
+        role: "设计评审",
       },
     })) {
       return;
@@ -216,7 +216,7 @@ export function CommentsSection() {
       content: draft,
       data: {
         author: "Noah",
-        role: "Product",
+        role: "产品",
       },
     })) {
       return;
@@ -229,10 +229,10 @@ export function CommentsSection() {
     resetCommentsProvider(provider);
     editor.commands.setContent(commentsDemoContent);
     setNewThreadDraft(
-      "This is a great anchor point. Can we make the user outcome even more explicit?",
+      "这句话已经很接近核心价值了，能不能把用户收益再说得更明确一点？",
     );
     setReplyDraft(
-      "Let's keep this as-is for the demo, but call out the overlap behavior.",
+      "这个示例里先保留当前写法，但要把重叠锚点的行为说清楚。",
     );
 
     queueMicrotask(() => {
@@ -267,22 +267,22 @@ export function CommentsSection() {
         <div className="ui-shell comments-editor-card border border-[var(--panel-border)]">
           <div className="comments-card__header">
             <div>
-              <div className="panel-eyebrow">Comments</div>
-              <h2>Inline review threads with overlapping anchors</h2>
+              <div className="panel-eyebrow">评论</div>
+              <h2>支持重叠锚点的行内审阅讨论</h2>
               <p>
-                选中文本创建 thread，侧栏直接回复、resolve 或归档。文档里的高亮和右侧线程面板保持双向联动。
+                选中文本创建讨论串，侧栏直接回复、标记解决或归档。文档里的高亮与右侧讨论面板保持双向联动。
               </p>
             </div>
             <div className="comments-stat-strip">
-              <span>{activeThreads.filter((thread) => !thread.resolved).length} open</span>
-              <span>{activeThreads.filter((thread) => thread.resolved).length} resolved</span>
+              <span>{activeThreads.filter((thread) => !thread.resolved).length} 个未解决</span>
+              <span>{activeThreads.filter((thread) => thread.resolved).length} 个已解决</span>
               <button
                 className="comments-ghost-button"
                 onClick={resetDemo}
                 type="button"
               >
                 <RotateCcw size={15} strokeWidth={2} />
-                <span>Reset demo</span>
+                <span>重置演示</span>
               </button>
             </div>
           </div>
@@ -294,7 +294,7 @@ export function CommentsSection() {
               {" "}
               {editorMeta.hasSelection
                 ? `“${editorMeta.selectedText.trim()}”`
-                : "先在正文里选一段文字，再创建 thread"}
+                : "先在正文里选一段文字，再创建讨论串"}
             </span>
           </div>
 
@@ -308,21 +308,21 @@ export function CommentsSection() {
           <section className="ui-shell comments-panel border border-[var(--panel-border)]">
             <div className="comments-panel__header">
               <div>
-                <div className="panel-eyebrow">Selection Composer</div>
-                <h3>Start a new thread</h3>
+                <div className="panel-eyebrow">选区发起</div>
+                <h3>新建讨论串</h3>
               </div>
             </div>
 
             <div className="comments-selection-quote">
               {editorMeta.hasSelection
                 ? `“${editorMeta.selectedText.trim()}”`
-                : "Select text in the editor to create a new discussion thread."}
+                : "在编辑器中选中文本后，就可以为这段内容发起新讨论。"}
             </div>
 
             <textarea
               className="comments-textarea"
               onChange={(event) => setNewThreadDraft(event.target.value)}
-              placeholder="Write the opening note for this selection..."
+              placeholder="为这段选区写下第一条评论..."
               rows={4}
               value={newThreadDraft}
             />
@@ -334,18 +334,18 @@ export function CommentsSection() {
               type="button"
             >
               <MessageSquarePlus size={16} strokeWidth={2} />
-              <span>Create thread</span>
+              <span>创建讨论串</span>
             </button>
           </section>
 
           <section className="ui-shell comments-panel border border-[var(--panel-border)]">
             <div className="comments-panel__header">
               <div>
-                <div className="panel-eyebrow">Thread List</div>
-                <h3>Live discussion map</h3>
+                <div className="panel-eyebrow">讨论列表</div>
+                <h3>实时讨论概览</h3>
               </div>
               <span className="comments-panel__meta">
-                {activeThreads.length} active
+                {activeThreads.length} 个进行中
               </span>
             </div>
 
@@ -369,20 +369,20 @@ export function CommentsSection() {
                       thread.resolved ? " is-resolved" : " is-open"
                     }`}
                     >
-                      {thread.resolved ? "Resolved" : "Open"}
+                      {thread.resolved ? "已解决" : "未解决"}
                     </span>
                   </div>
                   <p>{getThreadQuote(thread)}</p>
                   <div className="comments-thread-card__meta">
                     <span>{getThreadAuthor(thread)}</span>
-                    <span>{thread.comments.length} comments</span>
+                    <span>{thread.comments.length} 条评论</span>
                   </div>
                 </button>
               ))}
 
               {!activeThreads.length && (
                 <div className="comments-empty-state">
-                  No active threads yet.
+                  还没有进行中的讨论。
                 </div>
               )}
             </div>
@@ -390,12 +390,12 @@ export function CommentsSection() {
             {archivedThreads.length > 0 && (
               <div className="comments-archived-list">
                 <div className="comments-archived-list__title">
-                  Archived
+                  已归档
                 </div>
                 {archivedThreads.map((thread) => (
                   <div key={thread.id} className="comments-archived-item">
                     <strong>{thread.data?.label ?? thread.id}</strong>
-                    <span>{thread.comments.length} comments</span>
+                    <span>{thread.comments.length} 条评论</span>
                   </div>
                 ))}
               </div>
@@ -405,13 +405,12 @@ export function CommentsSection() {
           <section className="ui-shell comments-panel border border-[var(--panel-border)]">
             <div className="comments-panel__header">
               <div>
-                <div className="panel-eyebrow">Selected Thread</div>
-                <h3>{selectedThread?.data?.label ?? "Inspect discussion state"}</h3>
+                <div className="panel-eyebrow">当前讨论</div>
+                <h3>{selectedThread?.data?.label ?? "查看讨论详情"}</h3>
               </div>
               {selectedThread && (
                 <span className="comments-panel__meta">
-                  {selectedThreadOccurrences} anchor
-                  {selectedThreadOccurrences === 1 ? "" : "s"}
+                  {selectedThreadOccurrences} 个锚点
                 </span>
               )}
             </div>
@@ -423,7 +422,7 @@ export function CommentsSection() {
                     selectedThread.resolved ? " is-resolved" : " is-open"
                   }`}
                   >
-                    {selectedThread.resolved ? "Resolved" : "Open"}
+                    {selectedThread.resolved ? "已解决" : "未解决"}
                   </span>
                   <span>{formatTimestamp(selectedThread.updatedAt)}</span>
                 </div>
@@ -451,7 +450,7 @@ export function CommentsSection() {
                 <textarea
                   className="comments-textarea"
                   onChange={(event) => setReplyDraft(event.target.value)}
-                  placeholder="Reply to the selected thread..."
+                  placeholder="回复当前讨论..."
                   rows={3}
                   value={replyDraft}
                 />
@@ -464,7 +463,7 @@ export function CommentsSection() {
                     type="button"
                   >
                     <MessageCircleReply size={16} strokeWidth={2} />
-                    <span>Reply</span>
+                    <span>回复</span>
                   </button>
 
                   <button
@@ -482,7 +481,7 @@ export function CommentsSection() {
                       <CheckCheck size={16} strokeWidth={2} />
                     )}
                     <span>
-                      {selectedThread.resolved ? "Reopen" : "Resolve"}
+                      {selectedThread.resolved ? "重新打开" : "标记已解决"}
                     </span>
                   </button>
 
@@ -492,13 +491,13 @@ export function CommentsSection() {
                     type="button"
                   >
                     <Archive size={16} strokeWidth={2} />
-                    <span>Archive</span>
+                    <span>归档</span>
                   </button>
                 </div>
               </div>
             ) : (
               <div className="comments-empty-state comments-empty-state--detail">
-                Click a highlighted range or choose a thread from the list to inspect its discussion.
+                点击正文中的高亮范围，或从列表里选择一个讨论，即可查看详细内容。
               </div>
             )}
           </section>

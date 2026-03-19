@@ -93,6 +93,10 @@ export class Editor extends EventEmitter<EditorEventMap> {
 
   private customPlugins: Plugin[] = [];
 
+  isCapturingTransaction = false;
+
+  private capturedTransaction: Transaction | null = null;
+
   private destroyed = false;
 
   constructor(options: EditorOptions = {}) {
@@ -195,6 +199,22 @@ export class Editor extends EventEmitter<EditorEventMap> {
 
   can(): CanCommands {
     return this.commandManager.can();
+  }
+
+  captureTransaction(fn: () => void) {
+    this.isCapturingTransaction = true;
+
+    try {
+      fn();
+    } finally {
+      this.isCapturingTransaction = false;
+    }
+
+    const transaction = this.capturedTransaction;
+
+    this.capturedTransaction = null;
+
+    return transaction;
   }
 
   mount(element: HTMLElement) {
@@ -555,6 +575,19 @@ export class Editor extends EventEmitter<EditorEventMap> {
 
   private dispatchTransaction = (transaction: Transaction) => {
     if (!this.editorView) {
+      return;
+    }
+
+    if (this.isCapturingTransaction) {
+      if (!this.capturedTransaction) {
+        this.capturedTransaction = transaction;
+        return;
+      }
+
+      transaction.steps.forEach((step) => {
+        this.capturedTransaction?.step(step);
+      });
+
       return;
     }
 

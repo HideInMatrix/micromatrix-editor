@@ -24,7 +24,7 @@ describe("P15 playground placeholder smoke", () => {
 
     expect(placeholders).toHaveLength(1);
     expect(placeholders[0]?.getAttribute("data-placeholder")).toBe(
-      "Type / for commands, or start with @ for mention",
+      "输入 / 打开命令，或输入 @ 提及成员",
     );
   });
 });

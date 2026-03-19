@@ -212,81 +212,81 @@ function createMentionRenderer() {
 const slashItems: SlashItem[] = [
   {
     id: "heading-1",
-    label: "Heading 1",
+    label: "一级标题",
     description: "把当前段落转换成一级标题",
-    keywords: ["h1", "title", "heading"],
+    keywords: ["h1", "title", "heading", "标题"],
     execute: (editor) => {
       editor.commands.setHeading({ level: 1 });
     },
   },
   {
     id: "heading-2",
-    label: "Heading 2",
+    label: "二级标题",
     description: "把当前段落转换成二级标题",
-    keywords: ["h2", "subtitle", "heading"],
+    keywords: ["h2", "subtitle", "heading", "标题"],
     execute: (editor) => {
       editor.commands.setHeading({ level: 2 });
     },
   },
   {
     id: "paragraph",
-    label: "Paragraph",
+    label: "段落",
     description: "恢复为普通段落",
-    keywords: ["text", "paragraph", "body"],
+    keywords: ["text", "paragraph", "body", "正文", "段落"],
     execute: (editor) => {
       editor.commands.setParagraph();
     },
   },
   {
     id: "quote",
-    label: "Blockquote",
+    label: "引用",
     description: "包裹当前块级内容为引用",
-    keywords: ["quote", "blockquote", "cite"],
+    keywords: ["quote", "blockquote", "cite", "引用"],
     execute: (editor) => {
       editor.commands.toggleBlockquote();
     },
   },
   {
     id: "bullet-list",
-    label: "Bullet List",
+    label: "无序列表",
     description: "把当前块转换为无序列表",
-    keywords: ["bullet", "list", "ul"],
+    keywords: ["bullet", "list", "ul", "列表", "无序"],
     execute: (editor) => {
       editor.commands.toggleBulletList();
     },
   },
   {
     id: "ordered-list",
-    label: "Ordered List",
+    label: "有序列表",
     description: "把当前块转换为有序列表",
-    keywords: ["ordered", "list", "ol", "number"],
+    keywords: ["ordered", "list", "ol", "number", "列表", "有序"],
     execute: (editor) => {
       editor.commands.toggleOrderedList();
     },
   },
   {
     id: "task-list",
-    label: "Task List",
+    label: "任务列表",
     description: "把当前块转换为任务列表",
-    keywords: ["task", "checkbox", "todo"],
+    keywords: ["task", "checkbox", "todo", "任务", "待办"],
     execute: (editor) => {
       editor.commands.toggleTaskList();
     },
   },
   {
     id: "code-block",
-    label: "Code Block",
-    description: "插入 fenced code block",
-    keywords: ["code", "pre", "snippet"],
+    label: "代码块",
+    description: "插入围栏代码块",
+    keywords: ["code", "pre", "snippet", "代码"],
     execute: (editor) => {
       editor.commands.toggleCodeBlock();
     },
   },
   {
     id: "block-math",
-    label: "Block Math",
-    description: "插入一个 KaTeX block math 节点",
-    keywords: ["math", "latex", "equation", "katex"],
+    label: "块级公式",
+    description: "插入一个 KaTeX 块级公式节点",
+    keywords: ["math", "latex", "equation", "katex", "公式"],
     execute: (editor) => {
       editor.commands.insertBlockMath({
         latex: String.raw`\sum_{i=1}^{n} x_i = X`,
@@ -295,31 +295,31 @@ const slashItems: SlashItem[] = [
   },
   {
     id: "horizontal-rule",
-    label: "Horizontal Rule",
+    label: "分隔线",
     description: "插入一个分隔线块",
-    keywords: ["hr", "divider", "rule"],
+    keywords: ["hr", "divider", "rule", "分隔线"],
     execute: (editor) => {
       editor.commands.setHorizontalRule();
     },
   },
   {
     id: "image",
-    label: "Image",
-    description: "插入一个 block image 节点",
-    keywords: ["image", "media", "photo"],
+    label: "图片",
+    description: "插入一个块级图片节点",
+    keywords: ["image", "media", "photo", "图片"],
     execute: (editor) => {
       editor.commands.setImage({
         src: sampleImageUrl,
-        alt: "mxm-editor preview",
-        title: "mxm-editor preview",
+        alt: "mxm-editor 预览图",
+        title: "mxm-editor 预览图",
       });
     },
   },
   {
     id: "table",
-    label: "Table",
+    label: "表格",
     description: "插入一个带表头的 3x3 表格",
-    keywords: ["table", "grid", "markdown"],
+    keywords: ["table", "grid", "markdown", "表格"],
     execute: (editor) => {
       editor.commands.insertTable({
         rows: 3,
@@ -330,36 +330,36 @@ const slashItems: SlashItem[] = [
   },
   {
     id: "table-row",
-    label: "Add Table Row",
+    label: "新增表格行",
     description: "在当前表格选区后新增一行",
-    keywords: ["table", "row", "grid"],
+    keywords: ["table", "row", "grid", "表格", "行"],
     execute: (editor) => {
       editor.commands.addRowAfter();
     },
   },
   {
     id: "table-column",
-    label: "Add Table Column",
+    label: "新增表格列",
     description: "在当前表格选区后新增一列",
-    keywords: ["table", "column", "grid"],
+    keywords: ["table", "column", "grid", "表格", "列"],
     execute: (editor) => {
       editor.commands.addColumnAfter();
     },
   },
   {
     id: "tip",
-    label: "Tip Callout",
-    description: "插入提示型 callout 节点",
-    keywords: ["tip", "callout", "note"],
+    label: "提示块",
+    description: "插入一个提示信息块",
+    keywords: ["tip", "callout", "note", "提示"],
     execute: (editor) => {
       editor.commands.insertCallout("tip");
     },
   },
   {
     id: "warning",
-    label: "Warning Callout",
-    description: "插入 warning callout 节点",
-    keywords: ["warning", "alert", "callout"],
+    label: "警告块",
+    description: "插入一个警告信息块",
+    keywords: ["warning", "alert", "callout", "警告"],
     execute: (editor) => {
       editor.commands.insertCallout("warning");
     },
@@ -625,8 +625,8 @@ export function createPlaygroundExtensions(
             showOnlyCurrent: true,
             placeholder: ({ node }) =>
               node.type.name.startsWith("heading")
-                ? "Write a headline"
-                : "Type / for commands, or start with @ for mention",
+                ? "输入标题"
+                : "输入 / 打开命令，或输入 @ 提及成员",
           }),
           createSlashCommand(),
         ]

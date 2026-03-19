@@ -1,8 +1,12 @@
-import { Selection } from "@mxm-editor/pm";
+import {
+  Selection,
+  type Fragment,
+} from "@mxm-editor/pm";
 import {
   createDocumentFromContent,
   createSliceFromContent,
 } from "../helpers/content";
+import { selectionToInsertionEnd } from "../helpers";
 import type {
   Content,
   InsertContentAtPosition,
@@ -44,6 +48,38 @@ function normalizeRange(range: InsertContentAtPosition) {
   }
 
   return range;
+}
+
+function getPlainTextContent(fragment: Fragment) {
+  let text = "";
+  let isPlainText = fragment.childCount > 0;
+
+  fragment.forEach((node) => {
+    if (!node.isText || node.marks.length > 0) {
+      isPlainText = false;
+      return;
+    }
+
+    text += node.text ?? "";
+  });
+
+  return isPlainText ? text : null;
+}
+
+function isOnlyBlockContent(fragment: Fragment) {
+  if (fragment.childCount === 0) {
+    return false;
+  }
+
+  let onlyBlockContent = true;
+
+  fragment.forEach((node) => {
+    if (!node.isBlock) {
+      onlyBlockContent = false;
+    }
+  });
+
+  return onlyBlockContent;
 }
 
 type ContentCommands = Pick<
@@ -102,8 +138,8 @@ export function createContentCommands(editor: Editor): ContentCommands {
       ({ tr }) => {
         const normalizedRange = normalizeRange(position);
         const normalizedOptions = normalizeInsertContentOptions(options);
-        const from = clamp(normalizedRange.from, 0, tr.doc.content.size);
-        const to = clamp(normalizedRange.to, from, tr.doc.content.size);
+        let from = clamp(normalizedRange.from, 0, tr.doc.content.size);
+        let to = clamp(normalizedRange.to, from, tr.doc.content.size);
         const slice = createSliceFromContent(
           editor.schema,
           value,
@@ -113,21 +149,29 @@ export function createContentCommands(editor: Editor): ContentCommands {
             markdown: editor.markdown,
           },
         );
+        const startLength = tr.steps.length;
+        const plainTextContent = getPlainTextContent(slice.content);
 
-        tr.replaceRange(from, to, slice);
+        if (from === to && isOnlyBlockContent(slice.content)) {
+          const { parent } = tr.doc.resolve(from);
+          const isEmptyTextBlock = parent.isTextblock
+            && !parent.type.spec.code
+            && parent.childCount === 0;
+
+          if (isEmptyTextBlock) {
+            from = Math.max(0, from - 1);
+            to = Math.min(tr.doc.content.size, to + 1);
+          }
+        }
+
+        if (plainTextContent !== null) {
+          tr.insertText(plainTextContent, from, to);
+        } else {
+          tr.replaceRange(from, to, slice);
+        }
 
         if (normalizedOptions.updateSelection) {
-          const selectionPosition = Math.min(
-            from + slice.content.size,
-            tr.doc.content.size,
-          );
-
-          tr.setSelection(
-            Selection.near(
-              tr.doc.resolve(selectionPosition),
-              1,
-            ),
-          );
+          selectionToInsertionEnd(tr, startLength, -1);
         }
 
         return true;

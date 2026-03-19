@@ -9,3 +9,4 @@ export * from "./getNodeType";
 export * from "./findParentNode";
 export * from "./isList";
 export * from "./schema";
+export * from "./selectionToInsertionEnd";

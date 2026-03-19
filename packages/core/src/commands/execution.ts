@@ -112,7 +112,7 @@ export function createExecutionCommands(): ExecutionCommands {
         commands.keyboardShortcut("Enter"),
     keyboardShortcut:
       (name: string) =>
-      ({ view, dispatch, tr }) => {
+      ({ editor, view, dispatch, tr }) => {
         if (!view || !dispatch) {
           return false;
         }
@@ -127,20 +127,23 @@ export function createExecutionCommands(): ExecutionCommands {
           bubbles: true,
           cancelable: true,
         });
-
-        let handled = false;
-
-        view.someProp("handleKeyDown", (handler) => {
-          if (handler(view, event)) {
-            handled = true;
-            tr.setMeta("preventDispatch", true);
-            return true;
-          }
-
-          return false;
+        const capturedTransaction = editor.captureTransaction(() => {
+          view.someProp("handleKeyDown", (handler) => handler(view, event));
         });
 
-        return handled;
+        if (!capturedTransaction) {
+          return false;
+        }
+
+        capturedTransaction.steps.forEach((step) => {
+          const mappedStep = step.map(tr.mapping);
+
+          if (mappedStep) {
+            tr.maybeStep(mappedStep);
+          }
+        });
+
+        return true;
       },
     newlineInCode:
       () =>

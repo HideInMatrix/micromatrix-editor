@@ -70,13 +70,13 @@ export function App() {
       <div className="playground-shell relative mx-auto flex min-h-[calc(100vh-2rem)] max-w-[1400px] flex-col gap-4">
         <header className="playground-header">
           <div className="playground-header__copy">
-            <div className="playground-header__eyebrow">mxm-editor Playground</div>
+            <div className="playground-header__eyebrow">mxm-editor 演示场</div>
             <h1>{route.label}</h1>
             <p>{route.description}</p>
           </div>
 
           <div className="playground-header__actions">
-            <nav className="playground-route-nav" aria-label="Playground Routes">
+            <nav className="playground-route-nav" aria-label="演示页导航">
               {routes.map((routeItem) => (
                 <a
                   key={routeItem.id}
@@ -108,7 +108,7 @@ export function App() {
             </nav>
 
             <button
-              aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+              aria-label={theme === "dark" ? "切换到浅色模式" : "切换到深色模式"}
               className="playground-theme-toggle"
               onClick={() => {
                 setTheme((currentTheme) =>

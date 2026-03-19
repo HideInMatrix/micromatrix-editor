@@ -45,7 +45,7 @@ export function useLocalPlayground(): LocalPlaygroundController {
       return;
     }
 
-    const alt = window.prompt("输入 alt 文本", "mxm-editor preview");
+    const alt = window.prompt("输入图片替代文本", "mxm-editor 预览图");
 
     editor.commands.setImage({
       src,

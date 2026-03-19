@@ -10,9 +10,9 @@ export function InspectorPanel({ editor }: InspectorPanelProps) {
 
   return (
     <aside className="inspector-panel">
-      <h2>HTML Output</h2>
+      <h2>HTML 输出</h2>
       <pre>{html}</pre>
-      <h2 className="secondary-heading">Markdown Output</h2>
+      <h2 className="secondary-heading">Markdown 输出</h2>
       <pre>{markdown}</pre>
     </aside>
   );

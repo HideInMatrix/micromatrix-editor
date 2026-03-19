@@ -66,15 +66,15 @@ const paperOptions: Array<{
 
 const pageBreakBackgrounds = [
   {
-    label: "Warm Gray",
+    label: "暖灰纸面",
     value: "#d6d0c7",
   },
   {
-    label: "Blue Slate",
+    label: "蓝灰纸面",
     value: "#d9e3ef",
   },
   {
-    label: "Moss Paper",
+    label: "苔绿纸面",
     value: "#d7ddd0",
   },
 ];
@@ -98,8 +98,8 @@ function createPageFormat(
 const pagesPresets: PagesPreset[] = [
   {
     id: "editorial",
-    label: "Editorial Draft",
-    description: "Mirrored running heads and generous margins for review passes.",
+    label: "编辑校对稿",
+    description: "镜像页眉搭配更宽页边距，适合内容审阅轮次。",
     formatName: "A4",
     pageFormat: createPageFormat("A4", {
       top: 112,
@@ -115,19 +115,19 @@ const pagesPresets: PagesPreset[] = [
     footerBottomMargin: 38,
     differentFirstPage: true,
     differentOddEven: true,
-    header: "Field Notes Atlas",
-    footer: ({ page, totalPages }) => `Page ${page} / ${totalPages}`,
-    headerFirstPage: "mxm-editor Pages Demo",
-    footerFirstPage: "Internal working draft",
-    headerOdd: ({ page }) => `Editorial proof · Page ${page}`,
-    headerEven: ({ page }) => `mxm-editor layout study · Page ${page}`,
+    header: "田野手册总览",
+    footer: ({ page, totalPages }) => `第 ${page} 页 / 共 ${totalPages} 页`,
+    headerFirstPage: "mxm-editor 分页演示",
+    footerFirstPage: "内部工作草稿",
+    headerOdd: ({ page }) => `校对稿 · 第 ${page} 页`,
+    headerEven: ({ page }) => `mxm-editor 版式研究 · 第 ${page} 页`,
     footerOdd: null,
     footerEven: null,
   },
   {
     id: "briefing",
-    label: "Briefing Packet",
-    description: "Tighter chrome for handouts, leave more vertical room to the body.",
+    label: "简报包",
+    description: "更紧凑的页面装饰，把更多纵向空间留给正文。",
     formatName: "Letter",
     pageFormat: createPageFormat("Letter", {
       top: 92,
@@ -143,10 +143,10 @@ const pagesPresets: PagesPreset[] = [
     footerBottomMargin: 30,
     differentFirstPage: true,
     differentOddEven: false,
-    header: "Quarterly briefing packet",
-    footer: ({ page, totalPages }) => `Review copy · ${page} / ${totalPages}`,
-    headerFirstPage: "Launch review packet",
-    footerFirstPage: "Prepared for product and editorial review",
+    header: "季度简报包",
+    footer: ({ page, totalPages }) => `审阅副本 · ${page} / ${totalPages}`,
+    headerFirstPage: "发布评审简报",
+    footerFirstPage: "供产品与编辑评审使用",
     headerOdd: null,
     headerEven: null,
     footerOdd: null,
@@ -327,8 +327,8 @@ export function PagesSection() {
         <div className="ui-shell pages-editor-card border border-[var(--panel-border)]">
           <div className="pages-card__header">
             <div>
-              <div className="panel-eyebrow">Pages</div>
-              <h2>Paper-aware layout playground</h2>
+              <div className="panel-eyebrow">分页</div>
+              <h2>纸张感布局演示</h2>
               <p>
                 这页专门演示 `Pages` 的格式切换、分页间距、页眉页脚和不同首页 /
                 奇偶页版式。直接编辑左侧文档，右侧控制会实时驱动版式。
@@ -336,8 +336,8 @@ export function PagesSection() {
             </div>
 
             <div className="pages-card__meta">
-              <span>{pagesMeta.pageCount} pages</span>
-              <span>Cursor on {pagesMeta.selectionPage}</span>
+              <span>{pagesMeta.pageCount} 页</span>
+              <span>光标在第 {pagesMeta.selectionPage} 页</span>
             </div>
           </div>
 
@@ -348,7 +348,7 @@ export function PagesSection() {
               type="button"
             >
               <Sparkles size={16} strokeWidth={2} />
-              <span>Reapply {activePreset.label}</span>
+              <span>重新应用 {activePreset.label}</span>
             </button>
             <button
               className="pages-toolbar-button"
@@ -356,7 +356,7 @@ export function PagesSection() {
               type="button"
             >
               <RotateCcw size={16} strokeWidth={2} />
-              <span>Reset demo</span>
+              <span>重置演示</span>
             </button>
           </div>
 
@@ -370,8 +370,8 @@ export function PagesSection() {
           <section className="ui-shell pages-panel border border-[var(--panel-border)]">
             <div className="pages-panel__header">
               <div>
-                <div className="panel-eyebrow">Snapshot</div>
-                <h3>Current layout</h3>
+                <div className="panel-eyebrow">版式快照</div>
+                <h3>当前布局</h3>
               </div>
               <span className="pages-panel__meta">
                 {roundPixels(pagesMeta.pageFormat.width)} x {roundPixels(pagesMeta.pageFormat.height)} px
@@ -380,30 +380,30 @@ export function PagesSection() {
 
             <div className="pages-stat-grid">
               <article className="pages-stat-card">
-                <span>Pages</span>
+                <span>页数</span>
                 <strong>{pagesMeta.pageCount}</strong>
                 <p>当前光标位于第 {pagesMeta.selectionPage} 页。</p>
               </article>
 
               <article className="pages-stat-card">
-                <span>Gap</span>
+                <span>页面间距</span>
                 <strong>{roundPixels(pagesMeta.pageGap)}px</strong>
                 <p>分页缝隙会影响整页阅读节奏。</p>
               </article>
 
               <article className="pages-stat-card">
-                <span>Margins</span>
+                <span>页边距</span>
                 <strong>
                   {roundPixels(pagesMeta.pageFormat.margins.top)} / {roundPixels(pagesMeta.pageFormat.margins.right)}
                 </strong>
                 <p>
-                  Top / Right，Left 为 {roundPixels(pagesMeta.pageFormat.margins.left)}px，
-                  Bottom 为 {roundPixels(pagesMeta.pageFormat.margins.bottom)}px。
+                  上 / 右，左为 {roundPixels(pagesMeta.pageFormat.margins.left)}px，
+                  下为 {roundPixels(pagesMeta.pageFormat.margins.bottom)}px。
                 </p>
               </article>
 
               <article className="pages-stat-card">
-                <span>Content Height</span>
+                <span>正文高度</span>
                 <strong>{roundPixels(pagesMeta.metrics.availableContentHeight)}px</strong>
                 <p>可用于正文的纵向空间。</p>
               </article>
@@ -413,8 +413,8 @@ export function PagesSection() {
           <section className="ui-shell pages-panel border border-[var(--panel-border)]">
             <div className="pages-panel__header">
               <div>
-                <div className="panel-eyebrow">Controls</div>
-                <h3>Presets and paper</h3>
+                <div className="panel-eyebrow">控制面板</div>
+                <h3>预设与纸张</h3>
               </div>
               <span className="pages-panel__meta">
                 {activePreset.label}
@@ -462,7 +462,7 @@ export function PagesSection() {
 
             <label className="pages-control-block" htmlFor="pages-gap-range">
               <div className="pages-control-label">
-                <span>Page gap</span>
+                <span>页面间距</span>
                 <output>{pageGap}px</output>
               </div>
               <input
@@ -484,7 +484,7 @@ export function PagesSection() {
 
             <div className="pages-control-block">
               <div className="pages-control-label">
-                <span>Break background</span>
+                <span>分页背景</span>
                 <output>{pageBreakBackground}</output>
               </div>
               <div className="pages-swatch-row">
@@ -521,7 +521,7 @@ export function PagesSection() {
                 type="checkbox"
               />
               <div>
-                <strong>Different first page</strong>
+                <strong>首页使用独立版式</strong>
                 <small>首页可以单独展示封面级页眉和页脚。</small>
               </div>
             </label>
@@ -538,8 +538,8 @@ export function PagesSection() {
                 type="checkbox"
               />
               <div>
-                <strong>Mirror odd and even pages</strong>
-                <small>打开后可以区分左页和右页的 running heads。</small>
+                <strong>区分奇偶页</strong>
+                <small>打开后可以为左页和右页使用不同的镜像页眉。</small>
               </div>
             </label>
           </section>
@@ -547,24 +547,24 @@ export function PagesSection() {
           <section className="ui-shell pages-panel border border-[var(--panel-border)]">
             <div className="pages-panel__header">
               <div>
-                <div className="panel-eyebrow">Notes</div>
-                <h3>What to inspect</h3>
+                <div className="panel-eyebrow">说明</div>
+                <h3>观察要点</h3>
               </div>
             </div>
 
             <ul className="pages-note-list">
-              <li>切换纸张尺寸时，正文会保持当前 margin 设定，只改变 page box 大小。</li>
+              <li>切换纸张尺寸时，正文会保持当前页边距设定，只改变页面盒尺寸。</li>
               <li>
-                当前 preset 会同时设置 `pageFormat`、`pageGap`、`pageBreakBackground`
+                当前预设会同时设置 `pageFormat`、`pageGap`、`pageBreakBackground`
                 和页眉页脚变体。
               </li>
               <li>
-                这个实现仍然按顶层 block 分页，不会把单个超高 block 自动拆到两页。
+                这个实现仍然按顶层块分页，不会把单个超高块自动拆到两页。
               </li>
               <li>
-                当前版式状态：first page 为
-                {pagesMeta.differentFirstPage ? " on" : " off"}，
-                odd/even 为 {pagesMeta.differentOddEven ? " on" : " off"}。
+                当前版式状态：首页独立版式为
+                {pagesMeta.differentFirstPage ? " 开" : " 关"}，
+                奇偶页区分为 {pagesMeta.differentOddEven ? " 开" : " 关"}。
               </li>
             </ul>
           </section>
