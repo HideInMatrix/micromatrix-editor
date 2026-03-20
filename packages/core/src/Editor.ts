@@ -14,7 +14,7 @@ import {
   type Transaction,
 } from "@mxm-editor/pm";
 import { CommandManager } from "./CommandManager";
-import { createCoreCommands, resolveFocusSelection } from "./commands";
+import { resolveFocusSelection } from "./commands";
 import { getCoreExtensions } from "./extensions";
 import { EventEmitter } from "./EventEmitter";
 import { ExtensionManager } from "./ExtensionManager";
@@ -30,7 +30,6 @@ import type {
   FocusOptions,
   FocusPosition,
   PluginKeySource,
-  RawCommands,
   ResolvedEditorOptions,
   SetContentOptions,
   SingleCommands,
@@ -81,8 +80,6 @@ export class Editor extends EventEmitter<EditorEventMap> {
 
   readonly extensionManager: ExtensionManager;
 
-  readonly coreCommands: RawCommands;
-
   markdown: MarkdownParser | null = null;
 
   private readonly commandManager: CommandManager;
@@ -112,14 +109,18 @@ export class Editor extends EventEmitter<EditorEventMap> {
       parseOptions: undefined,
       enableInputRules: true,
       enablePasteRules: true,
+      enableExtensionDispatchTransaction: true,
       editorProps: {},
       onBeforeCreate: () => undefined,
+      onBeforeTransaction: () => undefined,
       onCreate: () => undefined,
       onUpdate: () => undefined,
       onSelectionUpdate: () => undefined,
       onTransaction: () => undefined,
       onFocus: () => undefined,
       onBlur: () => undefined,
+      onPaste: () => undefined,
+      onDrop: () => undefined,
       onDestroy: () => undefined,
       ...options,
     };
@@ -131,10 +132,8 @@ export class Editor extends EventEmitter<EditorEventMap> {
       ],
       this,
     );
-    this.coreCommands = createCoreCommands(this);
     this.commandManager = new CommandManager({ editor: this });
     this.editorState = this.createState(this.options.content);
-    this.extensionManager.onBeforeCreate();
     this.emit("beforeCreate", { editor: this });
     this.options.onBeforeCreate({ editor: this });
 
@@ -232,7 +231,6 @@ export class Editor extends EventEmitter<EditorEventMap> {
       this.createViewProps(this.editorState),
     );
 
-    this.extensionManager.onCreate();
     this.emit("create", { editor: this });
     this.options.onCreate({ editor: this });
 
@@ -245,7 +243,6 @@ export class Editor extends EventEmitter<EditorEventMap> {
   }
 
   destroy() {
-    this.extensionManager.onDestroy();
     this.emit("destroy", { editor: this });
     this.options.onDestroy({ editor: this });
     this.unmount();
@@ -277,7 +274,12 @@ export class Editor extends EventEmitter<EditorEventMap> {
     }
 
     if (emitUpdate) {
-      this.emit("update", { editor: this, transaction: this.state.tr });
+      this.emit("update", { editor: this, transaction: this.state.tr, appendedTransactions: [] });
+      this.options.onUpdate({
+        editor: this,
+        transaction: this.state.tr,
+        appendedTransactions: [],
+      });
     }
   }
 
@@ -300,11 +302,17 @@ export class Editor extends EventEmitter<EditorEventMap> {
     this.editorView?.updateState(nextState);
 
     if (normalizedOptions.emitUpdate !== false) {
-      this.extensionManager.onUpdate(nextState.tr);
-      this.extensionManager.onSelectionUpdate(nextState.tr);
-      this.emit("update", { editor: this, transaction: nextState.tr });
+      this.emit("update", {
+        editor: this,
+        transaction: nextState.tr,
+        appendedTransactions: [],
+      });
       this.emit("selectionUpdate", { editor: this, transaction: nextState.tr });
-      this.options.onUpdate({ editor: this, transaction: nextState.tr });
+      this.options.onUpdate({
+        editor: this,
+        transaction: nextState.tr,
+        appendedTransactions: [],
+      });
       this.options.onSelectionUpdate({ editor: this, transaction: nextState.tr });
     }
   }
@@ -565,10 +573,25 @@ export class Editor extends EventEmitter<EditorEventMap> {
   }
 
   private createViewProps(state: EditorState): DirectEditorProps {
+    const editorProps = this.options.editorProps ?? {};
+    const baseDispatch =
+      editorProps.dispatchTransaction
+      ?? this.dispatchTransaction;
+    const dispatchTransaction = this.options.enableExtensionDispatchTransaction !== false
+      ? this.extensionManager.dispatchTransaction(baseDispatch)
+      : baseDispatch;
+    const transformPastedHTML = this.extensionManager.transformPastedHTML(
+      editorProps.transformPastedHTML
+        ? (html, view) => editorProps.transformPastedHTML!(html, view as any)
+        : undefined,
+    );
+
     return {
-      ...this.options.editorProps,
+      ...editorProps,
       state,
-      dispatchTransaction: this.dispatchTransaction,
+      dispatchTransaction,
+      transformPastedHTML,
+      markViews: this.extensionManager.markViews,
       nodeViews: this.extensionManager.nodeViews,
     };
   }
@@ -591,23 +614,60 @@ export class Editor extends EventEmitter<EditorEventMap> {
       return;
     }
 
-    const previousSelection = this.editorView.state.selection;
-    const { state } = this.editorView.state.applyTransaction(transaction);
+    const previousState = this.editorView.state;
+    const previousSelection = previousState.selection;
+    const { state, transactions } = previousState.applyTransaction(transaction);
+    const appendedTransactions = transactions.slice(1);
+
+    this.emit("beforeTransaction", {
+      editor: this,
+      transaction,
+      nextState: state,
+    });
+    this.options.onBeforeTransaction({
+      editor: this,
+      transaction,
+      nextState: state,
+    });
+
+    if (!transactions.includes(transaction)) {
+      return;
+    }
 
     this.editorState = state;
     this.editorView.updateState(state);
-    this.extensionManager.onTransaction(transaction);
-    this.emit("transaction", { editor: this, transaction });
-    this.options.onTransaction({ editor: this, transaction });
-    if (transaction.getMeta("preventUpdate") !== true) {
-      this.extensionManager.onUpdate(transaction);
-      this.emit("update", { editor: this, transaction });
-      if (transaction.selectionSet || !state.selection.eq(previousSelection)) {
-        this.extensionManager.onSelectionUpdate(transaction);
-        this.emit("selectionUpdate", { editor: this, transaction });
-        this.options.onSelectionUpdate({ editor: this, transaction });
-      }
-      this.options.onUpdate({ editor: this, transaction });
+
+    this.emit("transaction", {
+      editor: this,
+      transaction,
+      appendedTransactions,
+    });
+    this.options.onTransaction({
+      editor: this,
+      transaction,
+      appendedTransactions,
+    });
+
+    if (transaction.selectionSet || !state.selection.eq(previousSelection)) {
+      this.emit("selectionUpdate", { editor: this, transaction });
+      this.options.onSelectionUpdate({ editor: this, transaction });
+    }
+
+    if (
+      transaction.getMeta("preventUpdate") !== true
+      && transactions.some((item) => item.docChanged)
+      && !previousState.doc.eq(state.doc)
+    ) {
+      this.emit("update", {
+        editor: this,
+        transaction,
+        appendedTransactions,
+      });
+      this.options.onUpdate({
+        editor: this,
+        transaction,
+        appendedTransactions,
+      });
     }
   };
 }

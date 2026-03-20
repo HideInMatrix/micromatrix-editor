@@ -4,6 +4,7 @@ import type {
   CanCommands,
   ChainedCommands,
   CommandProps,
+  RawCommands,
   SingleCommands,
 } from "./types";
 import type { Editor } from "./Editor";
@@ -11,10 +12,13 @@ import type { Editor } from "./Editor";
 export class CommandManager {
   private readonly editor: Editor;
 
+  private readonly rawCommands: RawCommands;
+
   private readonly customState?: EditorState;
 
   constructor(props: { editor: Editor; state?: EditorState }) {
     this.editor = props.editor;
+    this.rawCommands = this.editor.extensionManager.commands;
     this.customState = props.state;
   }
 
@@ -22,9 +26,13 @@ export class CommandManager {
     return this.customState ?? this.editor.state;
   }
 
+  get hasCustomState() {
+    return Boolean(this.customState);
+  }
+
   get commands(): SingleCommands {
-    const rawCommands = this.rawCommands;
-    const tr = this.state.tr;
+    const { rawCommands } = this;
+    const { tr } = this.state;
     const props = this.buildProps(tr);
 
     return Object.fromEntries(
@@ -34,7 +42,7 @@ export class CommandManager {
           const executeCommand = command as (...commandArgs: any[]) => ReturnType<typeof command>;
           const handled = executeCommand(...args)(props);
 
-          if (handled && this.editor.view && !this.shouldSkipDispatch(tr)) {
+          if (!this.hasCustomState && this.editor.view && !this.shouldSkipDispatch(tr)) {
             this.editor.view.dispatch(tr);
           }
 
@@ -53,7 +61,8 @@ export class CommandManager {
   }
 
   private createChain(startTransaction?: Transaction, shouldDispatch = true) {
-    const rawCommands = this.rawCommands;
+    const { rawCommands } = this;
+    const hasStartTransaction = Boolean(startTransaction);
     const transaction = startTransaction ?? this.state.tr;
     const callbacks: boolean[] = [];
 
@@ -72,7 +81,13 @@ export class CommandManager {
         ]),
       ),
       run: () => {
-        if (shouldDispatch && this.editor.view && !this.shouldSkipDispatch(transaction)) {
+        if (
+          !hasStartTransaction
+          && shouldDispatch
+          && !this.hasCustomState
+          && this.editor.view
+          && !this.shouldSkipDispatch(transaction)
+        ) {
           this.editor.view.dispatch(transaction);
         }
 
@@ -84,7 +99,7 @@ export class CommandManager {
   }
 
   private createCan(startTransaction?: Transaction) {
-    const rawCommands = this.rawCommands;
+    const { rawCommands } = this;
     const transaction = startTransaction ?? this.state.tr;
     const props = this.buildProps(transaction, false);
 
@@ -104,7 +119,7 @@ export class CommandManager {
   }
 
   private buildProps(transaction: Transaction, shouldDispatch = true): CommandProps {
-    const rawCommands = this.rawCommands;
+    const { rawCommands } = this;
     const state = createChainableState({
       state: this.state,
       transaction,
@@ -133,13 +148,6 @@ export class CommandManager {
     };
 
     return props;
-  }
-
-  private get rawCommands() {
-    return {
-      ...this.editor.coreCommands,
-      ...this.editor.extensionManager.commands,
-    };
   }
 
   private shouldSkipDispatch(transaction: Transaction) {

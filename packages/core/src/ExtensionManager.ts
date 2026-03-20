@@ -1,13 +1,17 @@
 import {
   inputRules,
   keymap,
+  type MarkViewConstructor,
   type NodeViewConstructor,
   Plugin,
   Schema,
+  type Transaction,
+  type EditorView,
 } from "@mxm-editor/pm";
 import type { Editor } from "./Editor";
 import { getExtensionField } from "./helpers/getExtensionField";
 import {
+  getAttributesFromResolvedExtensions,
   getAttributesForExtensionFromResolvedExtensions,
   getRenderedAttributes,
   getSchemaByResolvedExtensions,
@@ -17,7 +21,10 @@ import { pasteRulesPlugin } from "./PasteRule";
 import { callOrReturn } from "./utilities";
 import type {
   AnyExtension,
-  ExtensionConfig,
+  DispatchTransactionProps,
+  EditorEventMap,
+  MarkConfig,
+  MarkViewRenderer,
   NodeViewRenderer,
   NodeConfig,
   RawCommands,
@@ -45,45 +52,34 @@ function includesExtension(
 export class ExtensionManager {
   readonly editor: Editor;
 
+  readonly baseExtensions: AnyExtension[];
+
   readonly extensions: AnyExtension[];
 
   readonly schema: Schema;
 
   readonly storage: Storage;
 
-  readonly splittableMarks: string[];
+  readonly splittableMarks: string[] = [];
 
   private proseMirrorPluginsCache: Plugin[] | null = null;
 
   constructor(extensions: AnyExtension[], editor: Editor) {
     this.editor = editor;
+    this.baseExtensions = extensions;
     this.extensions = resolveExtensions(
       extensions,
+      (extension) => extension.createContext(this.editor),
+    );
+    this.schema = getSchemaByResolvedExtensions(
+      this.extensions,
       (extension) => extension.createContext(this.editor),
     );
     this.storage = Object.fromEntries(
       this.extensions.map((extension) => [extension.name, extension.storage]),
     ) as Storage;
-    this.splittableMarks = this.extensions.flatMap((extension) => {
-      if (extension.type !== "mark") {
-        return [];
-      }
-
-      const keepOnSplit = callOrReturn(
-        getExtensionField(
-          extension,
-          "keepOnSplit",
-          extension.createContext(this.editor),
-        ) ?? true,
-      );
-
-      return keepOnSplit ? [extension.name] : [];
-    });
+    this.setupExtensions();
     this.onExtensionsResolved();
-    this.schema = getSchemaByResolvedExtensions(
-      this.extensions,
-      (extension) => extension.createContext(this.editor),
-    );
   }
 
   get commands(): RawCommands {
@@ -91,7 +87,7 @@ export class ExtensionManager {
       const addCommands = getExtensionField(
         extension,
         "addCommands",
-        extension.createContext(this.editor),
+        this.getContext(extension),
       ) as (() => Partial<RawCommands>) | undefined;
 
       if (!addCommands) {
@@ -107,9 +103,17 @@ export class ExtensionManager {
     }, {} as RawCommands);
   }
 
+  get attributes() {
+    return getAttributesFromResolvedExtensions(
+      this.extensions,
+      (extension) => extension.createContext(this.editor),
+    );
+  }
+
   get plugins(): Plugin[] {
-    const keyboardPlugins = this.extensions.flatMap((extension) => {
-      const context = extension.createContext(this.editor);
+    const extensions = this.getPluginExtensions();
+    const keyboardPlugins = extensions.flatMap((extension) => {
+      const context = this.getContext(extension);
       const addKeyboardShortcuts = getExtensionField(
         extension,
         "addKeyboardShortcuts",
@@ -122,12 +126,12 @@ export class ExtensionManager {
 
       return [keymap(addKeyboardShortcuts())];
     });
-    const inputRulePlugins = this.extensions.flatMap((extension) => {
+    const inputRulePlugins = extensions.flatMap((extension) => {
       if (!includesExtension(this.editor.options.enableInputRules, extension)) {
         return [];
       }
 
-      const context = extension.createContext(this.editor);
+      const context = this.getContext(extension);
       const addInputRules = getExtensionField(
         extension,
         "addInputRules",
@@ -137,12 +141,12 @@ export class ExtensionManager {
 
       return rules.length ? [inputRules({ rules })] : [];
     });
-    const pasteRules = this.extensions.flatMap((extension) => {
+    const pasteRules = extensions.flatMap((extension) => {
       if (!includesExtension(this.editor.options.enablePasteRules, extension)) {
         return [];
       }
 
-      const context = extension.createContext(this.editor);
+      const context = this.getContext(extension);
       const addPasteRules = getExtensionField(
         extension,
         "addPasteRules",
@@ -152,8 +156,8 @@ export class ExtensionManager {
       return addPasteRules?.() ?? [];
     });
     const proseMirrorPlugins = this.proseMirrorPluginsCache
-      ?? this.extensions.flatMap((extension) => {
-        const context = extension.createContext(this.editor);
+      ?? extensions.flatMap((extension) => {
+        const context = this.getContext(extension);
         const addProseMirrorPlugins = getExtensionField(
           extension,
           "addProseMirrorPlugins",
@@ -182,18 +186,23 @@ export class ExtensionManager {
     return Object.fromEntries(
       nodes.map((node) => {
         const context = node.createContext(this.editor);
-        const renderNodeView = getExtensionField(
+        const addNodeView = getExtensionField(
           node,
           "addNodeView",
           context,
         ) as
-          | NodeViewRenderer
+          | (() => NodeViewRenderer)
           | undefined;
         const attributes = getAttributesForExtensionFromResolvedExtensions(
           node,
           this.extensions,
           (extension) => extension.createContext(this.editor),
         );
+        const renderNodeView = addNodeView?.();
+
+        if (!renderNodeView) {
+          return [];
+        }
 
         const nodeView: NodeViewConstructor = (
           pmNode,
@@ -256,109 +265,224 @@ export class ExtensionManager {
     );
   }
 
-  onCreate() {
-    this.extensions.forEach((extension) => {
-      const onCreate = getExtensionField(
-        extension,
-        "onCreate",
-        extension.createContext(this.editor),
-      ) as (() => void) | undefined;
+  get markViews(): Record<string, MarkViewConstructor> {
+    const marks = this.extensions.filter(
+      (extension): extension is ExtensionLike<any, any, MarkConfig<any, any>> =>
+        extension.type === "mark" && Boolean(extension.config.addMarkView),
+    );
 
-      onCreate?.();
-    });
+    return Object.fromEntries(
+      marks.map((mark) => {
+        const context = this.getContext(mark);
+        const renderMarkView = getExtensionField(
+          mark,
+          "addMarkView",
+          context,
+        ) as
+          | (() => MarkViewRenderer)
+          | undefined;
+        const attributes = getAttributesForExtensionFromResolvedExtensions(
+          mark,
+          this.extensions,
+          (extension) => extension.createContext(this.editor),
+        );
+        const createMarkView = renderMarkView?.();
+
+        if (!createMarkView) {
+          return [];
+        }
+
+        const markView: MarkViewConstructor = (
+          pmMark,
+          view,
+          inline,
+        ) =>
+          createMarkView({
+            mark: pmMark,
+            view,
+            inline,
+            editor: this.editor,
+            extension: mark,
+            HTMLAttributes: getRenderedAttributes(pmMark.attrs, attributes),
+            updateAttributes: (nextAttributes: Record<string, any>) => {
+              const { state } = view;
+              const { tr } = state;
+
+              state.doc.descendants((node, pos) => {
+                const from = tr.mapping.map(pos);
+                const to = tr.mapping.map(pos) + node.nodeSize;
+                const foundMark = node.marks.find((item) => item === pmMark);
+
+                if (!foundMark) {
+                  return;
+                }
+
+                tr.removeMark(from, to, pmMark.type);
+                tr.addMark(from, to, pmMark.type.create({
+                  ...pmMark.attrs,
+                  ...nextAttributes,
+                }));
+              });
+
+              if (tr.docChanged) {
+                view.dispatch(tr);
+              }
+            },
+          });
+
+        return [mark.name, markView];
+      }),
+    );
   }
 
-  onUpdate(transaction: Parameters<NonNullable<ExtensionConfig["onUpdate"]>>[0]["transaction"]) {
-    this.extensions.forEach((extension) => {
-      const onUpdate = getExtensionField(
-        extension,
-        "onUpdate",
-        extension.createContext(this.editor),
-      ) as ((props: { transaction: typeof transaction }) => void) | undefined;
+  dispatchTransaction(baseDispatch: (transaction: Transaction) => void) {
+    const extensions = this.getPluginExtensions();
 
-      onUpdate?.({
-        transaction,
-      });
-    });
+    return extensions.reduceRight<(transaction: Transaction) => void>(
+      (next, extension) => {
+        const dispatchTransaction = getExtensionField(
+          extension,
+          "dispatchTransaction",
+          this.getContext(extension),
+        ) as ((props: DispatchTransactionProps) => void) | undefined;
+
+        if (!dispatchTransaction) {
+          return next;
+        }
+
+        return (transaction: Transaction) => {
+          dispatchTransaction({
+            transaction,
+            next,
+          });
+        };
+      },
+      baseDispatch,
+    );
   }
 
-  onBeforeCreate() {
+  transformPastedHTML(
+    baseTransform?: (html: string, view?: EditorView) => string,
+  ) {
+    return [...this.extensions].sort((a, b) => b.priority - a.priority).reduce(
+      (transform, extension) => {
+        const transformPastedHTML = getExtensionField(
+          extension,
+          "transformPastedHTML",
+          this.getContext(extension),
+        ) as ((html: string) => string) | undefined;
+
+        if (!transformPastedHTML) {
+          return transform;
+        }
+
+        return (html: string, view?: EditorView) =>
+          transformPastedHTML(transform(html, view));
+      },
+      baseTransform ?? ((html: string) => html),
+    );
+  }
+
+  private getContext(extension: AnyExtension) {
+    return extension.createContext(this.editor);
+  }
+
+  private getPluginExtensions() {
+    return [...this.extensions]
+      .reverse()
+      .sort((a, b) => b.priority - a.priority);
+  }
+
+  private setupExtensions() {
     this.extensions.forEach((extension) => {
+      const context = this.getContext(extension);
+
+      if (extension.type === "mark") {
+        const keepOnSplit = callOrReturn(
+          getExtensionField(
+            extension,
+            "keepOnSplit",
+            context,
+          ) ?? true,
+        );
+
+        if (keepOnSplit) {
+          this.splittableMarks.push(extension.name);
+        }
+      }
+
       const onBeforeCreate = getExtensionField(
         extension,
         "onBeforeCreate",
-        extension.createContext(this.editor),
-      ) as (() => void) | undefined;
-
-      onBeforeCreate?.();
-    });
-  }
-
-  onSelectionUpdate(
-    transaction: Parameters<NonNullable<ExtensionConfig["onUpdate"]>>[0]["transaction"],
-  ) {
-    this.extensions.forEach((extension) => {
+        context,
+      ) as ((payload: EditorEventMap["beforeCreate"]) => void) | undefined;
+      const onCreate = getExtensionField(
+        extension,
+        "onCreate",
+        context,
+      ) as ((payload: EditorEventMap["create"]) => void) | undefined;
+      const onUpdate = getExtensionField(
+        extension,
+        "onUpdate",
+        context,
+      ) as ((payload: EditorEventMap["update"]) => void) | undefined;
       const onSelectionUpdate = getExtensionField(
         extension,
         "onSelectionUpdate",
-        extension.createContext(this.editor),
-      ) as ((props: { transaction: typeof transaction }) => void) | undefined;
-
-      onSelectionUpdate?.({
-        transaction,
-      });
-    });
-  }
-
-  onTransaction(
-    transaction: Parameters<NonNullable<ExtensionConfig["onUpdate"]>>[0]["transaction"],
-  ) {
-    this.extensions.forEach((extension) => {
+        context,
+      ) as ((payload: EditorEventMap["selectionUpdate"]) => void) | undefined;
       const onTransaction = getExtensionField(
         extension,
         "onTransaction",
-        extension.createContext(this.editor),
-      ) as ((props: { transaction: typeof transaction }) => void) | undefined;
-
-      onTransaction?.({
-        transaction,
-      });
-    });
-  }
-
-  onFocus(event: FocusEvent) {
-    this.extensions.forEach((extension) => {
+        context,
+      ) as ((payload: EditorEventMap["transaction"]) => void) | undefined;
       const onFocus = getExtensionField(
         extension,
         "onFocus",
-        extension.createContext(this.editor),
-      ) as ((props: { event: FocusEvent }) => void) | undefined;
-
-      onFocus?.({ event });
-    });
-  }
-
-  onBlur(event: FocusEvent) {
-    this.extensions.forEach((extension) => {
+        context,
+      ) as ((payload: EditorEventMap["focus"]) => void) | undefined;
       const onBlur = getExtensionField(
         extension,
         "onBlur",
-        extension.createContext(this.editor),
-      ) as ((props: { event: FocusEvent }) => void) | undefined;
-
-      onBlur?.({ event });
-    });
-  }
-
-  onDestroy() {
-    this.extensions.forEach((extension) => {
+        context,
+      ) as ((payload: EditorEventMap["blur"]) => void) | undefined;
       const onDestroy = getExtensionField(
         extension,
         "onDestroy",
-        extension.createContext(this.editor),
-      ) as (() => void) | undefined;
+        context,
+      ) as ((payload: EditorEventMap["destroy"]) => void) | undefined;
 
-      onDestroy?.();
+      if (onBeforeCreate) {
+        this.editor.on("beforeCreate", onBeforeCreate);
+      }
+
+      if (onCreate) {
+        this.editor.on("create", onCreate);
+      }
+
+      if (onUpdate) {
+        this.editor.on("update", onUpdate);
+      }
+
+      if (onSelectionUpdate) {
+        this.editor.on("selectionUpdate", onSelectionUpdate);
+      }
+
+      if (onTransaction) {
+        this.editor.on("transaction", onTransaction);
+      }
+
+      if (onFocus) {
+        this.editor.on("focus", onFocus);
+      }
+
+      if (onBlur) {
+        this.editor.on("blur", onBlur);
+      }
+
+      if (onDestroy) {
+        this.editor.on("destroy", onDestroy);
+      }
     });
   }
 
@@ -367,7 +491,10 @@ export class ExtensionManager {
       const onExtensionsResolved = getExtensionField(
         extension,
         "onExtensionsResolved",
-        extension.createContext(this.editor),
+        {
+          ...this.getContext(extension),
+          extensions: this.extensions,
+        },
       ) as ((props: { extensions: AnyExtension[] }) => void) | undefined;
 
       onExtensionsResolved?.({

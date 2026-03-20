@@ -5,6 +5,8 @@ import type {
   DOMOutputSpec,
   InputRule as ProseMirrorInputRule,
   Mark as ProseMirrorMark,
+  MarkView as ProseMirrorMarkView,
+  MarkViewConstructor,
   MarkSpec,
   Node as ProseMirrorNode,
   NodeView as ProseMirrorNodeView,
@@ -13,7 +15,9 @@ import type {
   ParseOptions,
   Plugin,
   PluginKey,
+  Slice,
   Transaction,
+  ViewMutationRecord,
   EditorState,
   EditorView,
   MarkType,
@@ -77,6 +81,26 @@ export type NodeViewRenderer = (
   props: NodeViewRendererProps,
 ) => ProseMirrorNodeView;
 
+export interface MarkViewRendererProps {
+  mark: ProseMirrorMark;
+  view: EditorView;
+  inline: boolean;
+  editor: Editor;
+  extension: AnyExtension;
+  HTMLAttributes: Record<string, string>;
+  updateAttributes: (attributes: Record<string, any>) => void;
+}
+
+export interface MarkViewProps extends MarkViewRendererProps {}
+
+export type MarkViewRenderer = (
+  props: MarkViewRendererProps,
+) => ProseMirrorMarkView;
+
+export interface MarkViewRendererOptions {
+  ignoreMutation?: ((props: { mutation: ViewMutationRecord }) => boolean) | null;
+}
+
 export interface PasteRuleMatchContext {
   state: EditorState;
   range: { from: number; to: number };
@@ -90,6 +114,11 @@ export interface PasteRule {
   replace: (
     props: PasteRuleMatchContext,
   ) => ProseMirrorNode | ProseMirrorNode[] | null;
+}
+
+export interface DispatchTransactionProps {
+  transaction: Transaction;
+  next: (transaction: Transaction) => void;
 }
 
 export interface ExtensionConfig<
@@ -117,6 +146,10 @@ export interface ExtensionConfig<
   addProseMirrorPlugins?: (
     this: ExtensionContext<Options, Storage>,
   ) => Plugin[];
+  transformPastedHTML?: (
+    this: ExtensionContext<Options, Storage>,
+    html: string,
+  ) => string;
   renderMarkdown?: (
     this: ExtensionContext<Options, Storage>,
     props: {
@@ -129,7 +162,7 @@ export interface ExtensionConfig<
   onCreate?: (this: ExtensionContext<Options, Storage>) => void;
   onUpdate?: (
     this: ExtensionContext<Options, Storage>,
-    props: { transaction: Transaction },
+    props: { transaction: Transaction; appendedTransactions: Transaction[] },
   ) => void;
   onSelectionUpdate?: (
     this: ExtensionContext<Options, Storage>,
@@ -137,7 +170,7 @@ export interface ExtensionConfig<
   ) => void;
   onTransaction?: (
     this: ExtensionContext<Options, Storage>,
-    props: { transaction: Transaction },
+    props: { transaction: Transaction; appendedTransactions: Transaction[] },
   ) => void;
   onFocus?: (
     this: ExtensionContext<Options, Storage>,
@@ -152,6 +185,10 @@ export interface ExtensionConfig<
     props: { extensions: AnyExtension[] },
   ) => void;
   onDestroy?: (this: ExtensionContext<Options, Storage>) => void;
+  dispatchTransaction?: (
+    this: ExtensionContext<Options, Storage>,
+    props: DispatchTransactionProps,
+  ) => void;
 }
 
 export interface NodeConfig<
@@ -204,6 +241,7 @@ export interface MarkConfig<
   addAttributes?: (
     this: ExtensionContext<Options, Storage>,
   ) => Record<string, ExtensionAttribute>;
+  addMarkView?: (this: ExtensionContext<Options, Storage>) => MarkViewRenderer;
   parseHTML?: (this: ExtensionContext<Options, Storage>) => MarkSpec["parseDOM"];
   renderHTML?: (
     this: ExtensionContext<Options, Storage>,
@@ -305,14 +343,24 @@ export interface EditorOptions {
   parseOptions?: ParseOptions;
   enableInputRules?: RulesSetting;
   enablePasteRules?: RulesSetting;
+  enableExtensionDispatchTransaction?: boolean;
   editorProps?: Partial<DirectEditorProps>;
   onBeforeCreate?: (props: { editor: Editor }) => void;
+  onBeforeTransaction?: (
+    props: { editor: Editor; transaction: Transaction; nextState: EditorState },
+  ) => void;
   onCreate?: (props: { editor: Editor }) => void;
-  onUpdate?: (props: { editor: Editor; transaction: Transaction }) => void;
+  onUpdate?: (
+    props: { editor: Editor; transaction: Transaction; appendedTransactions: Transaction[] },
+  ) => void;
   onSelectionUpdate?: (props: { editor: Editor; transaction: Transaction }) => void;
-  onTransaction?: (props: { editor: Editor; transaction: Transaction }) => void;
+  onTransaction?: (
+    props: { editor: Editor; transaction: Transaction; appendedTransactions: Transaction[] },
+  ) => void;
   onFocus?: (props: { editor: Editor; event: FocusEvent }) => void;
   onBlur?: (props: { editor: Editor; event: FocusEvent }) => void;
+  onPaste?: (props: { editor: Editor; event: ClipboardEvent; slice: Slice }) => void;
+  onDrop?: (props: { editor: Editor; event: DragEvent; slice: Slice; moved: boolean }) => void;
   onDestroy?: (props: { editor: Editor }) => void;
 }
 
@@ -324,12 +372,15 @@ export type ResolvedEditorOptions =
 
 export interface EditorEventMap {
   beforeCreate: { editor: Editor };
+  beforeTransaction: { editor: Editor; transaction: Transaction; nextState: EditorState };
   create: { editor: Editor };
-  update: { editor: Editor; transaction: Transaction };
+  update: { editor: Editor; transaction: Transaction; appendedTransactions: Transaction[] };
   selectionUpdate: { editor: Editor; transaction: Transaction };
-  transaction: { editor: Editor; transaction: Transaction };
+  transaction: { editor: Editor; transaction: Transaction; appendedTransactions: Transaction[] };
   focus: { editor: Editor; event: FocusEvent };
   blur: { editor: Editor; event: FocusEvent };
+  paste: { editor: Editor; event: ClipboardEvent; slice: Slice };
+  drop: { editor: Editor; event: DragEvent; slice: Slice; moved: boolean };
   destroy: { editor: Editor };
 }
 

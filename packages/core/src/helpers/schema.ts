@@ -18,6 +18,7 @@ import type {
 import {
   callOrReturn,
   cleanObject,
+  findDuplicates,
   mergeAttributes,
 } from "../utilities";
 
@@ -181,12 +182,8 @@ export function resolveExtensions(
   extensions: Extensions,
   createContext: ExtensionContextFactory = createStaticContext,
 ): Extensions {
-  const resolved: AnyExtension[] = [];
-
-  const visit = (items: Extensions) => {
-    items.forEach((extension) => {
-      resolved.push(extension);
-
+  const flatten = (items: Extensions): Extensions =>
+    items.flatMap((extension) => {
       const nested = (
         getExtensionField(
           extension,
@@ -195,15 +192,23 @@ export function resolveExtensions(
         ) as (() => Extensions) | undefined
       )?.();
 
-      if (nested?.length) {
-        visit(nested);
-      }
+      return nested?.length
+        ? [extension, ...flatten(nested)]
+        : [extension];
     });
-  };
+  const flattened = flatten(extensions);
+  const resolved = flattened.sort((a, b) => b.priority - a.priority);
+  const duplicateNames = findDuplicates(resolved.map((extension) => extension.name));
 
-  visit(extensions);
+  if (duplicateNames.length) {
+    console.warn(
+      `[mxm-editor warn]: Duplicate extension names found: [${duplicateNames
+        .map((name) => `'${name}'`)
+        .join(", ")}]. This can lead to issues.`,
+    );
+  }
 
-  return resolved.sort((a, b) => b.priority - a.priority);
+  return resolved;
 }
 
 export function splitExtensions(

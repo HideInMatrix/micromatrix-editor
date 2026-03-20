@@ -7,6 +7,10 @@ import type {
   ExtensionKind,
   ExtensionLike,
 } from "./types";
+import {
+  callOrReturn,
+  mergeDeep,
+} from "./utilities";
 
 export class Extendable<
   Options = Record<string, never>,
@@ -22,13 +26,7 @@ export class Extendable<
 
   readonly priority: number;
 
-  readonly options: Options;
-
-  readonly storage: Storage;
-
   readonly parent: AnyExtension | null;
-
-  protected readonly optionOverrides: Partial<Options>;
 
   constructor(
     type: ExtensionKind,
@@ -36,36 +34,33 @@ export class Extendable<
     options?: Partial<Options>,
     parent: AnyExtension | null = null,
   ) {
+    const resolvedConfig = options && Object.keys(options).length
+      ? {
+        ...config,
+        addOptions: () =>
+          mergeDeep(
+            (callOrReturn(
+              getExtensionField(
+                {
+                  config,
+                  parent,
+                } as AnyExtension,
+                "addOptions",
+                {
+                  name: config.name,
+                },
+              ) as (() => Options) | undefined,
+            ) ?? {}) as Record<string, any>,
+            options as Record<string, any>,
+          ) as Options,
+      }
+      : config;
+
     this.type = type;
-    this.config = config;
+    this.config = resolvedConfig;
     this.parent = parent;
-    this.name = config.name;
-    this.priority = config.priority ?? parent?.priority ?? 100;
-    this.optionOverrides = (options ?? {}) as Partial<Options>;
-
-    const baseContext = {
-      name: this.name,
-      options: {} as Options,
-      storage: {} as Storage,
-      editor: undefined as unknown as Editor,
-      type: null,
-    };
-    const addOptions = getExtensionField(this, "addOptions", {
-      name: this.name,
-    }) as (() => Options) | undefined;
-    const defaultOptions = addOptions?.() ?? ({} as Options);
-
-    this.options = {
-      ...(defaultOptions as object),
-      ...(this.optionOverrides as object),
-    } as Options;
-
-    const addStorage = getExtensionField(this, "addStorage", {
-      ...baseContext,
-      options: this.options,
-    }) as (() => Storage) | undefined;
-
-    this.storage = addStorage?.() ?? ({} as Storage);
+    this.name = resolvedConfig.name;
+    this.priority = resolvedConfig.priority ?? parent?.priority ?? 100;
   }
 
   configure(options?: Partial<Options>) {
@@ -76,11 +71,15 @@ export class Extendable<
     ) => Extendable<Options, Storage, Config>;
 
     return new Constructor(
-      this.config,
       {
-        ...(this.optionOverrides as object),
-        ...(options as object),
-      } as Partial<Options>,
+        ...(this.config as object),
+        addOptions: () =>
+          mergeDeep(
+            this.options as Record<string, any>,
+            (options ?? {}) as Record<string, any>,
+          ) as Options,
+      } as Config,
+      undefined,
       this.parent,
     );
   }
@@ -98,9 +97,26 @@ export class Extendable<
         ...(config as object),
         name: config?.name ?? this.name,
       } as Config,
-      this.optionOverrides,
+      undefined,
       this,
     );
+  }
+
+  get options(): Options {
+    return (callOrReturn(
+      getExtensionField(this, "addOptions", {
+        name: this.name,
+      }) as (() => Options) | undefined,
+    ) ?? {}) as Options;
+  }
+
+  get storage(): Storage {
+    return (callOrReturn(
+      getExtensionField(this, "addStorage", {
+        name: this.name,
+        options: this.options,
+      }) as (() => Storage) | undefined,
+    ) ?? {}) as Storage;
   }
 
   createContext(editor: Editor): ExtensionContext<Options, Storage> {

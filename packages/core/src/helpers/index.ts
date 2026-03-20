@@ -12,6 +12,7 @@ export * from "./getMarkRange";
 export * from "./getNodeAtPosition";
 export * from "./getNodeAttributes";
 export * from "./getNodeType";
+export * from "./isNodeEmpty";
 export * from "./isNodeSelection";
 export * from "./isList";
 export * from "./isTextSelection";
