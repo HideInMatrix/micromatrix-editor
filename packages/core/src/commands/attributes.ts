@@ -6,8 +6,12 @@ import {
   type Transaction,
 } from "@mxm-editor/pm";
 import type { Editor } from "../Editor";
-import type { RawCommands } from "../types";
+import type {
+  Range,
+  RawCommands,
+} from "../types";
 import { getMarkRange } from "../helpers";
+import { clamp } from "../utilities";
 
 function normalizeAttributeNames(attributes: string | string[]) {
   return Array.isArray(attributes) ? attributes : [attributes];
@@ -307,7 +311,42 @@ function resetNodeAttributes(
   return true;
 }
 
-type AttributeCommands = Pick<RawCommands, "updateAttributes" | "resetAttributes">;
+function resolveRange(
+  transaction: Transaction,
+  position?: number | Range,
+) {
+  if (typeof position === "number") {
+    const nextPosition = clamp(position, 0, transaction.doc.content.size);
+
+    return {
+      from: nextPosition,
+      to: nextPosition,
+    };
+  }
+
+  if (position) {
+    const from = clamp(position.from, 0, transaction.doc.content.size);
+    const to = clamp(position.to, from, transaction.doc.content.size);
+
+    return {
+      from,
+      to,
+    };
+  }
+
+  return {
+    from: transaction.selection.from,
+    to: transaction.selection.to,
+  };
+}
+
+type AttributeCommands = Pick<
+  RawCommands,
+  | "updateAttributes"
+  | "resetAttributes"
+  | "setTextDirection"
+  | "unsetTextDirection"
+>;
 
 export function createAttributeCommands(editor: Editor): AttributeCommands {
   return {
@@ -355,6 +394,59 @@ export function createAttributeCommands(editor: Editor): AttributeCommands {
         }
 
         return false;
+      },
+    setTextDirection:
+      (
+        direction: "ltr" | "rtl" | "auto",
+        position?: number | Range,
+      ) =>
+      ({ tr, dispatch }) => {
+        const range = resolveRange(tr, position);
+
+        if (!dispatch) {
+          return true;
+        }
+
+        tr.doc.nodesBetween(range.from, range.to, (node, pos) => {
+          if (node.isText || !node.type.spec.attrs?.dir) {
+            return true;
+          }
+
+          tr.setNodeMarkup(pos, undefined, {
+            ...node.attrs,
+            dir: direction,
+          });
+
+          return true;
+        });
+
+        return true;
+      },
+    unsetTextDirection:
+      (position?: number | Range) =>
+      ({ tr, dispatch }) => {
+        const range = resolveRange(tr, position);
+
+        if (!dispatch) {
+          return true;
+        }
+
+        tr.doc.nodesBetween(range.from, range.to, (node, pos) => {
+          if (node.isText || !node.type.spec.attrs?.dir) {
+            return true;
+          }
+
+          const nextAttributes = {
+            ...node.attrs,
+          };
+
+          delete nextAttributes.dir;
+          tr.setNodeMarkup(pos, undefined, nextAttributes);
+
+          return true;
+        });
+
+        return true;
       },
   };
 }

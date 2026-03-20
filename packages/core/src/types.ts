@@ -284,6 +284,11 @@ export interface InsertContentOptions {
   contentType?: ContentType;
 }
 
+export interface Range {
+  from: number;
+  to: number;
+}
+
 export type InsertContentAtPosition = number | { from: number; to: number };
 
 export type TextSelectionPosition = number | { from: number; to: number };
@@ -348,6 +353,7 @@ export interface Commands<ReturnType = boolean> {
       value: Content,
       options?: InsertContentOptions,
     ) => ReturnType;
+    cut: (range: Range, targetPos: number) => ReturnType;
     setTextSelection: (position: TextSelectionPosition) => ReturnType;
     setNodeSelection: (position: number) => ReturnType;
     selectAll: () => ReturnType;
@@ -388,6 +394,12 @@ export interface Commands<ReturnType = boolean> {
       nameOrType: string | ProseMirrorNodeType | MarkType,
       attributes: string | string[],
     ) => ReturnType;
+    setTextDirection: (
+      direction: "ltr" | "rtl" | "auto",
+      position?: number | Range,
+    ) => ReturnType;
+    unsetTextDirection: (position?: number | Range) => ReturnType;
+    deleteCurrentNode: () => ReturnType;
     deleteNode: (nameOrType: string | ProseMirrorNodeType) => ReturnType;
     clearNodes: () => ReturnType;
     wrapInList: (

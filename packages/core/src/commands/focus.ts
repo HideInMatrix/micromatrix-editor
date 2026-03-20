@@ -97,9 +97,23 @@ export function createFocusCommands(editor: Editor): FocusCommands {
       },
     blur:
       () =>
-      ({ dispatch }) => {
-        if (dispatch) {
-          editor.view?.dom.blur();
+      ({ view }) => {
+        const run = () => {
+          if (!view || editor.isDestroyed) {
+            return;
+          }
+
+          (view.dom as HTMLElement).blur();
+
+          if (typeof window !== "undefined") {
+            window.getSelection()?.removeAllRanges();
+          }
+        };
+
+        if (typeof requestAnimationFrame === "function") {
+          requestAnimationFrame(run);
+        } else {
+          run();
         }
 
         return true;

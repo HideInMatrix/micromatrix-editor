@@ -91,6 +91,7 @@ function joinListForwards(
 
 type NodeCommands = Pick<
   RawCommands,
+  | "deleteCurrentNode"
   | "deleteNode"
   | "clearNodes"
   | "wrapInList"
@@ -108,6 +109,36 @@ type NodeCommands = Pick<
 
 export function createNodeCommands(editor: Editor): NodeCommands {
   return {
+    deleteCurrentNode:
+      () =>
+      ({ tr, dispatch }) => {
+        const currentNode = tr.selection.$anchor.node();
+
+        if (currentNode.content.size > 0) {
+          return false;
+        }
+
+        const $position = tr.selection.$anchor;
+
+        for (let depth = $position.depth; depth > 0; depth -= 1) {
+          const node = $position.node(depth);
+
+          if (node.type !== currentNode.type) {
+            continue;
+          }
+
+          if (dispatch) {
+            const from = $position.before(depth);
+            const to = $position.after(depth);
+
+            tr.delete(from, to).scrollIntoView();
+          }
+
+          return true;
+        }
+
+        return false;
+      },
     deleteNode:
       (nameOrType: string | NodeType) =>
       ({ tr, dispatch }) => {

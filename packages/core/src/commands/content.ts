@@ -9,6 +9,7 @@ import {
 import { selectionToInsertionEnd } from "../helpers";
 import type {
   Content,
+  Range,
   InsertContentAtPosition,
   InsertContentOptions,
   RawCommands,
@@ -84,7 +85,7 @@ function isOnlyBlockContent(fragment: Fragment) {
 
 type ContentCommands = Pick<
   RawCommands,
-  "setContent" | "clearContent" | "insertContent" | "insertContentAt"
+  "setContent" | "clearContent" | "insertContent" | "insertContentAt" | "cut"
 >;
 
 export function createContentCommands(editor: Editor): ContentCommands {
@@ -173,6 +174,31 @@ export function createContentCommands(editor: Editor): ContentCommands {
         if (normalizedOptions.updateSelection) {
           selectionToInsertionEnd(tr, startLength, -1);
         }
+
+        return true;
+      },
+    cut:
+      (range: Range, targetPos: number) =>
+      ({ tr }) => {
+        const from = clamp(range.from, 0, tr.doc.content.size);
+        const to = clamp(range.to, from, tr.doc.content.size);
+        const contentSlice = tr.doc.slice(from, to);
+
+        tr.deleteRange(from, to);
+
+        const newPosition = clamp(
+          tr.mapping.map(targetPos),
+          0,
+          tr.doc.content.size,
+        );
+
+        tr.insert(newPosition, contentSlice.content);
+        tr.setSelection(
+          Selection.near(
+            tr.doc.resolve(clamp(Math.max(newPosition - 1, 0), 0, tr.doc.content.size)),
+            1,
+          ),
+        );
 
         return true;
       },
