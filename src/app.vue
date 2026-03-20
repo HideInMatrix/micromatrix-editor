@@ -36,7 +36,7 @@ const options = $ref({
     // menus: ['base'],
   },
   document: {
-    title: '测试文档',
+    title: '研究文档',
     content: localStorage.getItem('document.content') || '<p>测试文档</p>',
     // structure: 'heading block*',
   },

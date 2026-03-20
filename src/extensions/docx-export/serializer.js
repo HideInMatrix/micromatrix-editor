@@ -119,6 +119,48 @@ const fontSizeToHalfPoints = (value) => {
   return Number.isFinite(numeric) ? Math.round(numeric) : undefined
 }
 
+const normalizeRunFont = (value) => {
+  if (!value) {
+    return undefined
+  }
+
+  if (typeof value === 'string') {
+    const font = value.trim()
+    return font || undefined
+  }
+
+  if (typeof value !== 'object') {
+    return undefined
+  }
+
+  const font = {}
+  ;['ascii', 'cs', 'eastAsia', 'hAnsi', 'hint'].forEach((key) => {
+    const current = `${value[key] || ''}`.trim()
+    if (current) {
+      font[key] = current
+    }
+  })
+
+  return Object.keys(font).length > 0 ? font : undefined
+}
+
+const createCompositeFont = (eastAsia, western, extras = {}) => {
+  const zhFont = `${eastAsia || ''}`.trim()
+  const westernFont = `${western || ''}`.trim()
+
+  if (!zhFont && !westernFont) {
+    return undefined
+  }
+
+  const fallback = westernFont || zhFont
+  return normalizeRunFont({
+    ascii: westernFont || fallback,
+    eastAsia: zhFont || fallback,
+    hAnsi: westernFont || fallback,
+    ...extras,
+  })
+}
+
 const parseColorToHex = (value) => {
   if (!value || typeof value !== 'string') {
     return undefined
@@ -254,6 +296,75 @@ const getParagraphSpacing = (attrs = {}, lineRuleType) => {
   })
 
   return spacing
+}
+
+const getDefaultParagraphSpacing = (options = {}, lineRuleType) => {
+  const mode = `${options.defaultParagraphLineSpacingType || 'multiple'}`
+    .trim()
+    .toLowerCase()
+  const value = Number.parseFloat(`${options.defaultParagraphLineSpacing || ''}`)
+
+  if (!Number.isFinite(value) || value <= 0) {
+    return undefined
+  }
+
+  if (mode === 'exact') {
+    return {
+      line: Math.round(value * 20),
+      lineRule: lineRuleType.EXACT,
+    }
+  }
+
+  return {
+    line: Math.round(value * 240),
+    lineRule: lineRuleType.AUTO,
+  }
+}
+
+const getDefaultParagraphIndent = (options = {}, defaultFontSize) => {
+  const chars = Number.parseFloat(`${options.defaultFirstLineIndentChars || ''}`)
+
+  if (!Number.isFinite(chars) || chars <= 0) {
+    return undefined
+  }
+
+  const pointSize = (defaultFontSize || DEFAULT_FONT_SIZE) / 2
+  return {
+    firstLine: Math.round(chars * pointSize * 20),
+  }
+}
+
+const getHeadingStyles = (options = {}, defaultWesternFont = '') => {
+  if (!options.headingStyles || typeof options.headingStyles !== 'object') {
+    return {}
+  }
+
+  return Object.entries(options.headingStyles).reduce(
+    (styles, [level, config]) => {
+      if (!config || typeof config !== 'object') {
+        return styles
+      }
+
+      const font =
+        normalizeRunFont(config.font) ||
+        createCompositeFont(
+          config.eastAsiaFont || config.fontFamily,
+          config.westernFont || defaultWesternFont,
+        )
+      const size = fontSizeToHalfPoints(config.size)
+      const color = parseColorToHex(config.color)
+
+      styles[level] = {
+        ...(font ? { font } : {}),
+        ...(size ? { size } : {}),
+        ...(color ? { color } : {}),
+        bold: config.bold !== false,
+      }
+
+      return styles
+    },
+    {},
+  )
 }
 
 const getParagraphAlignment = (value, alignmentType) => {
@@ -950,6 +1061,11 @@ const buildSectionProperties = (docx, page = {}) => {
 
 const createContext = (docx, editor, documentJson, state, options = {}) => {
   const bookmarkAnchors = new Map()
+  const defaultFontSize =
+    fontSizeToHalfPoints(options.defaultFontSize) || DEFAULT_FONT_SIZE
+  const defaultFonts =
+    normalizeRunFont(options.defaultFonts) ||
+    createCompositeFont(options.defaultChineseFont, options.defaultWesternFont)
 
   const getBookmarkAnchor = (value) => {
     const key = `${value || ''}`.trim()
@@ -969,8 +1085,17 @@ const createContext = (docx, editor, documentJson, state, options = {}) => {
     pageContentWidthPx: getPageContentWidthPx(options.page),
     defaultTextColor:
       parseColorToHex(options.defaultTextColor) || DEFAULT_TEXT_COLOR,
-    defaultFontSize:
-      fontSizeToHalfPoints(options.defaultFontSize) || DEFAULT_FONT_SIZE,
+    defaultFont: defaultFonts,
+    defaultFontSize,
+    defaultParagraphIndent: getDefaultParagraphIndent(options, defaultFontSize),
+    defaultParagraphSpacing: getDefaultParagraphSpacing(
+      options,
+      docx.LineRuleType,
+    ),
+    headingStyles: getHeadingStyles(
+      options,
+      defaultFonts?.ascii || defaultFonts?.hAnsi || '',
+    ),
     getBookmarkAnchor,
     getFootnoteNode: (fnId) => {
       return state.footnotes.nodesById.get(fnId) || null

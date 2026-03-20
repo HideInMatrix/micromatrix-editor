@@ -319,15 +319,21 @@ export const createBlockSerializers = (runtime) => {
       6,
     )
     const headingKey = context.docx.HeadingLevel[`HEADING_${level}`]
+    const headingStyle = context.headingStyles?.[level] || {}
+    const headingRun = {
+      bold: headingStyle.bold !== false,
+      color: headingStyle.color || context.defaultTextColor,
+      size:
+        headingStyle.size ||
+        helpers.fontSizeToHalfPoints(node?.attrs?.fontSize) ||
+        [32, 28, 24, 22, 20, 18][level - 1],
+      ...(headingStyle.font ? { font: headingStyle.font } : {}),
+    }
     return await functions.createParagraph(node, {
       heading: headingKey,
-      run: {
-        bold: true,
-        color: context.defaultTextColor,
-        size:
-          helpers.fontSizeToHalfPoints(node?.attrs?.fontSize) ||
-          [32, 28, 24, 22, 20, 18][level - 1],
-      },
+      run: headingRun,
+      runDefaults: headingRun,
+      useDefaultIndent: false,
     })
   }
 

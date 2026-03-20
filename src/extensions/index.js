@@ -248,9 +248,9 @@ export const getDefaultExtensions = ({
     Echarts,
 
     // 页面
-    Pages.configure({
-      page,
-    }),
+    // Pages.configure({
+    //   page,
+    // }),
     PageBreak,
 
     // 其他

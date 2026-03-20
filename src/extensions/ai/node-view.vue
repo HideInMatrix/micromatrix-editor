@@ -6,7 +6,6 @@
         'umo-hover-shadow': !options.document?.readOnly,
         'is-thinking': isThinking,
         'is-error': isError,
-        'is-compact': isComposerMode,
       }"
       @click="handleContainerClick"
     >
@@ -16,242 +15,155 @@
         type="file"
         :accept="attachmentAccept"
         :multiple="allowMultipleAttachments"
-        :disabled="isReadonly || isThinking"
+        :disabled="isInteractionLocked"
         @change="handleAttachmentChange"
       />
 
-      <template v-if="isComposerMode">
-        <div class="umo-node-ai-composer">
-          <div class="umo-node-ai-composer-chips">
-            <button
-              type="button"
-              class="umo-node-ai-chip is-action"
-              :disabled="isReadonly || isThinking"
-              @click.stop="openFilePicker"
-            >
-              <icon name="plus" size="14" />
-              <span>{{ addContextLabel }}</span>
-            </button>
-            <span class="umo-node-ai-chip is-static">
-              <icon name="file" size="14" />
-              <span>{{ contextScopeLabel }}</span>
-            </span>
-            <div
-              v-for="item in attachments"
-              :key="item.id"
-              class="umo-node-ai-chip is-attachment"
-              :title="item.name"
-            >
-              <icon name="file" size="14" />
-              <span class="umo-node-ai-chip-text">{{ item.name }}</span>
-              <button
-                type="button"
-                class="umo-node-ai-chip-remove"
-                :disabled="isThinking"
-                @click.stop="removeAttachment(item.id)"
-              >
-                <icon name="close" size="12" />
-              </button>
-            </div>
-          </div>
-
-          <t-textarea
-            ref="promptInputRef"
-            v-model="localPrompt"
-            class="umo-node-ai-composer-input"
-            :autosize="{ minRows: 4, maxRows: 8 }"
-            :maxlength="1000"
-            :disabled="isReadonly || isThinking"
-            :placeholder="inputPlaceholder"
-            @keydown="handlePromptKeydown"
-          />
-
-          <div class="umo-node-ai-composer-footer">
-            <div class="umo-node-ai-composer-tools">
-              <button
-                type="button"
-                class="umo-node-ai-icon-button"
-                :disabled="isReadonly || isThinking"
-                :title="uploadButtonText"
-                @click.stop="openFilePicker"
-              >
-                <icon name="file" size="16" />
-              </button>
-              <button
-                type="button"
-                class="umo-node-ai-icon-button"
-                :disabled="isThinking"
-                :title="t('node.ai.discard')"
-                @click.stop="discardNode"
-              >
-                <icon name="close" size="16" />
-              </button>
-            </div>
-
-            <button
-              type="button"
-              class="umo-node-ai-send"
-              :class="{ 'is-disabled': !canSubmit }"
-              :disabled="!canSubmit"
-              :title="submitLabel"
-              @click.stop="submitPrompt"
-            >
-              <icon name="arrow-down" size="16" />
-            </button>
-          </div>
-        </div>
-      </template>
-
-      <template v-else>
-        <div class="umo-node-ai-header">
-          <div class="umo-node-ai-title">
-            <icon name="ai" />
-            <span>{{ title }}</span>
-          </div>
-          <div class="umo-node-ai-status" :class="`is-${statusName}`">
-            {{ statusLabel }}
-          </div>
-        </div>
-
-        <div v-if="createdAtText" class="umo-node-ai-time">
-          {{ createdAtText }}
-        </div>
-
-        <div class="umo-node-ai-section">
-          <div class="umo-node-ai-label">{{ t('node.ai.context') }}</div>
-          <div class="umo-node-ai-text is-context">{{ contextText }}</div>
-        </div>
-
-        <div class="umo-node-ai-section">
-          <div class="umo-node-ai-label">{{ t('node.ai.prompt') }}</div>
-          <t-textarea
-            ref="promptInputRef"
-            v-model="localPrompt"
-            class="umo-node-ai-input"
-            :autosize="{ minRows: 3, maxRows: 6 }"
-            :maxlength="1000"
-            :disabled="isReadonly || isThinking"
-            :placeholder="inputPlaceholder"
-            @keydown="handlePromptKeydown"
-          />
-          <div class="umo-node-ai-upload">
-            <t-button
-              theme="default"
-              variant="outline"
-              :disabled="isReadonly || isThinking"
-              @click="openFilePicker"
-            >
-              {{ uploadButtonText }}
-            </t-button>
-          </div>
-          <div v-if="attachments.length > 0" class="umo-node-ai-attachments">
-            <div
-              v-for="item in attachments"
-              :key="item.id"
-              class="umo-node-ai-attachment"
-            >
-              <div class="umo-node-ai-attachment-main">
-                <div class="umo-node-ai-attachment-name" :title="item.name">
-                  {{ item.name }}
-                </div>
-                <div class="umo-node-ai-attachment-meta">
-                  {{ formatAttachmentMeta(item) }}
-                </div>
-              </div>
-              <button
-                type="button"
-                class="umo-node-ai-attachment-remove"
-                :disabled="isThinking"
-                @click="removeAttachment(item.id)"
-              >
-                <icon name="close" size="14" />
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <div class="umo-node-ai-toolbar">
-          <t-button
-            theme="primary"
-            :loading="isThinking"
-            :disabled="!canSubmit"
-            @click="submitPrompt"
-          >
-            {{ submitLabel }}
-          </t-button>
-          <t-button
-            theme="default"
-            variant="base"
-            :disabled="isThinking"
-            @click="discardNode"
-          >
-            {{ t('node.ai.discard') }}
-          </t-button>
-        </div>
-
-        <div class="umo-node-ai-section">
-          <div class="umo-node-ai-label">{{ t('node.ai.response') }}</div>
-          <div v-if="isThinking" class="umo-node-ai-skeleton" aria-hidden="true">
-            <span class="line short"></span>
-            <span class="line"></span>
-            <span class="line"></span>
-            <span class="line medium"></span>
-          </div>
-          <div v-else class="umo-node-ai-text" :class="{ 'is-empty': !responseText }">
-            {{ responseText || t('node.ai.emptyResponse') }}
-          </div>
-        </div>
-
-        <div v-if="previewText" class="umo-node-ai-preview">
-          <div class="umo-node-ai-label">{{ t('node.ai.preview') }}</div>
-          <div class="umo-node-ai-text">{{ previewText }}</div>
-        </div>
-
-        <div v-if="actionLabels.length > 0" class="umo-node-ai-actions">
+      <div class="umo-node-ai-composer">
+        <div class="umo-node-ai-composer-chips">
           <span
-            v-for="item in actionLabels"
-            :key="item.key"
-            class="umo-node-ai-action"
+            v-if="statusName !== 'idle'"
+            class="umo-node-ai-chip is-status"
+            :class="`is-${statusName}`"
           >
-            {{ item.label }}
+            <icon :name="statusIconName" size="14" />
+            <span>{{ statusLabel }}</span>
           </span>
+          <div
+            v-for="item in attachments"
+            :key="item.id"
+            class="umo-node-ai-chip is-attachment"
+            :title="item.name"
+          >
+            <icon name="file" size="14" />
+            <span class="umo-node-ai-chip-text">{{ item.name }}</span>
+            <button
+              type="button"
+              class="umo-node-ai-chip-remove"
+              :disabled="isInteractionLocked"
+              @click.stop="removeAttachment(item.id)"
+            >
+              <icon name="close" size="12" />
+            </button>
+          </div>
+        </div>
+
+        <t-textarea
+          ref="promptInputRef"
+          v-model="localPrompt"
+          class="umo-node-ai-composer-input"
+          :autosize="{ minRows: 4, maxRows: 8 }"
+          :maxlength="1000"
+          :readonly="isInteractionLocked"
+          :disabled="isReadonly"
+          :placeholder="inputPlaceholder"
+          @keydown="handlePromptKeydown"
+        />
+
+        <div v-if="resultGroups.length > 0" class="umo-node-ai-result-group">
+          <div class="umo-node-ai-result-group-title">
+            {{ t('node.ai.preview') }}
+          </div>
+          <div class="umo-node-ai-result-list">
+            <div
+              v-for="item in resultGroups"
+              :key="item.key"
+              class="umo-node-ai-result-card"
+              :class="`is-${item.kind}`"
+            >
+              <div class="umo-node-ai-result-card-head">
+                <span class="umo-node-ai-result-chip" :class="`is-${item.kind}`">
+                  <icon :name="item.icon" size="14" />
+                  <span>{{ item.label }}</span>
+                </span>
+              </div>
+              <div class="umo-node-ai-result-card-body">
+                {{ item.text }}
+              </div>
+            </div>
+          </div>
         </div>
 
         <div v-if="isError && attrs.error" class="umo-node-ai-error">
           {{ attrs.error }}
         </div>
 
-        <div v-if="showDecisionActions" class="umo-node-ai-decisions">
-          <t-button
-            theme="primary"
-            :disabled="isThinking"
-            @click="applyDecision('append')"
-          >
-            {{ t('node.ai.apply.append') }}
-          </t-button>
-          <t-button
-            theme="default"
-            :disabled="isThinking"
-            @click="applyDecision('replace')"
-          >
-            {{ t('node.ai.apply.replace') }}
-          </t-button>
-          <t-button
-            theme="default"
-            variant="base"
-            :disabled="isThinking"
-            @click="discardNode"
-          >
-            {{ t('node.ai.apply.cancel') }}
-          </t-button>
+        <div class="umo-node-ai-composer-footer">
+          <div class="umo-node-ai-composer-tools">
+            <button
+              type="button"
+              class="umo-node-ai-icon-button"
+              :disabled="isInteractionLocked"
+              :title="uploadButtonText"
+              @click.stop="openFilePicker"
+            >
+              <icon name="file" size="16" />
+            </button>
+            <button
+              type="button"
+              class="umo-node-ai-icon-button"
+              :disabled="isInteractionLocked"
+              :title="closeNodeLabel"
+              @click.stop="discardNode"
+            >
+              <icon name="close" size="16" />
+            </button>
+          </div>
+
+          <div class="umo-node-ai-footer-actions">
+            <button
+              v-if="showDecisionActions"
+              type="button"
+              class="umo-node-ai-icon-button is-decision"
+              :disabled="isInteractionLocked"
+              :title="t('node.ai.apply.append')"
+              @click.stop="applyDecision('append')"
+            >
+              <icon name="block-add" size="16" />
+            </button>
+            <button
+              v-if="showDecisionActions"
+              type="button"
+              class="umo-node-ai-icon-button is-decision"
+              :disabled="isInteractionLocked"
+              :title="t('node.ai.apply.replace')"
+              @click.stop="applyDecision('replace')"
+            >
+              <icon name="node-switch" size="16" />
+            </button>
+            <button
+              v-if="showCancelAction"
+              type="button"
+              class="umo-node-ai-icon-button is-decision"
+              :disabled="isInteractionLocked"
+              :title="cancelLabel"
+              @click.stop="discardNode"
+            >
+              <icon name="close" size="16" />
+            </button>
+
+            <button
+              type="button"
+              class="umo-node-ai-send"
+              :class="{ 'is-disabled': !canSubmit, 'is-loading': isThinking }"
+              :disabled="!canSubmit"
+              :title="submitLabel"
+              @click.stop="submitPrompt"
+            >
+              <icon
+                :name="isThinking ? 'loading' : 'arrow-down'"
+                size="16"
+                class="umo-node-ai-send-icon"
+              />
+            </button>
+          </div>
         </div>
-      </template>
+      </div>
     </div>
   </node-view-wrapper>
 </template>
 
 <script setup>
-import prettyBytes from 'pretty-bytes'
 import { nodeViewProps, NodeViewWrapper } from '@tiptap/vue-3'
 
 import { useAiAttachments } from '@/composables/ai'
@@ -316,20 +228,6 @@ const toPreviewText = (value = '', limit = 280) => {
     return normalized
   }
   return `${normalized.slice(0, limit)}...`
-}
-
-const formatAttachmentMeta = (item) => {
-  const parts = []
-  if (item.type) {
-    parts.push(item.type)
-  }
-  if (Number.isFinite(item.size) && item.size > 0) {
-    parts.push(prettyBytes(item.size))
-  }
-  if (!parts.length) {
-    return locale.value === 'zh-CN' ? '待上传附件' : 'Pending attachment'
-  }
-  return parts.join(' / ')
 }
 
 const getPatchPreview = (action) => {
@@ -426,30 +324,90 @@ const isReadonly = computed(() => {
 const statusName = computed(() => attrs.value.status || 'idle')
 const isThinking = computed(() => statusName.value === 'thinking')
 const isError = computed(() => statusName.value === 'error')
-
-const title = computed(() => attrs.value.title || t('node.ai.title'))
-const contextText = computed(() => {
-  if (attrs.value.contextText) {
-    return attrs.value.contextText
-  }
-  return locale.value === 'zh-CN'
-    ? '当前没有可用上下文。'
-    : 'No context is available.'
+const isInteractionLocked = computed(() => {
+  return isReadonly.value || isThinking.value
 })
-const responseText = computed(() => {
+const statusIconName = computed(() => {
+  if (isThinking.value) {
+    return 'loading'
+  }
   if (isError.value) {
-    return attrs.value.error || t('node.ai.error')
+    return 'close'
   }
-  return attrs.value.response || ''
+  return 'ai'
 })
-const previewText = computed(() => {
-  if (!Array.isArray(attrs.value.actions) || attrs.value.actions.length === 0) {
-    return ''
+
+const getActionMeta = (action) => {
+  if (action?.type === 'insert_echarts') {
+    return {
+      kind: 'chart',
+      icon: 'echarts',
+      label: t('node.ai.action.chart'),
+    }
   }
-  return attrs.value.actions
-    .map((action) => getActionPreviewText(action))
-    .filter(Boolean)
-    .join('\n\n')
+  if (action?.type === 'patch') {
+    return {
+      kind: 'rewrite',
+      icon: 'ai',
+      label: t('node.ai.action.rewrite'),
+    }
+  }
+  if (action?.type === 'insert_math') {
+    return {
+      kind: 'math',
+      icon: 'math',
+      label: t('node.ai.action.math'),
+    }
+  }
+  if (action?.type === 'insert_mermaid') {
+    return {
+      kind: 'mermaid',
+      icon: 'mermaid',
+      label: t('node.ai.action.mermaid'),
+    }
+  }
+  if (action?.type === 'insert_diagrams') {
+    return {
+      kind: 'flowchart',
+      icon: 'diagrams',
+      label: t('node.ai.action.flowchart'),
+    }
+  }
+  return {
+    kind: 'other',
+    icon: 'file',
+    label: t('node.ai.action.other'),
+  }
+}
+
+const resultGroups = computed(() => {
+  const groups = []
+  const response = `${attrs.value.response || ''}`.trim()
+  if (response) {
+    groups.push({
+      key: 'response',
+      kind: 'response',
+      icon: 'ai',
+      label: t('node.ai.response'),
+      text: response,
+    })
+  }
+
+  const actions = Array.isArray(attrs.value.actions) ? attrs.value.actions : []
+  actions.forEach((action, index) => {
+    const preview =
+      getActionPreviewText(action) || toPreviewText(JSON.stringify(action ?? {}))
+    if (!preview) {
+      return
+    }
+    groups.push({
+      key: `${action?.type || 'action'}-${index}`,
+      ...getActionMeta(action),
+      text: preview,
+    })
+  })
+
+  return groups
 })
 const statusLabel = computed(() => {
   if (isThinking.value) {
@@ -479,18 +437,6 @@ const inputPlaceholder = computed(() => {
 const uploadButtonText = computed(() => {
   return locale.value === 'zh-CN' ? '上传文件' : 'Upload files'
 })
-const addContextLabel = computed(() => {
-  return locale.value === 'zh-CN' ? '添加上下文' : 'Add context'
-})
-const contextScopeLabel = computed(() => {
-  return attrs.value.selectionRange?.empty === false
-    ? locale.value === 'zh-CN'
-      ? '当前选区'
-      : 'Current selection'
-    : locale.value === 'zh-CN'
-      ? '当前文档'
-      : 'Current document'
-})
 const canSubmit = computed(() => {
   return (
     !!localPrompt.value.trim() &&
@@ -500,14 +446,6 @@ const canSubmit = computed(() => {
     canUseAiChat(aiOptions.value)
   )
 })
-const isComposerMode = computed(() => {
-  return (
-    statusName.value === 'idle' &&
-    !attrs.value.response &&
-    !attrs.value.error &&
-    (!Array.isArray(attrs.value.actions) || attrs.value.actions.length === 0)
-  )
-})
 const showDecisionActions = computed(() => {
   return (
     statusName.value === 'done' &&
@@ -515,45 +453,24 @@ const showDecisionActions = computed(() => {
     attrs.value.actions.length > 0
   )
 })
-
-const actionLabels = computed(() => {
-  if (!Array.isArray(attrs.value.actions)) {
-    return []
-  }
-  return attrs.value.actions.map((action, index) => {
-    let label = t('node.ai.action.other')
-    if (action?.type === 'insert_echarts') {
-      label = t('node.ai.action.chart')
-    } else if (action?.type === 'patch') {
-      label = t('node.ai.action.rewrite')
-    } else if (action?.type === 'insert_math') {
-      label = t('node.ai.action.math')
-    } else if (action?.type === 'insert_mermaid') {
-      label = t('node.ai.action.mermaid')
-    } else if (action?.type === 'insert_diagrams') {
-      label = t('node.ai.action.flowchart')
-    }
-    return {
-      key: `${action?.type || 'action'}-${index}`,
-      label,
-    }
-  })
+const showCancelAction = computed(() => {
+  return (
+    !isReadonly.value &&
+    (
+      !!localPrompt.value.trim() ||
+      attachments.value.length > 0 ||
+      statusName.value !== 'idle' ||
+      resultGroups.value.length > 0
+    )
+  )
 })
-
-const createdAtText = computed(() => {
-  if (!attrs.value.createdAt) {
-    return ''
-  }
-  const date = new Date(attrs.value.createdAt)
-  if (Number.isNaN(date.getTime())) {
-    return ''
-  }
-  return date.toLocaleString(locale.value === 'zh-CN' ? 'zh-CN' : 'en-US', {
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-  })
+const cancelLabel = computed(() => {
+  return showDecisionActions.value
+    ? t('node.ai.apply.cancel')
+    : t('node.ai.discard')
+})
+const closeNodeLabel = computed(() => {
+  return locale.value === 'zh-CN' ? '关闭 AI 节点' : 'Close AI node'
 })
 
 const nodeStyle = computed(() => {
@@ -595,7 +512,7 @@ const handleContainerClick = (event) => {
   ) {
     return
   }
-  if (isComposerMode.value) {
+  if (!isInteractionLocked.value) {
     focusPromptInput()
     return
   }
@@ -782,38 +699,64 @@ watch(
 .umo-node-view {
   .umo-node-ai {
     width: min(100%, 760px);
+    position: relative;
     background:
-      linear-gradient(180deg, rgba(37, 99, 235, 0.03), rgba(37, 99, 235, 0)),
-      var(--umo-color-white);
-    border: solid 1px rgba(37, 99, 235, 0.16);
+      linear-gradient(180deg, rgba(37, 99, 235, 0.035), rgba(37, 99, 235, 0.01))
+        padding-box,
+      linear-gradient(135deg, rgba(37, 99, 235, 0.18), rgba(37, 99, 235, 0.08))
+        border-box;
+    border: solid 1px transparent;
     border-radius: 14px;
     padding: 16px;
     box-sizing: border-box;
+    transition:
+      box-shadow 0.2s ease,
+      background-position 0.2s ease,
+      border-color 0.2s ease;
+    box-shadow: 0 12px 30px rgba(15, 23, 42, 0.04);
 
-    &.is-error {
-      border-color: rgba(214, 48, 49, 0.18);
+    &.is-thinking {
       background:
-        linear-gradient(180deg, rgba(214, 48, 49, 0.04), rgba(214, 48, 49, 0)),
-        var(--umo-color-white);
+        linear-gradient(
+            180deg,
+            rgba(37, 99, 235, 0.05),
+            rgba(56, 189, 248, 0.015)
+          )
+          padding-box,
+        linear-gradient(
+            110deg,
+            rgba(37, 99, 235, 0.18),
+            rgba(56, 189, 248, 0.95),
+            rgba(37, 99, 235, 0.18)
+          )
+          border-box;
+      background-size:
+        100% 100%,
+        240% 100%;
+      animation: ai-border-flow 2.2s linear infinite;
+      box-shadow: 0 14px 36px rgba(37, 99, 235, 0.1);
     }
 
-    &.is-compact {
-      padding: 7px;
-      border-color: rgba(37, 99, 235, 0.26);
-      box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.08);
+    &.is-error {
+      background:
+        linear-gradient(180deg, rgba(214, 48, 49, 0.045), rgba(214, 48, 49, 0.01))
+          padding-box,
+        linear-gradient(135deg, rgba(214, 48, 49, 0.2), rgba(214, 48, 49, 0.08))
+          border-box;
+      box-shadow: 0 14px 34px rgba(214, 48, 49, 0.08);
     }
   }
 
   .umo-node-ai-composer {
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: 10px;
   }
 
   .umo-node-ai-composer-chips {
     display: flex;
     flex-wrap: wrap;
-    gap: 5px;
+    gap: 6px;
   }
 
   .umo-node-ai-chip {
@@ -825,11 +768,16 @@ watch(
     height: 24px;
     border-radius: 7px;
     border: 1px solid rgba(15, 23, 42, 0.12);
-    background-color: #fff;
+    background-color: rgba(255, 255, 255, 0.88);
     color: var(--umo-text-color);
     box-sizing: border-box;
     font-size: 12px;
     line-height: 1;
+    backdrop-filter: blur(8px);
+    transition:
+      border-color 0.2s ease,
+      background-color 0.2s ease,
+      color 0.2s ease;
 
     .umo-icon {
       flex: none;
@@ -839,11 +787,43 @@ watch(
 
     &.is-action {
       cursor: pointer;
+
+      &:hover:not(:disabled) {
+        border-color: rgba(37, 99, 235, 0.22);
+        background-color: rgba(37, 99, 235, 0.06);
+        color: var(--umo-primary-color);
+      }
     }
 
     &.is-static,
     &.is-attachment {
       max-width: 100%;
+    }
+
+    &.is-status {
+      border-color: rgba(37, 99, 235, 0.14);
+      background-color: rgba(37, 99, 235, 0.06);
+      color: var(--umo-primary-color);
+    }
+
+    &.is-status.is-thinking {
+      border-color: rgba(56, 189, 248, 0.24);
+      background-color: rgba(56, 189, 248, 0.1);
+      color: #0369a1;
+
+      .umo-icon {
+        animation: ai-spin 1s linear infinite;
+      }
+    }
+
+    &.is-status.is-error {
+      border-color: rgba(214, 48, 49, 0.22);
+      background-color: rgba(214, 48, 49, 0.08);
+      color: var(--umo-error-color);
+    }
+
+    &.is-attachment {
+      border-color: rgba(15, 23, 42, 0.08);
     }
 
     &:disabled {
@@ -884,6 +864,7 @@ watch(
       border: none;
       box-shadow: none;
       background: transparent;
+      border-radius: 12px;
     }
 
     :deep(.t-textarea__inner),
@@ -891,26 +872,153 @@ watch(
     :deep(textarea) {
       border: none;
       box-shadow: none;
-      padding: 6px 1px 0;
+      padding: 6px 2px 0;
       min-height: 120px;
       background: transparent;
       font-size: 14px;
       line-height: 1.7;
       resize: none;
+      color: var(--umo-text-color);
     }
+
+    :deep(textarea[readonly]) {
+      cursor: default;
+    }
+
+    :deep(textarea::placeholder) {
+      color: var(--umo-text-color-light);
+    }
+  }
+
+  .umo-node-ai-result-group {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 12px;
+    border-radius: 12px;
+    background:
+      linear-gradient(180deg, rgba(37, 99, 235, 0.045), rgba(37, 99, 235, 0.012)),
+      rgba(255, 255, 255, 0.72);
+    border: 1px solid rgba(37, 99, 235, 0.08);
+  }
+
+  .umo-node-ai-result-group-title {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--umo-text-color-light);
+    letter-spacing: 0.02em;
+  }
+
+  .umo-node-ai-result-list {
+    display: grid;
+    gap: 10px;
+  }
+
+  .umo-node-ai-result-card {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 12px;
+    border-radius: 12px;
+    background-color: rgba(255, 255, 255, 0.92);
+    border: 1px solid rgba(15, 23, 42, 0.08);
+    box-shadow: 0 8px 18px rgba(15, 23, 42, 0.03);
+
+    &.is-response {
+      border-color: rgba(37, 99, 235, 0.14);
+    }
+
+    &.is-rewrite {
+      border-color: rgba(37, 99, 235, 0.14);
+    }
+
+    &.is-chart {
+      border-color: rgba(14, 165, 233, 0.16);
+    }
+
+    &.is-math {
+      border-color: rgba(16, 185, 129, 0.18);
+    }
+
+    &.is-mermaid,
+    &.is-flowchart {
+      border-color: rgba(249, 115, 22, 0.18);
+    }
+  }
+
+  .umo-node-ai-result-card-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  .umo-node-ai-result-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+    max-width: 100%;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    line-height: 1;
+    border: 1px solid transparent;
+    background-color: rgba(15, 23, 42, 0.05);
+    color: var(--umo-text-color-light);
+
+    &.is-response,
+    &.is-rewrite {
+      background-color: rgba(37, 99, 235, 0.08);
+      border-color: rgba(37, 99, 235, 0.14);
+      color: var(--umo-primary-color);
+    }
+
+    &.is-chart {
+      background-color: rgba(14, 165, 233, 0.08);
+      border-color: rgba(14, 165, 233, 0.14);
+      color: #0284c7;
+    }
+
+    &.is-math {
+      background-color: rgba(16, 185, 129, 0.08);
+      border-color: rgba(16, 185, 129, 0.14);
+      color: #047857;
+    }
+
+    &.is-mermaid,
+    &.is-flowchart {
+      background-color: rgba(249, 115, 22, 0.09);
+      border-color: rgba(249, 115, 22, 0.15);
+      color: #c2410c;
+    }
+  }
+
+  .umo-node-ai-result-card-body {
+    font-size: 13px;
+    line-height: 1.75;
+    color: var(--umo-text-color);
+    white-space: pre-wrap;
+    word-break: break-word;
   }
 
   .umo-node-ai-composer-footer {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 6px;
+    gap: 8px;
   }
 
   .umo-node-ai-composer-tools {
     display: flex;
     align-items: center;
-    gap: 3px;
+    gap: 4px;
+  }
+
+  .umo-node-ai-footer-actions {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
   }
 
   .umo-node-ai-icon-button,
@@ -926,6 +1034,7 @@ watch(
     background: transparent;
     color: var(--umo-text-color);
     cursor: pointer;
+    flex: none;
     transition:
       background-color 0.2s ease,
       color 0.2s ease,
@@ -942,112 +1051,29 @@ watch(
     }
   }
 
+  .umo-node-ai-icon-button.is-decision {
+    background-color: rgba(15, 23, 42, 0.035);
+  }
+
   .umo-node-ai-send {
     width: 28px;
     height: 28px;
-    background-color: #8b8cf8;
+    background-color: var(--umo-primary-color);
     color: #fff;
-
-    .umo-icon {
-      transform: rotate(180deg);
-    }
+    box-shadow: 0 8px 18px rgba(37, 99, 235, 0.18);
 
     &:hover:not(:disabled) {
-      background-color: #7477f6;
       color: #fff;
+      opacity: 0.92;
     }
 
     &.is-disabled {
-      background-color: rgba(139, 140, 248, 0.4);
+      background-color: rgba(37, 99, 235, 0.36);
       color: rgba(255, 255, 255, 0.86);
     }
-  }
 
-  .umo-node-ai-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-  }
-
-  .umo-node-ai-title {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    color: var(--umo-text-color);
-    font-size: 14px;
-    font-weight: 600;
-
-    .umo-icon {
-      font-size: 16px;
-      color: var(--umo-primary-color);
-    }
-  }
-
-  .umo-node-ai-status {
-    padding: 4px 10px;
-    border-radius: 999px;
-    font-size: 12px;
-    line-height: 1;
-    background-color: rgba(100, 116, 139, 0.1);
-    color: #475569;
-
-    &.is-thinking {
-      background-color: rgba(245, 158, 11, 0.12);
-      color: #c27a00;
-    }
-
-    &.is-done {
-      background-color: rgba(37, 99, 235, 0.08);
-      color: var(--umo-primary-color);
-    }
-
-    &.is-error {
-      background-color: rgba(214, 48, 49, 0.1);
-      color: var(--umo-error-color);
-    }
-  }
-
-  .umo-node-ai-time {
-    margin-top: 8px;
-    font-size: 12px;
-    color: var(--umo-text-color-light);
-  }
-
-  .umo-node-ai-section {
-    margin-top: 14px;
-  }
-
-  .umo-node-ai-label {
-    font-size: 12px;
-    font-weight: 600;
-    color: var(--umo-text-color-light);
-    margin-bottom: 6px;
-  }
-
-  .umo-node-ai-text {
-    font-size: 13px;
-    line-height: 1.7;
-    color: var(--umo-text-color);
-    white-space: pre-wrap;
-    word-break: break-word;
-
-    &.is-context {
-      max-height: 140px;
-      overflow: auto;
-      padding: 10px 12px;
-      border-radius: 12px;
-      background-color: rgba(0, 0, 0, 0.03);
-    }
-
-    &.is-empty {
-      color: var(--umo-text-color-light);
-    }
-  }
-
-  .umo-node-ai-input {
-    :deep(textarea) {
-      line-height: 1.7;
+    &.is-loading:disabled {
+      opacity: 1;
     }
   }
 
@@ -1055,100 +1081,7 @@ watch(
     display: none;
   }
 
-  .umo-node-ai-upload {
-    margin-top: 10px;
-  }
-
-  .umo-node-ai-attachments {
-    margin-top: 10px;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    max-height: 180px;
-    overflow: auto;
-  }
-
-  .umo-node-ai-attachment {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 10px 12px;
-    border-radius: 12px;
-    background-color: rgba(0, 0, 0, 0.03);
-    border: solid 1px rgba(0, 0, 0, 0.04);
-  }
-
-  .umo-node-ai-attachment-main {
-    flex: 1;
-    min-width: 0;
-  }
-
-  .umo-node-ai-attachment-name {
-    font-size: 13px;
-    line-height: 1.4;
-    color: var(--umo-text-color);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  .umo-node-ai-attachment-meta {
-    margin-top: 4px;
-    font-size: 12px;
-    color: var(--umo-text-color-light);
-  }
-
-  .umo-node-ai-attachment-remove {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 28px;
-    height: 28px;
-    border: none;
-    border-radius: 999px;
-    padding: 0;
-    background-color: transparent;
-    color: var(--umo-text-color-light);
-    cursor: pointer;
-
-    &:hover {
-      background-color: rgba(0, 0, 0, 0.05);
-      color: var(--umo-text-color);
-    }
-  }
-
-  .umo-node-ai-toolbar {
-    margin-top: 12px;
-    display: flex;
-    gap: 8px;
-  }
-
-  .umo-node-ai-preview {
-    margin-top: 14px;
-    padding: 12px;
-    border-radius: 12px;
-    background:
-      linear-gradient(180deg, rgba(37, 99, 235, 0.04), rgba(37, 99, 235, 0)),
-      rgba(0, 0, 0, 0.02);
-  }
-
-  .umo-node-ai-actions {
-    margin-top: 12px;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-  }
-
-  .umo-node-ai-action {
-    padding: 4px 10px;
-    border-radius: 999px;
-    font-size: 12px;
-    color: var(--umo-primary-color);
-    background-color: rgba(37, 99, 235, 0.08);
-  }
-
   .umo-node-ai-error {
-    margin-top: 12px;
     padding: 10px 12px;
     border-radius: 10px;
     color: var(--umo-error-color);
@@ -1157,43 +1090,39 @@ watch(
     line-height: 1.6;
   }
 
-  .umo-node-ai-decisions {
-    margin-top: 16px;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
+  .umo-node-ai-send-icon {
+    transform: rotate(180deg);
   }
 
-  .umo-node-ai-skeleton {
-    display: grid;
-    gap: 8px;
-
-    .line {
-      display: block;
-      height: 10px;
-      border-radius: 999px;
-      background:
-        linear-gradient(90deg, rgba(37, 99, 235, 0.08), rgba(37, 99, 235, 0.18), rgba(37, 99, 235, 0.08));
-      background-size: 200% 100%;
-      animation: ai-skeleton 1.2s ease-in-out infinite;
-
-      &.short {
-        width: 38%;
-      }
-
-      &.medium {
-        width: 72%;
-      }
+  .umo-node-ai-send.is-loading {
+    .umo-node-ai-send-icon {
+      transform: none;
+      animation: ai-spin 1s linear infinite;
     }
   }
 }
 
-@keyframes ai-skeleton {
+@keyframes ai-border-flow {
   0% {
-    background-position: 200% 0;
+    background-position:
+      0 0,
+      200% 0;
   }
+
   100% {
-    background-position: -200% 0;
+    background-position:
+      0 0,
+      -40% 0;
+  }
+}
+
+@keyframes ai-spin {
+  0% {
+    transform: rotate(0deg);
+  }
+
+  100% {
+    transform: rotate(360deg);
   }
 }
 </style>

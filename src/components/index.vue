@@ -860,18 +860,24 @@ const getImage = async (format = 'blob') => {
 const getText = () => getContent('text')
 const getHTML = () => getContent('html')
 const getJSON = () => getContent('json')
-const exportDocx = async () => {
+const exportDocx = async (customOptions = {}) => {
   if (!editor.value) {
     throw new Error('editor is not ready!')
   }
 
+  const pageOptions = {
+    ...page.value,
+    ...(customOptions.page || {}),
+    size: customOptions.page?.size || page.value?.size,
+    margin: customOptions.page?.margin || page.value?.margin,
+  }
   const exportOptions = {
-    title: options.value.document?.title,
-    page: page.value,
+    ...customOptions,
+    title: customOptions.title || options.value.document?.title,
+    page: pageOptions,
   }
 
   const getBlob = editor.value.storage?.docxExport?.getBlob
-  console.log(editor.value.getJSON())
   if (typeof getBlob === 'function') {
     try {
       return await getBlob(exportOptions)

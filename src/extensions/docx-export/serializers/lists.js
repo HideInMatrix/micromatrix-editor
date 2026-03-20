@@ -98,6 +98,7 @@ export const createListSerializers = (runtime) => {
           await functions.createParagraph(child, {
             ...createListParagraphOptions(listState),
             prefixChildren: prefixChildren.length ? prefixChildren : undefined,
+            useDefaultIndent: false,
           }),
         )
         prefixChildren.length = 0

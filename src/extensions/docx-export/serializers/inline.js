@@ -1,10 +1,12 @@
 export const createInlineSerializers = (runtime) => {
   const { context, helpers } = runtime
 
-  const createTextRun = (options = {}) => {
+  const createTextRun = (options = {}, baseOptions = {}) => {
     return new context.docx.TextRun({
       color: context.defaultTextColor,
+      ...(context.defaultFont ? { font: context.defaultFont } : {}),
       size: context.defaultFontSize,
+      ...baseOptions,
       ...options,
     })
   }
@@ -20,10 +22,12 @@ export const createInlineSerializers = (runtime) => {
     return marks.filter((mark) => mark?.type !== 'bookmark')
   }
 
-  const mergeRunOptionsFromMarks = (marks = []) => {
+  const mergeRunOptionsFromMarks = (marks = [], baseOptions = {}) => {
     const options = {
       color: context.defaultTextColor,
+      ...(context.defaultFont ? { font: context.defaultFont } : {}),
       size: context.defaultFontSize,
+      ...baseOptions,
     }
     let link = null
 
@@ -108,13 +112,17 @@ export const createInlineSerializers = (runtime) => {
     })
   }
 
-  const createInlineText = async (node, marks = node?.marks) => {
+  const createInlineText = async (
+    node,
+    marks = node?.marks,
+    baseOptions = {},
+  ) => {
     const text = node?.text || ''
     if (!text) {
       return []
     }
 
-    const { link, options } = mergeRunOptionsFromMarks(marks)
+    const { link, options } = mergeRunOptionsFromMarks(marks, baseOptions)
     const run = createTextRun({
       text,
       ...options,
@@ -283,7 +291,7 @@ export const createInlineSerializers = (runtime) => {
         ]
   }
 
-  const createInlineAtomRuns = async (node) => {
+  const createInlineAtomRuns = async (node, baseOptions = {}) => {
     switch (node?.type) {
       case 'inlineImage':
         return await createImageRun(node)
@@ -300,7 +308,7 @@ export const createInlineSerializers = (runtime) => {
           createTextRun({
             text: `[${node?.attrs?.referenceNumber || '?'}]`,
             superScript: true,
-          }),
+          }, baseOptions),
         ]
       }
       case 'mention':
@@ -308,10 +316,10 @@ export const createInlineSerializers = (runtime) => {
           createTextRun({
             text: `@${node?.attrs?.label || node?.attrs?.id || ''}`,
             color: '0563C1',
-          }),
+          }, baseOptions),
         ]
       case 'datetime':
-        return [createTextRun({ text: node?.attrs?.text || '' })]
+        return [createTextRun({ text: node?.attrs?.text || '' }, baseOptions)]
       case 'tag':
         return [
           createTextRun({
@@ -324,7 +332,7 @@ export const createInlineSerializers = (runtime) => {
                   fill: helpers.parseColorToHex(node?.attrs?.backgroundColor),
                 }
               : undefined,
-          }),
+          }, baseOptions),
         ]
       case 'optionBox':
         return createOptionBoxRuns(node)
@@ -332,12 +340,12 @@ export const createInlineSerializers = (runtime) => {
         const text =
           helpers.pickFirstText(node, ['text', 'label', 'name', 'content']) ||
           helpers.getNodeText(node)
-        return text ? [createTextRun({ text })] : []
+        return text ? [createTextRun({ text }, baseOptions)] : []
       }
     }
   }
 
-  const serializeInlineNodes = async (nodes) => {
+  const serializeInlineNodes = async (nodes, baseOptions = {}) => {
     const children = []
     let activeBookmarkName = null
     let activeBookmarkChildren = []
@@ -373,6 +381,7 @@ export const createInlineSerializers = (runtime) => {
         const childrenForNode = await createInlineText(
           node,
           stripBookmarkMarks(node.marks),
+          baseOptions,
         )
         if (!bookmarkName) {
           children.push(...childrenForNode)
@@ -387,11 +396,11 @@ export const createInlineSerializers = (runtime) => {
       flushBookmark()
 
       if (node.type === 'hardBreak') {
-        children.push(createTextRun({ break: 1 }))
+        children.push(createTextRun({ break: 1 }, baseOptions))
         continue
       }
 
-      children.push(...(await createInlineAtomRuns(node)))
+      children.push(...(await createInlineAtomRuns(node, baseOptions)))
     }
 
     flushBookmark()
@@ -420,12 +429,12 @@ export const createInlineSerializers = (runtime) => {
   const createParagraph = async (node, extras = {}) => {
     const children = [
       ...helpers.ensureArray(extras.prefixChildren),
-      ...(await serializeInlineNodes(node?.content)),
+      ...(await serializeInlineNodes(node?.content, extras.runDefaults)),
       ...helpers.ensureArray(extras.suffixChildren),
     ]
 
     if (children.length === 0) {
-      children.push(createTextRun({ text: '' }))
+      children.push(createTextRun({ text: '' }, extras.runDefaults))
     }
 
     const bookmarkId =
@@ -441,6 +450,9 @@ export const createInlineSerializers = (runtime) => {
         : children
 
     const spacing = {
+      ...(extras.useDefaultSpacing === false
+        ? {}
+        : context.defaultParagraphSpacing || {}),
       ...helpers.getParagraphSpacing(node?.attrs, context.docx.LineRuleType),
       ...extras.spacing,
     }
@@ -464,7 +476,15 @@ export const createInlineSerializers = (runtime) => {
           ? true
           : undefined,
       spacing: Object.keys(spacing).length > 0 ? spacing : undefined,
-      indent: getParagraphIndent(node, extras),
+      indent: getParagraphIndent(node, {
+        ...extras,
+        indent: {
+          ...(extras.useDefaultIndent === false
+            ? {}
+            : context.defaultParagraphIndent || {}),
+          ...(extras.indent || {}),
+        },
+      }),
       border: extras.border,
       shading: extras.shading,
       bullet: extras.bullet,
