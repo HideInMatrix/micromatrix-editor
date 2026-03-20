@@ -58,14 +58,59 @@ let maxWidth = $ref(0)
 let selected = $ref(false)
 let chart = null
 let chartOption = $ref(null)
+let resizeObserver = null
+let widthSyncFrame = 0
+
+const MAX_WIDTH_SYNC_ATTEMPTS = 12
+
+const getContainerWidth = () => {
+  return Number(containerRef.value?.$el?.offsetWidth || 0)
+}
+
+const scheduleWidthSync = (attempt = 0) => {
+  if (widthSyncFrame) {
+    cancelAnimationFrame(widthSyncFrame)
+  }
+
+  widthSyncFrame = requestAnimationFrame(() => {
+    widthSyncFrame = 0
+    syncContainerWidth(attempt)
+  })
+}
+
+const syncContainerWidth = (attempt = 0) => {
+  const nextWidth = getContainerWidth()
+
+  if (nextWidth <= 0) {
+    if (attempt < MAX_WIDTH_SYNC_ATTEMPTS) {
+      scheduleWidthSync(attempt + 1)
+    }
+    return
+  }
+
+  maxWidth = nextWidth
+
+  if (attrs.width === null || Number(attrs.width) <= 0) {
+    updateAttributes({ width: nextWidth })
+  }
+
+  if (chart !== null) {
+    chart.resize()
+  }
+}
 
 // 加载数据
 onMounted(async () => {
   await nextTick()
-  maxWidth = containerRef.value?.$el.offsetWidth
-  if (attrs.width === null) {
-    updateAttributes({ width: maxWidth })
+
+  if (typeof ResizeObserver === 'function' && containerRef.value?.$el) {
+    resizeObserver = new ResizeObserver(() => {
+      syncContainerWidth()
+    })
+    resizeObserver.observe(containerRef.value.$el)
   }
+
+  syncContainerWidth()
   await loadData()
 })
 
@@ -83,17 +128,24 @@ const nodeStyle = $computed(() => {
   }
 })
 const onResize = ({ width, height }) => {
+  const nextWidth = Number(width || 0)
+  const nextHeight = Number(height || 0)
+
   updateAttributes({
-    width: Number(width.toFixed(2)),
-    height: Number(height.toFixed(2)),
+    width: Number(nextWidth.toFixed(2)),
+    height: Number(nextHeight.toFixed(2)),
   })
   if (chart !== null) {
     chart.resize()
   }
 }
 
-// onBeforeUnmount(() => {
-// })
+onBeforeUnmount(() => {
+  if (widthSyncFrame) {
+    cancelAnimationFrame(widthSyncFrame)
+  }
+  resizeObserver?.disconnect()
+})
 
 onClickOutside(containerRef, () => {
   selected = false
@@ -147,12 +199,14 @@ const loadData = async () => {
           chart = echarts.init(document.getElementById(`chart-${id}`))
           chart.setOption(resOptions)
           chartOption = resOptions
+          syncContainerWidth()
         }
       }
     } else if (chartOptions !== null) {
       chart = echarts.init(document.getElementById(`chart-${id}`))
       chart.setOption(chartOptions)
       chartOption = chartOptions
+      syncContainerWidth()
     }
   }
 }

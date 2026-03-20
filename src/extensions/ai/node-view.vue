@@ -1,129 +1,260 @@
 <template>
-  <node-view-wrapper class="umo-node-view" :style="nodeStyle">
+  <node-view-wrapper class="umo-node-view" :style="nodeStyle" style="min-width: 100%;">
     <div
       class="umo-node-container umo-node-ai umo-select-outline"
       :class="{
         'umo-hover-shadow': !options.document?.readOnly,
         'is-thinking': isThinking,
         'is-error': isError,
+        'is-compact': isComposerMode,
       }"
       @click="handleContainerClick"
     >
-      <div class="umo-node-ai-header">
-        <div class="umo-node-ai-title">
-          <icon name="ai" />
-          <span>{{ title }}</span>
+      <input
+        ref="fileInputRef"
+        class="umo-node-ai-file-input"
+        type="file"
+        :accept="attachmentAccept"
+        :multiple="allowMultipleAttachments"
+        :disabled="isReadonly || isThinking"
+        @change="handleAttachmentChange"
+      />
+
+      <template v-if="isComposerMode">
+        <div class="umo-node-ai-composer">
+          <div class="umo-node-ai-composer-chips">
+            <button
+              type="button"
+              class="umo-node-ai-chip is-action"
+              :disabled="isReadonly || isThinking"
+              @click.stop="openFilePicker"
+            >
+              <icon name="plus" size="14" />
+              <span>{{ addContextLabel }}</span>
+            </button>
+            <span class="umo-node-ai-chip is-static">
+              <icon name="file" size="14" />
+              <span>{{ contextScopeLabel }}</span>
+            </span>
+            <div
+              v-for="item in attachments"
+              :key="item.id"
+              class="umo-node-ai-chip is-attachment"
+              :title="item.name"
+            >
+              <icon name="file" size="14" />
+              <span class="umo-node-ai-chip-text">{{ item.name }}</span>
+              <button
+                type="button"
+                class="umo-node-ai-chip-remove"
+                :disabled="isThinking"
+                @click.stop="removeAttachment(item.id)"
+              >
+                <icon name="close" size="12" />
+              </button>
+            </div>
+          </div>
+
+          <t-textarea
+            ref="promptInputRef"
+            v-model="localPrompt"
+            class="umo-node-ai-composer-input"
+            :autosize="{ minRows: 4, maxRows: 8 }"
+            :maxlength="1000"
+            :disabled="isReadonly || isThinking"
+            :placeholder="inputPlaceholder"
+            @keydown="handlePromptKeydown"
+          />
+
+          <div class="umo-node-ai-composer-footer">
+            <div class="umo-node-ai-composer-tools">
+              <button
+                type="button"
+                class="umo-node-ai-icon-button"
+                :disabled="isReadonly || isThinking"
+                :title="uploadButtonText"
+                @click.stop="openFilePicker"
+              >
+                <icon name="file" size="16" />
+              </button>
+              <button
+                type="button"
+                class="umo-node-ai-icon-button"
+                :disabled="isThinking"
+                :title="t('node.ai.discard')"
+                @click.stop="discardNode"
+              >
+                <icon name="close" size="16" />
+              </button>
+            </div>
+
+            <button
+              type="button"
+              class="umo-node-ai-send"
+              :class="{ 'is-disabled': !canSubmit }"
+              :disabled="!canSubmit"
+              :title="submitLabel"
+              @click.stop="submitPrompt"
+            >
+              <icon name="arrow-down" size="16" />
+            </button>
+          </div>
         </div>
-        <div class="umo-node-ai-status" :class="`is-${statusName}`">
-          {{ statusLabel }}
+      </template>
+
+      <template v-else>
+        <div class="umo-node-ai-header">
+          <div class="umo-node-ai-title">
+            <icon name="ai" />
+            <span>{{ title }}</span>
+          </div>
+          <div class="umo-node-ai-status" :class="`is-${statusName}`">
+            {{ statusLabel }}
+          </div>
         </div>
-      </div>
 
-      <div v-if="createdAtText" class="umo-node-ai-time">
-        {{ createdAtText }}
-      </div>
-
-      <div class="umo-node-ai-section">
-        <div class="umo-node-ai-label">{{ t('node.ai.context') }}</div>
-        <div class="umo-node-ai-text is-context">{{ contextText }}</div>
-      </div>
-
-      <div class="umo-node-ai-section">
-        <div class="umo-node-ai-label">{{ t('node.ai.prompt') }}</div>
-        <t-textarea
-          ref="promptInputRef"
-          v-model="localPrompt"
-          class="umo-node-ai-input"
-          :autosize="{ minRows: 3, maxRows: 6 }"
-          :maxlength="1000"
-          :disabled="isReadonly || isThinking"
-          :placeholder="inputPlaceholder"
-          @keydown="handlePromptKeydown"
-        />
-      </div>
-
-      <div class="umo-node-ai-toolbar">
-        <t-button
-          theme="primary"
-          :loading="isThinking"
-          :disabled="!canSubmit"
-          @click="submitPrompt"
-        >
-          {{ submitLabel }}
-        </t-button>
-        <t-button
-          theme="default"
-          variant="base"
-          :disabled="isThinking"
-          @click="discardNode"
-        >
-          {{ t('node.ai.discard') }}
-        </t-button>
-      </div>
-
-      <div class="umo-node-ai-section">
-        <div class="umo-node-ai-label">{{ t('node.ai.response') }}</div>
-        <div v-if="isThinking" class="umo-node-ai-skeleton" aria-hidden="true">
-          <span class="line short"></span>
-          <span class="line"></span>
-          <span class="line"></span>
-          <span class="line medium"></span>
+        <div v-if="createdAtText" class="umo-node-ai-time">
+          {{ createdAtText }}
         </div>
-        <div v-else class="umo-node-ai-text" :class="{ 'is-empty': !responseText }">
-          {{ responseText || t('node.ai.emptyResponse') }}
+
+        <div class="umo-node-ai-section">
+          <div class="umo-node-ai-label">{{ t('node.ai.context') }}</div>
+          <div class="umo-node-ai-text is-context">{{ contextText }}</div>
         </div>
-      </div>
 
-      <div v-if="previewText" class="umo-node-ai-preview">
-        <div class="umo-node-ai-label">{{ t('node.ai.preview') }}</div>
-        <div class="umo-node-ai-text">{{ previewText }}</div>
-      </div>
+        <div class="umo-node-ai-section">
+          <div class="umo-node-ai-label">{{ t('node.ai.prompt') }}</div>
+          <t-textarea
+            ref="promptInputRef"
+            v-model="localPrompt"
+            class="umo-node-ai-input"
+            :autosize="{ minRows: 3, maxRows: 6 }"
+            :maxlength="1000"
+            :disabled="isReadonly || isThinking"
+            :placeholder="inputPlaceholder"
+            @keydown="handlePromptKeydown"
+          />
+          <div class="umo-node-ai-upload">
+            <t-button
+              theme="default"
+              variant="outline"
+              :disabled="isReadonly || isThinking"
+              @click="openFilePicker"
+            >
+              {{ uploadButtonText }}
+            </t-button>
+          </div>
+          <div v-if="attachments.length > 0" class="umo-node-ai-attachments">
+            <div
+              v-for="item in attachments"
+              :key="item.id"
+              class="umo-node-ai-attachment"
+            >
+              <div class="umo-node-ai-attachment-main">
+                <div class="umo-node-ai-attachment-name" :title="item.name">
+                  {{ item.name }}
+                </div>
+                <div class="umo-node-ai-attachment-meta">
+                  {{ formatAttachmentMeta(item) }}
+                </div>
+              </div>
+              <button
+                type="button"
+                class="umo-node-ai-attachment-remove"
+                :disabled="isThinking"
+                @click="removeAttachment(item.id)"
+              >
+                <icon name="close" size="14" />
+              </button>
+            </div>
+          </div>
+        </div>
 
-      <div v-if="actionLabels.length > 0" class="umo-node-ai-actions">
-        <span
-          v-for="item in actionLabels"
-          :key="item.key"
-          class="umo-node-ai-action"
-        >
-          {{ item.label }}
-        </span>
-      </div>
+        <div class="umo-node-ai-toolbar">
+          <t-button
+            theme="primary"
+            :loading="isThinking"
+            :disabled="!canSubmit"
+            @click="submitPrompt"
+          >
+            {{ submitLabel }}
+          </t-button>
+          <t-button
+            theme="default"
+            variant="base"
+            :disabled="isThinking"
+            @click="discardNode"
+          >
+            {{ t('node.ai.discard') }}
+          </t-button>
+        </div>
 
-      <div v-if="isError && attrs.error" class="umo-node-ai-error">
-        {{ attrs.error }}
-      </div>
+        <div class="umo-node-ai-section">
+          <div class="umo-node-ai-label">{{ t('node.ai.response') }}</div>
+          <div v-if="isThinking" class="umo-node-ai-skeleton" aria-hidden="true">
+            <span class="line short"></span>
+            <span class="line"></span>
+            <span class="line"></span>
+            <span class="line medium"></span>
+          </div>
+          <div v-else class="umo-node-ai-text" :class="{ 'is-empty': !responseText }">
+            {{ responseText || t('node.ai.emptyResponse') }}
+          </div>
+        </div>
 
-      <div v-if="showDecisionActions" class="umo-node-ai-decisions">
-        <t-button
-          theme="primary"
-          :disabled="isThinking"
-          @click="applyDecision('append')"
-        >
-          {{ t('node.ai.apply.append') }}
-        </t-button>
-        <t-button
-          theme="default"
-          :disabled="isThinking"
-          @click="applyDecision('replace')"
-        >
-          {{ t('node.ai.apply.replace') }}
-        </t-button>
-        <t-button
-          theme="default"
-          variant="base"
-          :disabled="isThinking"
-          @click="discardNode"
-        >
-          {{ t('node.ai.apply.cancel') }}
-        </t-button>
-      </div>
+        <div v-if="previewText" class="umo-node-ai-preview">
+          <div class="umo-node-ai-label">{{ t('node.ai.preview') }}</div>
+          <div class="umo-node-ai-text">{{ previewText }}</div>
+        </div>
+
+        <div v-if="actionLabels.length > 0" class="umo-node-ai-actions">
+          <span
+            v-for="item in actionLabels"
+            :key="item.key"
+            class="umo-node-ai-action"
+          >
+            {{ item.label }}
+          </span>
+        </div>
+
+        <div v-if="isError && attrs.error" class="umo-node-ai-error">
+          {{ attrs.error }}
+        </div>
+
+        <div v-if="showDecisionActions" class="umo-node-ai-decisions">
+          <t-button
+            theme="primary"
+            :disabled="isThinking"
+            @click="applyDecision('append')"
+          >
+            {{ t('node.ai.apply.append') }}
+          </t-button>
+          <t-button
+            theme="default"
+            :disabled="isThinking"
+            @click="applyDecision('replace')"
+          >
+            {{ t('node.ai.apply.replace') }}
+          </t-button>
+          <t-button
+            theme="default"
+            variant="base"
+            :disabled="isThinking"
+            @click="discardNode"
+          >
+            {{ t('node.ai.apply.cancel') }}
+          </t-button>
+        </div>
+      </template>
     </div>
   </node-view-wrapper>
 </template>
 
 <script setup>
+import prettyBytes from 'pretty-bytes'
 import { nodeViewProps, NodeViewWrapper } from '@tiptap/vue-3'
 
+import { useAiAttachments } from '@/composables/ai'
 import {
   applyAiActions,
   canUseAiChat,
@@ -145,6 +276,17 @@ const promptInputRef = ref(null)
 const attrs = computed(() => props.node.attrs)
 const aiOptions = computed(() => options.value.ai || {})
 const locale = computed(() => options.value.locale || 'zh-CN')
+const {
+  attachments,
+  fileInputRef,
+  accept: attachmentAccept,
+  multiple: allowMultipleAttachments,
+  handleFileChange: handleAttachmentChange,
+  openFilePicker,
+  removeAttachment,
+} = useAiAttachments({
+  aiOptions,
+})
 
 const nodeInsertTypes = new Set([
   'insert_echarts',
@@ -174,6 +316,20 @@ const toPreviewText = (value = '', limit = 280) => {
     return normalized
   }
   return `${normalized.slice(0, limit)}...`
+}
+
+const formatAttachmentMeta = (item) => {
+  const parts = []
+  if (item.type) {
+    parts.push(item.type)
+  }
+  if (Number.isFinite(item.size) && item.size > 0) {
+    parts.push(prettyBytes(item.size))
+  }
+  if (!parts.length) {
+    return locale.value === 'zh-CN' ? '待上传附件' : 'Pending attachment'
+  }
+  return parts.join(' / ')
 }
 
 const getPatchPreview = (action) => {
@@ -320,6 +476,21 @@ const inputPlaceholder = computed(() => {
   }
   return t('node.ai.placeholder')
 })
+const uploadButtonText = computed(() => {
+  return locale.value === 'zh-CN' ? '上传文件' : 'Upload files'
+})
+const addContextLabel = computed(() => {
+  return locale.value === 'zh-CN' ? '添加上下文' : 'Add context'
+})
+const contextScopeLabel = computed(() => {
+  return attrs.value.selectionRange?.empty === false
+    ? locale.value === 'zh-CN'
+      ? '当前选区'
+      : 'Current selection'
+    : locale.value === 'zh-CN'
+      ? '当前文档'
+      : 'Current document'
+})
 const canSubmit = computed(() => {
   return (
     !!localPrompt.value.trim() &&
@@ -327,6 +498,14 @@ const canSubmit = computed(() => {
     !isThinking.value &&
     aiOptions.value.enabled &&
     canUseAiChat(aiOptions.value)
+  )
+})
+const isComposerMode = computed(() => {
+  return (
+    statusName.value === 'idle' &&
+    !attrs.value.response &&
+    !attrs.value.error &&
+    (!Array.isArray(attrs.value.actions) || attrs.value.actions.length === 0)
   )
 })
 const showDecisionActions = computed(() => {
@@ -416,6 +595,10 @@ const handleContainerClick = (event) => {
   ) {
     return
   }
+  if (isComposerMode.value) {
+    focusPromptInput()
+    return
+  }
   editor.value?.commands.setNodeSelection(getPos())
 }
 
@@ -435,6 +618,7 @@ const buildPayload = (userPrompt) => {
       empty: true,
       text: '',
     },
+    attachments: attachments.value,
     block: attrs.value.block || null,
     page: page.value,
     editor: {
@@ -612,6 +796,171 @@ watch(
         linear-gradient(180deg, rgba(214, 48, 49, 0.04), rgba(214, 48, 49, 0)),
         var(--umo-color-white);
     }
+
+    &.is-compact {
+      padding: 7px;
+      border-color: rgba(37, 99, 235, 0.26);
+      box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.08);
+    }
+  }
+
+  .umo-node-ai-composer {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .umo-node-ai-composer-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+  }
+
+  .umo-node-ai-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    min-width: 0;
+    padding: 0 7px;
+    height: 24px;
+    border-radius: 7px;
+    border: 1px solid rgba(15, 23, 42, 0.12);
+    background-color: #fff;
+    color: var(--umo-text-color);
+    box-sizing: border-box;
+    font-size: 12px;
+    line-height: 1;
+
+    .umo-icon {
+      flex: none;
+      font-size: 12px;
+      color: #6b7280;
+    }
+
+    &.is-action {
+      cursor: pointer;
+    }
+
+    &.is-static,
+    &.is-attachment {
+      max-width: 100%;
+    }
+
+    &:disabled {
+      cursor: not-allowed;
+      opacity: 0.6;
+    }
+  }
+
+  .umo-node-ai-chip-text {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .umo-node-ai-chip-remove {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 12px;
+    height: 12px;
+    padding: 0;
+    border: none;
+    background: transparent;
+    color: #6b7280;
+    cursor: pointer;
+    border-radius: 999px;
+
+    &:hover {
+      background-color: rgba(0, 0, 0, 0.05);
+      color: var(--umo-text-color);
+    }
+  }
+
+  .umo-node-ai-composer-input {
+    :deep(.t-textarea),
+    :deep(.umo-textarea) {
+      border: none;
+      box-shadow: none;
+      background: transparent;
+    }
+
+    :deep(.t-textarea__inner),
+    :deep(.umo-textarea__inner),
+    :deep(textarea) {
+      border: none;
+      box-shadow: none;
+      padding: 6px 1px 0;
+      min-height: 120px;
+      background: transparent;
+      font-size: 14px;
+      line-height: 1.7;
+      resize: none;
+    }
+  }
+
+  .umo-node-ai-composer-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+  }
+
+  .umo-node-ai-composer-tools {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+  }
+
+  .umo-node-ai-icon-button,
+  .umo-node-ai-send {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    padding: 0;
+    border: none;
+    border-radius: 999px;
+    background: transparent;
+    color: var(--umo-text-color);
+    cursor: pointer;
+    transition:
+      background-color 0.2s ease,
+      color 0.2s ease,
+      opacity 0.2s ease;
+
+    &:hover:not(:disabled) {
+      background-color: rgba(37, 99, 235, 0.08);
+      color: var(--umo-primary-color);
+    }
+
+    &:disabled {
+      cursor: not-allowed;
+      opacity: 0.48;
+    }
+  }
+
+  .umo-node-ai-send {
+    width: 28px;
+    height: 28px;
+    background-color: #8b8cf8;
+    color: #fff;
+
+    .umo-icon {
+      transform: rotate(180deg);
+    }
+
+    &:hover:not(:disabled) {
+      background-color: #7477f6;
+      color: #fff;
+    }
+
+    &.is-disabled {
+      background-color: rgba(139, 140, 248, 0.4);
+      color: rgba(255, 255, 255, 0.86);
+    }
   }
 
   .umo-node-ai-header {
@@ -699,6 +1048,72 @@ watch(
   .umo-node-ai-input {
     :deep(textarea) {
       line-height: 1.7;
+    }
+  }
+
+  .umo-node-ai-file-input {
+    display: none;
+  }
+
+  .umo-node-ai-upload {
+    margin-top: 10px;
+  }
+
+  .umo-node-ai-attachments {
+    margin-top: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    max-height: 180px;
+    overflow: auto;
+  }
+
+  .umo-node-ai-attachment {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 12px;
+    border-radius: 12px;
+    background-color: rgba(0, 0, 0, 0.03);
+    border: solid 1px rgba(0, 0, 0, 0.04);
+  }
+
+  .umo-node-ai-attachment-main {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .umo-node-ai-attachment-name {
+    font-size: 13px;
+    line-height: 1.4;
+    color: var(--umo-text-color);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .umo-node-ai-attachment-meta {
+    margin-top: 4px;
+    font-size: 12px;
+    color: var(--umo-text-color-light);
+  }
+
+  .umo-node-ai-attachment-remove {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border: none;
+    border-radius: 999px;
+    padding: 0;
+    background-color: transparent;
+    color: var(--umo-text-color-light);
+    cursor: pointer;
+
+    &:hover {
+      background-color: rgba(0, 0, 0, 0.05);
+      color: var(--umo-text-color);
     }
   }
 

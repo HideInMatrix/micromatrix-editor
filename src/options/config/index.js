@@ -103,7 +103,7 @@ export default {
         'Tell me how you want the document changed. I will send your instruction together with the current selection or full-document context to AI, then write the result back into the editor.',
     },
     defaultScope: 'auto',
-    outputMode: 'sync',
+    outputMode: 'stream',
     autoApply: true,
     autoSave: false,
     showConfigTip: true,
@@ -111,6 +111,9 @@ export default {
     prompt: buildAiPrompt,
     system: buildAiSystemPrompt,
     maxOutputTokens: 12000,
+    accept:
+      'image/*,application/pdf,.csv,text/csv,.xls,.xlsx,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,.doc,.docx,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    multiple: true,
   },
   webPages: [
     {

@@ -18,6 +18,107 @@ const resolveValue = (value) => {
   return typeof value === 'function' ? value() : unref(value)
 }
 
+const isFileLike = (value) => {
+  return typeof File !== 'undefined' && value instanceof File
+}
+
+const createAttachmentId = () => {
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    return crypto.randomUUID()
+  }
+  return `ai-file-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
+}
+
+const normalizeAttachment = (item) => {
+  const file = isFileLike(item) ? item : isFileLike(item?.file) ? item.file : null
+  if (!file) {
+    return null
+  }
+  return {
+    id: item?.id || createAttachmentId(),
+    file,
+    name: item?.name || file.name || 'attachment',
+    type: item?.type || file.type || '',
+    size: Number.isFinite(item?.size) ? item.size : file.size || 0,
+    lastModified:
+      Number.isFinite(item?.lastModified) ?
+        item.lastModified
+      : file.lastModified || Date.now(),
+  }
+}
+
+const getAttachmentSignature = (item) => {
+  return [item.name, item.size, item.type, item.lastModified].join('::')
+}
+
+export const useAiAttachments = ({ aiOptions } = {}) => {
+  const attachments = ref([])
+  const fileInputRef = ref(null)
+  const resolvedAiOptions = computed(() => resolveValue(aiOptions) || {})
+  const accept = computed(() => resolvedAiOptions.value.accept || '')
+  const multiple = computed(() => resolvedAiOptions.value.multiple !== false)
+
+  const resetInputValue = () => {
+    if (fileInputRef.value) {
+      fileInputRef.value.value = ''
+    }
+  }
+
+  const addAttachments = (items = []) => {
+    const nextItems = items
+      .map((item) => normalizeAttachment(item))
+      .filter(Boolean)
+    if (!nextItems.length) {
+      resetInputValue()
+      return
+    }
+
+    const exists = new Set(attachments.value.map(getAttachmentSignature))
+    attachments.value = [
+      ...attachments.value,
+      ...nextItems.filter((item) => {
+        const signature = getAttachmentSignature(item)
+        if (exists.has(signature)) {
+          return false
+        }
+        exists.add(signature)
+        return true
+      }),
+    ]
+    resetInputValue()
+  }
+
+  const handleFileChange = (event) => {
+    addAttachments(Array.from(event?.target?.files || []))
+  }
+
+  const openFilePicker = () => {
+    fileInputRef.value?.click?.()
+  }
+
+  const removeAttachment = (attachmentId) => {
+    attachments.value = attachments.value.filter((item) => item.id !== attachmentId)
+    resetInputValue()
+  }
+
+  const clearAttachments = () => {
+    attachments.value = []
+    resetInputValue()
+  }
+
+  return {
+    attachments,
+    fileInputRef,
+    accept,
+    multiple,
+    addAttachments,
+    handleFileChange,
+    openFilePicker,
+    removeAttachment,
+    clearAttachments,
+  }
+}
+
 export const useAiSession = ({
   options,
   editor,

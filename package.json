@@ -11,14 +11,11 @@
     "richtext editor",
     "tiptap",
     "tiptap3",
-    "umo editor",
-    "umodoc editor",
     "vue editor",
     "vue3 editor",
     "web editor",
     "web office",
-    "word editor",
-    "wysiwyg editor"
+    "word editor"
   ],
   "homepage": "https://www.umodoc.com",
   "bugs": {

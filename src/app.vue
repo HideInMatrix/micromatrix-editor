@@ -48,7 +48,6 @@ const options = $ref({
     apiUrl:"/api/ai/stream",
     enabled: true,
     showConfigTip: false,
-    outputMode:"stream"
   },
   templates,
   cdnUrl: 'https://cdn.umodoc.com',

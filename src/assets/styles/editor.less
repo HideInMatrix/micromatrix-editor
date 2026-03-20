@@ -54,10 +54,14 @@
 
     >* {
       position: relative;
-      z-index: -1;
+      z-index: 0;
 
       +*:not(.umo-floating-node) {
         margin-top: var(--umo-content-node-bottom);
+      }
+
+      &.umo-node-focused {
+        z-index: -1 !important;
       }
 
       &.umo-node-focused,
@@ -653,6 +657,12 @@
         pointer-events: none;
 
       }
+    }
+
+    .tiptap-page-tail {
+      display: block;
+      width: 100%;
+      pointer-events: none;
     }
   }
 

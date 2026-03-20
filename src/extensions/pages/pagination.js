@@ -4,34 +4,24 @@ import { Decoration, DecorationSet } from '@tiptap/pm/view'
 import { clonePageFormat, resolvePageSettings, resolveTemplate } from './utils'
 
 const EPSILON = 0.5
+const PAGE_BREAK_NODE_NAME = 'pageBreak'
+const PAGINATION_WIDGET_ATTRIBUTE = 'data-tiptap-page-widget'
 
 const pagesPluginKey = new PluginKey('pages')
 
-const createPaginationContainer = () => {
-  const element = document.createElement('div')
-  element.id = 'pages'
-  element.className = 'ProseMirror-widget'
-  element.dataset.tiptapPagination = 'true'
-  element.contentEditable = 'false'
-  element.setAttribute('aria-hidden', 'true')
-  return element
-}
-
-const createDecorationSet = (doc) => {
-  return DecorationSet.create(doc, [
-    Decoration.widget(0, () => createPaginationContainer(), {
-      side: -1,
-      ignoreSelection: true,
-      key: 'tiptap-pages-root',
-    }),
-  ])
+const createEmptyPaginationState = () => {
+  return {
+    decorations: DecorationSet.empty,
+    signature: '',
+    pageCount: 1,
+  }
 }
 
 const getEditorChildren = (view) => {
   return Array.from(view.dom.children).filter((node) => {
     return (
       node instanceof HTMLElement &&
-      node.dataset?.tiptapPagination !== 'true' &&
+      node.getAttribute(PAGINATION_WIDGET_ATTRIBUTE) !== 'true' &&
       !node.classList.contains('ProseMirror-gapcursor')
     )
   })
@@ -46,51 +36,72 @@ const roundMetric = (value) => {
   return Number(value.toFixed(2))
 }
 
-const measurePaginationLayout = (view, container) => {
+const togglePaginationWidgets = (root, hidden) => {
+  const widgets = Array.from(
+    root.querySelectorAll(`[${PAGINATION_WIDGET_ATTRIBUTE}="true"]`),
+  )
+
+  widgets.forEach((widget) => {
+    if (!(widget instanceof HTMLElement)) {
+      return
+    }
+
+    if (hidden) {
+      widget.dataset.paginationDisplay = widget.style.display || ''
+      widget.style.display = 'none'
+      return
+    }
+
+    widget.style.display = widget.dataset.paginationDisplay || ''
+    delete widget.dataset.paginationDisplay
+  })
+}
+
+const measurePaginationLayout = (view) => {
   const root = view.dom
-  const previousDisplay = container?.style.display || ''
   const previousMinHeight = root.style.minHeight
 
-  if (container) {
-    container.style.display = 'none'
-  }
+  togglePaginationWidgets(root, true)
   root.style.minHeight = '0px'
 
   const children = getEditorChildren(view)
+  const blocks = []
   let naturalHeight = 0
+  let childIndex = 0
 
-  for (const child of children) {
+  view.state.doc.forEach((node, offset) => {
+    const child = children[childIndex]
+    childIndex += 1
+
+    if (!(child instanceof HTMLElement)) {
+      return
+    }
+
     const style = window.getComputedStyle(child)
-    const bottom =
-      child.offsetTop + child.offsetHeight + parseMargin(style.marginBottom)
+    const top = roundMetric(child.offsetTop)
+    const bottom = roundMetric(
+      child.offsetTop + child.offsetHeight + parseMargin(style.marginBottom),
+    )
+    const height = roundMetric(bottom - top)
+
     naturalHeight = Math.max(naturalHeight, bottom)
-  }
-
-  const manualBreakOffsets = Array.from(
-    root.querySelectorAll('[data-page-break="true"], .umo-page-break'),
-  )
-    .map((node) => {
-      if (!(node instanceof HTMLElement)) {
-        return null
-      }
-
-      const style = window.getComputedStyle(node)
-      return roundMetric(
-        node.offsetTop + node.offsetHeight + parseMargin(style.marginBottom),
-      )
+    blocks.push({
+      node,
+      pos: offset,
+      endPos: offset + node.nodeSize,
+      top,
+      bottom,
+      height,
+      forcedBreakAfter: node.type.name === PAGE_BREAK_NODE_NAME,
     })
-    .filter((value) => value && value > EPSILON)
-    .filter((value, index, values) => values.indexOf(value) === index)
-    .sort((left, right) => left - right)
+  })
 
   root.style.minHeight = previousMinHeight
-  if (container) {
-    container.style.display = previousDisplay
-  }
+  togglePaginationWidgets(root, false)
 
   return {
     naturalHeight,
-    manualBreakOffsets,
+    blocks,
   }
 }
 
@@ -118,44 +129,61 @@ const buildMetrics = (settings) => {
   }
 }
 
-const buildBreakOffsets = (naturalHeight, contentHeight, manualBreakOffsets) => {
-  const breakOffsets = []
-  let pageStart = 0
-  let manualBreakIndex = 0
-
-  while (true) {
-    while (
-      manualBreakIndex < manualBreakOffsets.length &&
-      manualBreakOffsets[manualBreakIndex] <= pageStart + EPSILON
-    ) {
-      manualBreakIndex += 1
+const buildPaginationModel = (blocks, contentHeight) => {
+  if (!blocks.length) {
+    return {
+      breaks: [],
+      tailHeight: 0,
+      pageCount: 1,
     }
-
-    const nextManualBreak = manualBreakOffsets[manualBreakIndex]
-    const automaticBreak = roundMetric(pageStart + contentHeight)
-
-    if (
-      Number.isFinite(nextManualBreak) &&
-      nextManualBreak <= automaticBreak + EPSILON
-    ) {
-      breakOffsets.push(nextManualBreak)
-      pageStart = nextManualBreak
-      manualBreakIndex += 1
-      continue
-    }
-
-    if (naturalHeight <= automaticBreak + EPSILON) {
-      break
-    }
-
-    breakOffsets.push(automaticBreak)
-    pageStart = automaticBreak
   }
 
-  return breakOffsets
+  const breaks = []
+  let currentPageTop = 0
+  let currentPageNumber = 1
+
+  blocks.forEach((block) => {
+    const pageUsage = block.bottom - currentPageTop
+    const canBreakBefore = block.top > currentPageTop + EPSILON
+
+    if (
+      !block.forcedBreakAfter &&
+      pageUsage > contentHeight + EPSILON &&
+      canBreakBefore
+    ) {
+      breaks.push({
+        pos: block.pos,
+        pageNumber: currentPageNumber,
+      })
+      currentPageNumber += 1
+      currentPageTop = block.top
+    }
+
+    if (block.forcedBreakAfter) {
+      breaks.push({
+        pos: block.endPos,
+        pageNumber: currentPageNumber,
+      })
+      currentPageNumber += 1
+      currentPageTop = block.bottom
+    }
+  })
+
+  const lastContentBottom = blocks[blocks.length - 1]?.bottom || 0
+  const lastPageUsedHeight = Math.max(0, lastContentBottom - currentPageTop)
+  const tailHeight =
+    currentPageNumber > 1
+      ? roundMetric(Math.max(0, contentHeight - lastPageUsedHeight))
+      : 0
+
+  return {
+    breaks,
+    tailHeight,
+    pageCount: Math.max(1, currentPageNumber),
+  }
 }
 
-const buildSignature = (settings, metrics, breakOffsets) => {
+const buildSignature = (settings, metrics, paginationModel) => {
   return JSON.stringify({
     pageFormat: clonePageFormat(settings.pageFormat),
     pageGap: settings.pageGap,
@@ -172,7 +200,11 @@ const buildSignature = (settings, metrics, breakOffsets) => {
         : settings.footer,
     contentHeight: Math.round(metrics.contentHeight),
     spacerHeight: Math.round(metrics.spacerHeight),
-    breakOffsets: breakOffsets.map((offset) => Math.round(offset * 100) / 100),
+    tailHeight: paginationModel.tailHeight,
+    breaks: paginationModel.breaks.map((item) => ({
+      pos: item.pos,
+      pageNumber: item.pageNumber,
+    })),
   })
 }
 
@@ -199,27 +231,15 @@ const createPageEdgeContent = (className, html, edge, metrics) => {
   return content
 }
 
-const createBreakElement = (
-  pageNumber,
-  totalPages,
-  settings,
-  metrics,
-  pageHeight,
-) => {
+const createBreakElement = (pageNumber, totalPages, settings, metrics) => {
   const pageBreak = document.createElement('div')
   pageBreak.className = 'tiptap-page-break'
   pageBreak.dataset.pageNumber = `${pageNumber}`
-
-  const page = document.createElement('div')
-  page.className = 'page'
-  page.dataset.pageNumber = `${pageNumber}`
-  page.style.position = 'relative'
-  page.style.float = 'left'
-  page.style.clear = 'both'
-  page.style.width = '0px'
-  page.style.height = '0px'
-  page.style.marginTop = `${pageHeight}px`
-  pageBreak.appendChild(page)
+  pageBreak.setAttribute(PAGINATION_WIDGET_ATTRIBUTE, 'true')
+  pageBreak.contentEditable = 'false'
+  pageBreak.setAttribute('aria-hidden', 'true')
+  pageBreak.style.display = 'block'
+  pageBreak.style.pointerEvents = 'none'
 
   const breaker = document.createElement('div')
   breaker.className = 'breaker'
@@ -227,8 +247,6 @@ const createBreakElement = (
   breaker.style.width = `calc(${metrics.pageWidth}px)`
   breaker.style.marginLeft = `-${metrics.marginLeft}px`
   breaker.style.position = 'relative'
-  breaker.style.float = 'left'
-  breaker.style.clear = 'both'
   breaker.style.left = '0px'
   breaker.style.right = '0px'
   breaker.style.zIndex = '2'
@@ -281,6 +299,54 @@ const createBreakElement = (
   return pageBreak
 }
 
+const createTailElement = (height) => {
+  const tail = document.createElement('div')
+  tail.className = 'tiptap-page-tail'
+  tail.setAttribute(PAGINATION_WIDGET_ATTRIBUTE, 'true')
+  tail.contentEditable = 'false'
+  tail.setAttribute('aria-hidden', 'true')
+  tail.style.display = 'block'
+  tail.style.height = `${height}px`
+  tail.style.pointerEvents = 'none'
+  return tail
+}
+
+const createDecorationSet = (doc, settings, metrics, paginationModel) => {
+  const decorations = paginationModel.breaks.map((item) => {
+    return Decoration.widget(
+      item.pos,
+      () =>
+        createBreakElement(
+          item.pageNumber,
+          paginationModel.pageCount,
+          settings,
+          metrics,
+        ),
+      {
+        side: -1,
+        ignoreSelection: true,
+        key: `tiptap-page-break-${item.pageNumber}-${item.pos}`,
+      },
+    )
+  })
+
+  if (paginationModel.tailHeight > EPSILON) {
+    decorations.push(
+      Decoration.widget(
+        doc.content.size,
+        () => createTailElement(paginationModel.tailHeight),
+        {
+          side: 1,
+          ignoreSelection: true,
+          key: `tiptap-page-tail-${paginationModel.tailHeight}`,
+        },
+      ),
+    )
+  }
+
+  return DecorationSet.create(doc, decorations)
+}
+
 class PagesView {
   constructor(view, extension) {
     this.view = view
@@ -314,10 +380,6 @@ class PagesView {
     this.schedule()
   }
 
-  getContainer() {
-    return this.view.dom.querySelector('#pages[data-tiptap-pagination="true"]')
-  }
-
   schedule() {
     if (this.frame) {
       cancelAnimationFrame(this.frame)
@@ -331,52 +393,46 @@ class PagesView {
 
   sync() {
     const root = this.view.dom
-    const container = this.getContainer()
     const settings = resolvePageSettings(this.extension)
 
     root.classList.toggle('tiptap-pages', Boolean(settings.enabled))
 
-    if (!settings.enabled || !container) {
+    if (!settings.enabled) {
       this.signature = ''
       this.pageFormatSignature = ''
       this.extension.storage.pageCount = 1
-      root.style.removeProperty('--page-max-height')
       root.style.removeProperty('--tiptap-page-break-background')
       root.style.removeProperty('min-height')
-      container?.replaceChildren()
+
+      const state = pagesPluginKey.getState(this.view.state)
+      if (state?.signature) {
+        this.view.dispatch(
+          this.view.state.tr.setMeta(pagesPluginKey, {
+            type: 'clear',
+          }),
+        )
+      }
       return
     }
 
     const metrics = buildMetrics(settings)
-    const { naturalHeight, manualBreakOffsets } = measurePaginationLayout(
-      this.view,
-      container,
-    )
-    const breakOffsets = buildBreakOffsets(
-      naturalHeight,
-      metrics.contentHeight,
-      manualBreakOffsets,
-    )
-    const pageCount = Math.max(1, breakOffsets.length + 1)
-    const nextSignature = buildSignature(settings, metrics, breakOffsets)
+    const { blocks } = measurePaginationLayout(this.view)
+    const paginationModel = buildPaginationModel(blocks, metrics.contentHeight)
+    const nextSignature = buildSignature(settings, metrics, paginationModel)
     const nextPageFormatSignature = JSON.stringify(settings.pageFormat)
 
-    root.style.setProperty('--page-max-height', `${metrics.contentHeight}px`)
     root.style.setProperty(
       '--tiptap-page-break-background',
       settings.pageBreakBackground,
     )
-    root.style.minHeight = `${Math.max(
-      metrics.contentHeight,
-      naturalHeight + breakOffsets.length * metrics.spacerHeight,
-    )}px`
+    root.style.removeProperty('min-height')
 
     if (nextPageFormatSignature !== this.pageFormatSignature) {
       this.pageFormatSignature = nextPageFormatSignature
       settings.onPageFormatChange?.(clonePageFormat(settings.pageFormat))
     }
 
-    this.extension.storage.pageCount = pageCount
+    this.extension.storage.pageCount = paginationModel.pageCount
 
     if (nextSignature === this.signature) {
       return
@@ -384,24 +440,16 @@ class PagesView {
 
     this.signature = nextSignature
 
-    const fragment = document.createDocumentFragment()
-    let previousBreakOffset = 0
-
-    breakOffsets.forEach((breakOffset, index) => {
-      const pageNumber = index + 1
-      fragment.appendChild(
-        createBreakElement(
-          pageNumber,
-          pageCount,
-          settings,
-          metrics,
-          breakOffset - previousBreakOffset,
-        ),
-      )
-      previousBreakOffset = breakOffset
-    })
-
-    container.replaceChildren(fragment)
+    this.view.dispatch(
+      this.view.state.tr.setMeta(pagesPluginKey, {
+        type: 'set',
+        signature: nextSignature,
+        pageCount: paginationModel.pageCount,
+        settings,
+        metrics,
+        paginationModel,
+      }),
+    )
   }
 
   destroy() {
@@ -410,7 +458,6 @@ class PagesView {
     }
     this.resizeObserver?.disconnect()
     this.view.dom.classList.remove('tiptap-pages')
-    this.view.dom.style.removeProperty('--page-max-height')
     this.view.dom.style.removeProperty('--tiptap-page-break-background')
     this.view.dom.style.removeProperty('min-height')
   }
@@ -420,19 +467,42 @@ const createPagesPlugin = (extension) => {
   return new Plugin({
     key: pagesPluginKey,
     state: {
-      init(_, state) {
-        return createDecorationSet(state.doc)
+      init() {
+        return createEmptyPaginationState()
       },
-      apply(tr, decorationSet) {
-        if (!tr.docChanged) {
-          return decorationSet
+      apply(tr, pluginState) {
+        const meta = tr.getMeta(pagesPluginKey)
+
+        if (meta?.type === 'clear') {
+          return createEmptyPaginationState()
         }
-        return decorationSet.map(tr.mapping, tr.doc)
+
+        if (meta?.type === 'set') {
+          return {
+            decorations: createDecorationSet(
+              tr.doc,
+              meta.settings,
+              meta.metrics,
+              meta.paginationModel,
+            ),
+            signature: meta.signature,
+            pageCount: meta.pageCount,
+          }
+        }
+
+        if (!tr.docChanged) {
+          return pluginState
+        }
+
+        return {
+          ...pluginState,
+          decorations: pluginState.decorations.map(tr.mapping, tr.doc),
+        }
       },
     },
     props: {
       decorations(state) {
-        return pagesPluginKey.getState(state) || DecorationSet.empty
+        return pagesPluginKey.getState(state)?.decorations || DecorationSet.empty
       },
     },
     view: (view) => new PagesView(view, extension),

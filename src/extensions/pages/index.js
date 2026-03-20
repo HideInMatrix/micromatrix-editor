@@ -30,6 +30,7 @@ const Pages = Extension.create({
   name: 'pages',
   addOptions() {
     return {
+      enabled: true,
       page: null,
       pageFormat: 'A4',
       headerHeight: null,
@@ -118,6 +119,9 @@ const Pages = Extension.create({
     }
   },
   addProseMirrorPlugins() {
+    if (this.options.enabled === false) {
+      return []
+    }
     return [createPagesPlugin(this)]
   },
 })

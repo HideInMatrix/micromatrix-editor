@@ -23,6 +23,35 @@ const NODE_INSERT_ACTION_TYPES = new Set([
 const DEFAULT_AI_API_URL = '/api/ai/generate'
 const DEFAULT_AI_MAX_OUTPUT_TOKENS = 12000
 const DEFAULT_AI_OUTPUT_MODE = 'sync'
+const AI_RESPONSE_OUTPUT_SCHEMA = {
+  type: 'object',
+  additionalProperties: true,
+  properties: {
+    message: {
+      type: 'string',
+    },
+    autoApply: {
+      type: 'boolean',
+    },
+    autoSave: {
+      type: 'boolean',
+    },
+    actions: {
+      type: 'array',
+      items: {
+        type: 'object',
+        additionalProperties: true,
+        properties: {
+          type: {
+            type: 'string',
+          },
+        },
+        required: ['type'],
+      },
+    },
+  },
+  required: ['message', 'actions'],
+}
 
 const resolveValue = (value) => value?.value ?? value
 
@@ -40,6 +69,10 @@ const resolveAiOutputMode = (config = {}) => {
 
 const shouldUseAiStream = (config = {}) => {
   return resolveAiOutputMode(config) === 'stream'
+}
+
+const resolveAiEndpoint = (config = {}) => {
+  return `${config.apiUrl || config.url || DEFAULT_AI_API_URL}`.trim()
 }
 
 const isZh = (config = {}) => getLocale(config) === 'zh-CN'
@@ -74,6 +107,83 @@ const toPositiveNumber = (value) => {
 
 const getActionType = (action) => action?.type || action?.kind || ''
 
+const isFileLike = (value) => {
+  return typeof File !== 'undefined' && value instanceof File
+}
+
+const normalizeAiAttachment = (attachment, index = 0) => {
+  if (!attachment) {
+    return null
+  }
+
+  const file = isFileLike(attachment) ? attachment : isFileLike(attachment.file) ? attachment.file : null
+  const name = attachment.name || file?.name || `attachment-${index + 1}`
+  const type = attachment.type || file?.type || ''
+  const size = Number.isFinite(attachment.size) ? attachment.size : file?.size || 0
+  const lastModified =
+    Number.isFinite(attachment.lastModified) ?
+      attachment.lastModified
+    : file?.lastModified || null
+
+  if (!file && !name) {
+    return null
+  }
+
+  return {
+    id: attachment.id || `attachment-${index + 1}`,
+    file,
+    name,
+    type,
+    size,
+    lastModified,
+  }
+}
+
+const getAiAttachments = (payload = {}) => {
+  if (!Array.isArray(payload.attachments)) {
+    return []
+  }
+  return payload.attachments
+    .map((attachment, index) => normalizeAiAttachment(attachment, index))
+    .filter(Boolean)
+}
+
+const getAiAttachmentMetas = (payload = {}) => {
+  return getAiAttachments(payload).map(
+    ({ id, name, type, size, lastModified }) => ({
+      id,
+      name,
+      type,
+      size,
+      lastModified,
+    }),
+  )
+}
+
+const formatAiAttachmentPromptLine = (attachment, index) => {
+  const type = attachment.type || 'unknown'
+  const size = Number.isFinite(attachment.size) ? `${attachment.size} bytes` : 'unknown size'
+  return `${index + 1}. ${attachment.name}（type: ${type}, size: ${size}）`
+}
+
+const resolveAiOutputSchema = (config = {}, payload = {}) => {
+  const schema = resolveAiOptionValue(
+    config.outputSchema,
+    payload,
+    AI_RESPONSE_OUTPUT_SCHEMA,
+  )
+  if (!schema) {
+    return null
+  }
+  if (typeof schema === 'string') {
+    return schema.trim() || null
+  }
+  if (typeof schema === 'object') {
+    return schema
+  }
+  return null
+}
+
 export const buildAiSystemPrompt = () => {
   return [
     '你是一个富文本编辑器的文档改写助手。',
@@ -104,9 +214,11 @@ export const buildAiPrompt = ({
   scope,
   selection = {},
   document = {},
+  attachments = [],
 }) => {
   const hasSelection = !!selection.text?.trim()
   const effectiveScope = scope === 'selection' && hasSelection ? '选区' : '全文'
+  const attachmentMetas = getAiAttachmentMetas({ attachments })
   return [
     `用户要求：${prompt}`,
     '',
@@ -124,6 +236,17 @@ export const buildAiPrompt = ({
     '如果确实要输出 diagrams 节点，请返回 insert_diagrams，并确保 diagram.src 可直接展示；做不到时请改用 insert_mermaid。',
     '图表或图形的数据请优先从当前选区文本、全文文本、表格或列表中提取；如果数据不完整，可以做合理补全，但要保证节点可展示。',
     '如果是选区修改，只调整选区相关内容，文档其他部分保持原状。',
+    ...(attachmentMetas.length > 0
+      ? [
+          '',
+          '当前还附带了以下文件，请结合文件名、类型和大小理解任务；如果服务端支持读取附件内容，也请一并参考附件。',
+          '<attachments>',
+          ...attachmentMetas.map((attachment, index) =>
+            formatAiAttachmentPromptLine(attachment, index),
+          ),
+          '</attachments>',
+        ]
+      : []),
     '',
     '<current-document-text>',
     document.text || '',
@@ -372,23 +495,33 @@ const buildAiFallbackResponse = (content, scope, config = {}) => {
 
 const normalizeAiServiceResponse = (rawResponse, payload, config = {}) => {
   const scope = resolveAiScope(payload)
+  const structuredResponse =
+    rawResponse?.object && typeof rawResponse.object === 'object'
+      ? rawResponse.object
+      : rawResponse?.output && typeof rawResponse.output === 'object'
+        ? rawResponse.output
+        : rawResponse
 
   if (
-    rawResponse &&
-    typeof rawResponse === 'object' &&
-    !Array.isArray(rawResponse)
+    structuredResponse &&
+    typeof structuredResponse === 'object' &&
+    !Array.isArray(structuredResponse)
   ) {
-    const directResponse = toStructuredAiResponse(rawResponse, scope, config)
+    const directResponse = toStructuredAiResponse(
+      structuredResponse,
+      scope,
+      config,
+    )
     if (directResponse) {
       return directResponse
     }
   }
 
   const rawText =
-    typeof rawResponse === 'string'
-      ? rawResponse
-      : typeof rawResponse?.text === 'string'
-        ? rawResponse.text
+    typeof structuredResponse === 'string'
+      ? structuredResponse
+      : typeof structuredResponse?.text === 'string'
+        ? structuredResponse.text
         : ''
   const parsed = parseAiJson(rawText)
 
@@ -428,6 +561,7 @@ const buildAiRequestBody = (payload, config = {}) => {
     payload,
     buildAiSystemPrompt(),
   )
+  const outputSchema = resolveAiOutputSchema(config, payload)
 
   return {
     prompt: typeof prompt === 'string' ? prompt : `${prompt ?? ''}`,
@@ -436,6 +570,48 @@ const buildAiRequestBody = (payload, config = {}) => {
       toFiniteNumber(config.maxOutputTokens) ?? DEFAULT_AI_MAX_OUTPUT_TOKENS,
     outputMode: resolveAiOutputMode(config),
     stream: shouldUseAiStream(config),
+    outputSchema,
+  }
+}
+
+const buildAiRequestInit = (payload, config = {}) => {
+  const body = buildAiRequestBody(payload, config)
+  const attachments = getAiAttachments(payload)
+
+  if (!attachments.length) {
+    return {
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(body),
+    }
+  }
+
+  const formData = new FormData()
+  formData.append('prompt', body.prompt)
+  formData.append('system', body.system)
+  formData.append('maxOutputTokens', `${body.maxOutputTokens}`)
+  formData.append('outputMode', body.outputMode)
+  formData.append('stream', `${body.stream}`)
+  if (body.outputSchema) {
+    formData.append(
+      'outputSchema',
+      typeof body.outputSchema === 'string'
+        ? body.outputSchema
+        : JSON.stringify(body.outputSchema),
+    )
+  }
+
+  attachments.forEach((attachment) => {
+    if (!attachment.file) {
+      return
+    }
+    formData.append('files', attachment.file, attachment.name)
+  })
+
+  return {
+    headers: {},
+    body: formData,
   }
 }
 
@@ -572,6 +748,11 @@ const flushSseEvent = async (lines, state, handlers = {}) => {
     return
   }
 
+  const eventName =
+    lines
+      .filter((line) => line.startsWith('event:'))
+      .map((line) => line.slice(6).trim())
+      .pop() || 'message'
   const data = lines
     .filter((line) => line.startsWith('data:'))
     .map((line) => line.slice(5).trimStart())
@@ -581,7 +762,32 @@ const flushSseEvent = async (lines, state, handlers = {}) => {
     return
   }
 
-  const delta = extractTextDeltaFromStreamPayload(data)
+  const parsed = tryParseJson(data)
+
+  if (eventName === 'error') {
+    const message =
+      parsed && typeof parsed === 'object'
+        ? parsed.message || parsed.error
+        : data
+    state.error = message || data
+    return
+  }
+
+  if (eventName === 'partial-object') {
+    state.object = parsed?.data ?? parsed ?? state.object
+    return
+  }
+
+  if (eventName === 'done') {
+    if (parsed && typeof parsed === 'object' && parsed.output !== undefined) {
+      state.object = parsed.output
+    }
+    return
+  }
+
+  const delta = extractTextDeltaFromStreamPayload(
+    parsed?.text !== undefined ? parsed.text : parsed ?? data,
+  )
   if (!delta) {
     return
   }
@@ -597,7 +803,7 @@ const readSseStreamResponse = async (response, handlers = {}) => {
 
   const reader = response.body.getReader()
   const decoder = new TextDecoder()
-  const state = { text: '' }
+  const state = { text: '', object: null, error: '' }
   let buffer = ''
   let eventLines = []
 
@@ -632,7 +838,11 @@ const readSseStreamResponse = async (response, handlers = {}) => {
   }
   await flushSseEvent(eventLines, state, handlers)
 
-  return state.text
+  if (state.error) {
+    throw new Error(state.error)
+  }
+
+  return state.object ?? state.text
 }
 
 const readAiResponseText = async (response, config = {}, handlers = {}) => {
@@ -656,18 +866,16 @@ export const canUseAiChat = (config = {}) => {
   if (typeof config?.onChat === 'function') {
     return true
   }
-  const apiUrl = `${config?.apiUrl || config?.url || DEFAULT_AI_API_URL}`.trim()
+  const apiUrl = resolveAiEndpoint(config)
   return apiUrl.length > 0
 }
 
 export const callLocalAiService = async (payload, config = {}, handlers = {}) => {
-  const apiUrl = `${config.apiUrl || config.url || DEFAULT_AI_API_URL}`.trim()
+  const apiUrl = resolveAiEndpoint(config)
+  const requestInit = buildAiRequestInit(payload, config)
   const response = await fetch(apiUrl || DEFAULT_AI_API_URL, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(buildAiRequestBody(payload, config)),
+    ...requestInit,
   })
 
   if (!response.ok) {
@@ -675,7 +883,10 @@ export const callLocalAiService = async (payload, config = {}, handlers = {}) =>
   }
 
   const rawResponse = await readAiResponseText(response, config, handlers)
-  const parsedResponse = parseAiJson(rawResponse) ?? tryParseJson(rawResponse)
+  const parsedResponse =
+    typeof rawResponse === 'string'
+      ? parseAiJson(rawResponse) ?? tryParseJson(rawResponse)
+      : rawResponse
 
   return normalizeAiServiceResponse(
     parsedResponse ?? rawResponse,

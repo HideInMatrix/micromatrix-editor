@@ -116,7 +116,6 @@
               v-if="!disableMenu('hard-break')"
             />
             <menus-toolbar-insert-hr v-if="!disableMenu('hr')" />
-            <menus-toolbar-insert-footnote v-if="!disableMenu('footnote')" />
           </div>
           <div class="umo-virtual-group">
             <menus-toolbar-insert-template v-if="!disableMenu('template')" />
@@ -129,6 +128,7 @@
         <template v-if="currentMenu === 'reference'">
           <div class="umo-virtual-group">
             <menus-toolbar-insert-bookmark v-if="!disableMenu('bookmark')" />
+            <menus-toolbar-insert-footnote v-if="!disableMenu('footnote')" />
             <menus-toolbar-insert-toc v-if="!disableMenu('toc')" />
           </div>
           <div class="virtual-group is-slot">

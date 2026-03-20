@@ -643,6 +643,32 @@ export default new ObjectSchema({
         validate: 'number',
         required: false,
       },
+      outputSchema: {
+        merge: 'replace',
+        validate(value) {
+          if (
+            value !== undefined &&
+            !isString(value) &&
+            !isFunction(value) &&
+            typeof value !== 'object'
+          ) {
+            throw new Error(
+              'Key "ai": Key "outputSchema" must be a string, object or function.',
+            )
+          }
+        },
+        required: false,
+      },
+      accept: {
+        merge: 'replace',
+        validate: 'string',
+        required: false,
+      },
+      multiple: {
+        merge: 'replace',
+        validate: 'boolean',
+        required: false,
+      },
       autoApply: {
         merge: 'replace',
         validate: 'boolean',

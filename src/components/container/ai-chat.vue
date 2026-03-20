@@ -54,6 +54,15 @@
       {{ configTipText }}
     </div>
     <div class="umo-ai-chat-input">
+      <input
+        ref="fileInputRef"
+        class="umo-ai-chat-file-input"
+        type="file"
+        :accept="attachmentAccept"
+        :multiple="allowMultipleAttachments"
+        :disabled="isReadonly || isSubmitting"
+        @change="handleAttachmentChange"
+      />
       <t-textarea
         v-model="prompt"
         :autosize="{ minRows: 4, maxRows: 8 }"
@@ -62,22 +71,55 @@
         :placeholder="inputPlaceholder"
         @keydown="handlePromptKeydown"
       />
+      <div v-if="attachments.length > 0" class="umo-ai-chat-attachments">
+        <div
+          v-for="item in attachments"
+          :key="item.id"
+          class="umo-ai-chat-attachment"
+        >
+          <div class="umo-ai-chat-attachment-main">
+            <div class="umo-ai-chat-attachment-name" :title="item.name">
+              {{ item.name }}
+            </div>
+            <div class="umo-ai-chat-attachment-meta">
+              {{ formatAttachmentMeta(item) }}
+            </div>
+          </div>
+          <button
+            type="button"
+            class="umo-ai-chat-attachment-remove"
+            :disabled="isSubmitting"
+            @click="removeAttachment(item.id)"
+          >
+            <icon name="close" size="14" />
+          </button>
+        </div>
+      </div>
       <div class="umo-ai-chat-actions">
         <t-button
           variant="outline"
-          :disabled="isSubmitting || messages.length <= 1"
-          @click="resetMessages"
+          :disabled="isReadonly || isSubmitting"
+          @click="openFilePicker"
         >
-          {{ resetButtonText }}
+          {{ uploadButtonText }}
         </t-button>
-        <t-button
-          theme="primary"
-          :loading="isSubmitting"
-          :disabled="!canSubmit"
-          @click="submitPrompt"
-        >
-          {{ submitButtonText }}
-        </t-button>
+        <div class="umo-ai-chat-action-buttons">
+          <t-button
+            variant="outline"
+            :disabled="isSubmitting || messages.length <= 1"
+            @click="resetSession"
+          >
+            {{ resetButtonText }}
+          </t-button>
+          <t-button
+            theme="primary"
+            :loading="isSubmitting"
+            :disabled="!canSubmit"
+            @click="submitPrompt"
+          >
+            {{ submitButtonText }}
+          </t-button>
+        </div>
       </div>
     </div>
     <div class="umo-ai-chat-resize-handle" @mousedown="startResize"></div>
@@ -85,7 +127,10 @@
 </template>
 
 <script setup>
+import prettyBytes from 'pretty-bytes'
+
 import {
+  useAiAttachments,
   useAiEditorSnapshot,
   useAiRequest,
   useAiSession,
@@ -126,6 +171,18 @@ const {
 } = useAiEditorSnapshot({
   editor,
 })
+const {
+  attachments,
+  fileInputRef,
+  accept: attachmentAccept,
+  multiple: allowMultipleAttachments,
+  handleFileChange: handleAttachmentChange,
+  openFilePicker,
+  removeAttachment,
+  clearAttachments,
+} = useAiAttachments({
+  aiOptions,
+})
 
 const panelTitle = computed(() => {
   return (
@@ -147,6 +204,9 @@ const submitButtonText = computed(() =>
 )
 const resetButtonText = computed(() =>
   locale.value === 'zh-CN' ? '清空对话' : 'Clear chat',
+)
+const uploadButtonText = computed(() =>
+  locale.value === 'zh-CN' ? '上传文件' : 'Upload files',
 )
 const configTipText = computed(() => {
   return locale.value === 'zh-CN'
@@ -186,6 +246,20 @@ const truncateText = (value = '', maxLength = 120) => {
     return normalized
   }
   return `${normalized.slice(0, maxLength)}...`
+}
+
+const formatAttachmentMeta = (item) => {
+  const parts = []
+  if (item.type) {
+    parts.push(item.type)
+  }
+  if (Number.isFinite(item.size) && item.size > 0) {
+    parts.push(prettyBytes(item.size))
+  }
+  if (!parts.length) {
+    return locale.value === 'zh-CN' ? '待上传附件' : 'Pending attachment'
+  }
+  return parts.join(' / ')
 }
 
 const scopeOptions = computed(() => {
@@ -238,8 +312,14 @@ watch(
   { immediate: true },
 )
 
-onMounted(() => {
+const resetSession = () => {
+  prompt.value = ''
   resetMessages()
+  clearAttachments()
+}
+
+onMounted(() => {
+  resetSession()
 })
 onUnmounted(() => {
   stopResize()
@@ -268,6 +348,7 @@ const buildPayload = (userPrompt, scope, selectionSnapshot, documentSnapshot) =>
       to: selectionSnapshot.to,
       empty: selectionSnapshot.empty,
     },
+    attachments: attachments.value,
     page: page.value,
     editor: {
       isEmpty: editor.value?.isEmpty,
@@ -485,14 +566,76 @@ const stopResize = () => {
     display: flex;
     flex-direction: column;
     gap: 12px;
+
+    .umo-ai-chat-file-input {
+      display: none;
+    }
+
     :deep(.umo-textarea__inner) {
       font-size: 13px;
       line-height: 1.6;
     }
   }
+  .umo-ai-chat-attachments {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    max-height: 180px;
+    overflow: auto;
+  }
+  .umo-ai-chat-attachment {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 12px;
+    border-radius: 12px;
+    background-color: rgba(0, 0, 0, 0.03);
+    border: solid 1px rgba(0, 0, 0, 0.04);
+  }
+  .umo-ai-chat-attachment-main {
+    flex: 1;
+    min-width: 0;
+  }
+  .umo-ai-chat-attachment-name {
+    font-size: 13px;
+    line-height: 1.4;
+    color: var(--umo-text-color);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .umo-ai-chat-attachment-meta {
+    margin-top: 4px;
+    font-size: 12px;
+    color: var(--umo-text-color-light);
+  }
+  .umo-ai-chat-attachment-remove {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border: none;
+    border-radius: 999px;
+    padding: 0;
+    background-color: transparent;
+    color: var(--umo-text-color-light);
+    cursor: pointer;
+
+    &:hover {
+      background-color: rgba(0, 0, 0, 0.05);
+      color: var(--umo-text-color);
+    }
+  }
   .umo-ai-chat-actions {
     display: flex;
+    align-items: center;
     justify-content: space-between;
+    gap: 8px;
+  }
+  .umo-ai-chat-action-buttons {
+    display: flex;
+    justify-content: flex-end;
     gap: 8px;
   }
   .umo-ai-chat-resize-handle {
@@ -519,7 +662,8 @@ const stopResize = () => {
 [theme-mode='dark'] {
   .umo-ai-chat-container {
     .umo-ai-chat-notice,
-    .umo-ai-chat-message-body {
+    .umo-ai-chat-message-body,
+    .umo-ai-chat-attachment {
       background-color: rgba(255, 255, 255, 0.04);
       border-color: rgba(255, 255, 255, 0.06);
     }
