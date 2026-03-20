@@ -255,7 +255,10 @@ export const getDefaultExtensions = ({
 
     // 其他
     Selection,
-    NodeRange,
+    NodeRange.configure({
+      depth: 0,
+      key: null,
+    }),
     NodeSelect,
     TableOfContents.configure({
       getIndex: getHierarchicalIndexes,

@@ -4,7 +4,7 @@
     class="umo-block-menu-drag-handle"
     :class="{
       'is-empty': editor?.isEmpty,
-      'is-visible': selectedNodePos !== null,
+      'is-visible': selectedNodePos !== null && selectedNodePos >= 0,
     }"
     :node-type="selectedNode?.type?.name || 'unknown'"
     @node-change="nodeChange"
@@ -27,22 +27,117 @@
 </template>
 
 <script setup>
+import { computePosition } from '@floating-ui/dom'
+import { isNodeRangeSelection } from '@tiptap/extension-node-range'
 import { DragHandle } from '@tiptap/extension-drag-handle-vue-3'
 
 const editor = inject('editor')
 let selectedNode = $ref(null)
 let selectedNodePos = $ref(null)
+let nodeRangeActive = $ref(false)
+
+const getOuterNodeElement = (view, domNode) => {
+  let currentNode = domNode
+  while (currentNode?.parentNode) {
+    if (currentNode.parentNode === view.dom) {
+      break
+    }
+    currentNode = currentNode.parentNode
+  }
+  return currentNode
+}
+
+const positionHandleAt = async (pos) => {
+  const editorInstance = editor.value
+  const handleElement = document.querySelector('.umo-block-menu-drag-handle')
+  if (!editorInstance || !handleElement) {
+    return
+  }
+  let domNode = editorInstance.view.nodeDOM(pos)
+  domNode = getOuterNodeElement(editorInstance.view, domNode)
+  if (!(domNode instanceof Element)) {
+    return
+  }
+  const { x, y, strategy } = await computePosition(domNode, handleElement, {
+    placement: 'left-start',
+    strategy: 'absolute',
+  })
+  Object.assign(handleElement.style, {
+    position: strategy,
+    left: `${x}px`,
+    top: `${y}px`,
+    visibility: 'visible',
+    pointerEvents: 'auto',
+  })
+}
+
+const syncNodeRangeSelection = async () => {
+  const editorInstance = editor.value
+  if (!editorInstance) {
+    return
+  }
+  const { doc, selection } = editorInstance.state
+  if (!isNodeRangeSelection(selection) || !selection.ranges.length) {
+    return
+  }
+  const { pos } = selection.ranges[0].$from
+  const node = doc.nodeAt(pos)
+  if (!node) {
+    return
+  }
+  nodeRangeActive = true
+  selectedNode = node
+  selectedNodePos = pos
+  await nextTick()
+  positionHandleAt(pos)
+}
 
 const nodeChange = ({ node, pos }) => {
-  selectedNode = node || null
-  if (pos !== null) {
+  if (typeof pos === 'number' && pos >= 0) {
+    nodeRangeActive = false
+    selectedNode = node || null
     selectedNodePos = pos
+    return
   }
+  if (editor.value && isNodeRangeSelection(editor.value.state.selection)) {
+    syncNodeRangeSelection()
+    return
+  }
+  nodeRangeActive = false
+  selectedNode = null
+  selectedNodePos = null
 }
 
 const dropdownVisible = (visible) => {
   editor.value.commands.setMeta('lockDragHandle', visible)
 }
+
+const handleSelectionUpdate = () => {
+  if (editor.value && isNodeRangeSelection(editor.value.state.selection)) {
+    syncNodeRangeSelection()
+    return
+  }
+  if (!nodeRangeActive) {
+    return
+  }
+  nodeRangeActive = false
+  selectedNode = null
+  selectedNodePos = null
+  editor.value?.commands.setMeta('hideDragHandle', true)
+}
+
+watch(
+  () => editor.value,
+  (currentEditor, previousEditor) => {
+    previousEditor?.off('selectionUpdate', handleSelectionUpdate)
+    currentEditor?.on('selectionUpdate', handleSelectionUpdate)
+  },
+  { immediate: true },
+)
+
+onBeforeUnmount(() => {
+  editor.value?.off('selectionUpdate', handleSelectionUpdate)
+})
 </script>
 
 <style lang="less">
@@ -83,6 +178,7 @@ const dropdownVisible = (visible) => {
     }
     &.is-visible {
       visibility: visible !important;
+      pointer-events: auto !important;
     }
   }
   &-hander {
