@@ -7,7 +7,7 @@ afterEach(() => {
 });
 
 const TextDirection = Extension.create({
-  name: "textDirection",
+  name: "customTextDirection",
 
   addGlobalAttributes() {
     return [

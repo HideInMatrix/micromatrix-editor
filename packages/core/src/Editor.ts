@@ -19,6 +19,10 @@ import { getCoreExtensions } from "./extensions";
 import { EventEmitter } from "./EventEmitter";
 import { ExtensionManager } from "./ExtensionManager";
 import { createDocumentFromContent } from "./helpers/content";
+import {
+  getTextBetween,
+  getTextSerializersFromSchema,
+} from "./helpers";
 import type {
   CanCommands,
   ChainedCommands,
@@ -109,6 +113,8 @@ export class Editor extends EventEmitter<EditorEventMap> {
       parseOptions: undefined,
       enableInputRules: true,
       enablePasteRules: true,
+      coreExtensionOptions: {},
+      enableCoreExtensions: true,
       enableExtensionDispatchTransaction: true,
       editorProps: {},
       onBeforeCreate: () => undefined,
@@ -121,13 +127,14 @@ export class Editor extends EventEmitter<EditorEventMap> {
       onBlur: () => undefined,
       onPaste: () => undefined,
       onDrop: () => undefined,
+      onDelete: () => undefined,
       onDestroy: () => undefined,
       ...options,
     };
 
     this.extensionManager = new ExtensionManager(
       [
-        ...getCoreExtensions(),
+        ...getCoreExtensions(this.options),
         ...this.options.extensions,
       ],
       this,
@@ -322,14 +329,28 @@ export class Editor extends EventEmitter<EditorEventMap> {
   }
 
   getText(options: EditorGetTextOptions = {}) {
-    return this.state.doc.textBetween(
-      0,
-      this.state.doc.content.size,
-      options.blockSeparator ?? "\n\n",
-      (leafNode) =>
-        options.textSerializers?.[leafNode.type.name]?.(leafNode)
-          ?? (leafNode.type.name === "hardBreak" ? "\n" : ""),
+    const textSerializers = Object.fromEntries(
+      Object.entries(options.textSerializers ?? {}).map(([name, serializer]) => [
+        name,
+        (props: Parameters<NonNullable<typeof serializer>>[0] extends never ? never : any) => (
+          serializer.length <= 1
+            ? (serializer as (node: ProseMirrorNode) => string)(props.node)
+            : serializer(props)
+        ),
+      ]),
     );
+
+    return getTextBetween(this.state.doc, {
+      from: 0,
+      to: this.state.doc.content.size,
+    }, {
+      blockSeparator: options.blockSeparator,
+      textSerializers: {
+        ...getTextSerializersFromSchema(this.schema),
+        ...textSerializers,
+        hardBreak: () => "\n",
+      },
+    });
   }
 
   getHTML() {

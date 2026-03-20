@@ -17,6 +17,7 @@ import type {
   PluginKey,
   Slice,
   Transaction,
+  Transform,
   ViewMutationRecord,
   EditorState,
   EditorView,
@@ -49,6 +50,7 @@ export interface ExtensionContext<
   storage: Storage;
   editor: Editor;
   type: MarkType | ProseMirrorNodeType | null;
+  extensions?: AnyExtension[];
   parent?: any;
 }
 
@@ -223,6 +225,15 @@ export interface NodeConfig<
       HTMLAttributes: Record<string, string>;
     },
   ) => DOMOutputSpec;
+  renderText?: (
+    this: ExtensionContext<Options, Storage>,
+    props: {
+      node: ProseMirrorNode;
+      pos: number;
+      parent: ProseMirrorNode;
+      index: number;
+    },
+  ) => string;
 }
 
 export interface MarkConfig<
@@ -307,7 +318,10 @@ export interface FocusOptions {
 
 export interface EditorGetTextOptions {
   blockSeparator?: string;
-  textSerializers?: Record<string, (node: ProseMirrorNode) => string>;
+  textSerializers?: Record<
+    string,
+    TextSerializer | ((node: ProseMirrorNode) => string)
+  >;
 }
 
 export interface SetContentOptions {
@@ -327,6 +341,37 @@ export interface Range {
   to: number;
 }
 
+export interface DeleteExtensionOptions {
+  async?: boolean;
+  filterTransaction?: (transaction: Transaction) => boolean;
+}
+
+export interface ClipboardTextSerializerExtensionOptions {
+  blockSeparator?: string;
+}
+
+export interface TextDirectionExtensionOptions {
+  direction?: "ltr" | "rtl" | "auto";
+}
+
+export type CoreExtensionName =
+  | "editable"
+  | "clipboardTextSerializer"
+  | "commands"
+  | "focusEvents"
+  | "keymap"
+  | "tabindex"
+  | "drop"
+  | "paste"
+  | "delete"
+  | "textDirection";
+
+export interface CoreExtensionOptions {
+  clipboardTextSerializer?: ClipboardTextSerializerExtensionOptions;
+  delete?: DeleteExtensionOptions;
+  textDirection?: TextDirectionExtensionOptions;
+}
+
 export type InsertContentAtPosition = number | { from: number; to: number };
 
 export type TextSelectionPosition = number | { from: number; to: number };
@@ -343,6 +388,8 @@ export interface EditorOptions {
   parseOptions?: ParseOptions;
   enableInputRules?: RulesSetting;
   enablePasteRules?: RulesSetting;
+  coreExtensionOptions?: CoreExtensionOptions;
+  enableCoreExtensions?: boolean | Partial<Record<CoreExtensionName, false>>;
   enableExtensionDispatchTransaction?: boolean;
   editorProps?: Partial<DirectEditorProps>;
   onBeforeCreate?: (props: { editor: Editor }) => void;
@@ -361,6 +408,7 @@ export interface EditorOptions {
   onBlur?: (props: { editor: Editor; event: FocusEvent }) => void;
   onPaste?: (props: { editor: Editor; event: ClipboardEvent; slice: Slice }) => void;
   onDrop?: (props: { editor: Editor; event: DragEvent; slice: Slice; moved: boolean }) => void;
+  onDelete?: (props: DeleteEvent) => void;
   onDestroy?: (props: { editor: Editor }) => void;
 }
 
@@ -369,6 +417,30 @@ export type ResolvedEditorOptions =
     parseOptions?: ParseOptions;
     contentType?: ContentType;
   };
+
+export type DeleteEvent =
+  {
+    editor: Editor;
+    deletedRange: Range;
+    newRange: Range;
+    transaction: Transaction;
+    combinedTransform: Transform;
+    partial: boolean;
+    from: number;
+    to: number;
+  }
+  & (
+    | {
+      type: "node";
+      node: ProseMirrorNode;
+      newFrom: number;
+      newTo: number;
+    }
+    | {
+      type: "mark";
+      mark: ProseMirrorMark;
+    }
+  );
 
 export interface EditorEventMap {
   beforeCreate: { editor: Editor };
@@ -381,6 +453,7 @@ export interface EditorEventMap {
   blur: { editor: Editor; event: FocusEvent };
   paste: { editor: Editor; event: ClipboardEvent; slice: Slice };
   drop: { editor: Editor; event: DragEvent; slice: Slice; moved: boolean };
+  delete: DeleteEvent;
   destroy: { editor: Editor };
 }
 
@@ -489,6 +562,14 @@ export type UnionToIntersection<U> =
   (U extends any ? (value: U) => void : never) extends (value: infer I) => void
     ? I
     : never;
+
+export type TextSerializer = (props: {
+  node: ProseMirrorNode;
+  pos: number;
+  parent: ProseMirrorNode;
+  index: number;
+  range: Range;
+}) => string;
 
 export type UnionCommands<ReturnType = Command> = UnionToIntersection<
   ValuesOf<Pick<Commands<ReturnType>, KeysWithTypeOf<Commands<ReturnType>, object>>>

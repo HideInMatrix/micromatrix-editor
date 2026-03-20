@@ -14,6 +14,7 @@ import type {
   GlobalAttributes,
   MarkConfig,
   NodeConfig,
+  TextSerializer,
 } from "../types";
 import {
   callOrReturn,
@@ -381,6 +382,24 @@ export function getSchemaByResolvedExtensions(
               node: pmNode,
               HTMLAttributes: getRenderedAttributes(pmNode.attrs, attributes),
             });
+        }
+
+        const renderText = getExtensionField(
+          node,
+          "renderText",
+          context,
+        ) as NodeConfig["renderText"] | undefined;
+
+        if (renderText) {
+          const textRenderer = renderText as (props: {
+            node: ProseMirrorNode;
+            pos: number;
+            parent: ProseMirrorNode;
+            index: number;
+          }) => string;
+
+          (spec as NodeSpec & { toText?: TextSerializer }).toText = (props) =>
+            textRenderer(props);
         }
 
         return [node.name, spec];
