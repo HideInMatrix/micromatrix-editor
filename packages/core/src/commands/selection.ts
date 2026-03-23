@@ -94,7 +94,11 @@ export function createSelectionCommands(): SelectionCommands {
         selectParentNodeCommand(state, dispatch),
     deleteSelection:
       () =>
-      ({ tr }) => {
+      ({ state, tr }) => {
+        if (state.selection.empty) {
+          return false;
+        }
+
         tr.deleteSelection();
         return true;
       },

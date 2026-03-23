@@ -12,13 +12,10 @@ import type { Editor } from "./Editor";
 export class CommandManager {
   private readonly editor: Editor;
 
-  private readonly rawCommands: RawCommands;
-
   private readonly customState?: EditorState;
 
   constructor(props: { editor: Editor; state?: EditorState }) {
     this.editor = props.editor;
-    this.rawCommands = this.editor.extensionManager.commands;
     this.customState = props.state;
   }
 
@@ -152,5 +149,9 @@ export class CommandManager {
 
   private shouldSkipDispatch(transaction: Transaction) {
     return transaction.getMeta("preventDispatch") === true;
+  }
+
+  private get rawCommands(): RawCommands {
+    return this.editor.extensionManager.commands;
   }
 }

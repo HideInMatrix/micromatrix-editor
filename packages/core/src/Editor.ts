@@ -11,6 +11,7 @@ import {
   type ParseOptions,
   type Node as PMNode,
   type Node as ProseMirrorNode,
+  TextSelection,
   type Transaction,
 } from "@mxm-editor/pm";
 import { CommandManager } from "./CommandManager";
@@ -39,7 +40,12 @@ import type {
   SingleCommands,
   Storage,
 } from "./types";
-import { matchesAttributes } from "./utilities";
+import { style } from "./style";
+import {
+  clamp,
+  createStyleTag,
+  matchesAttributes,
+} from "./utilities";
 
 function getPluginKeyValue(pluginKey: PluginKeySource) {
   if (typeof pluginKey === "string") {
@@ -79,10 +85,14 @@ function getMarkAtCursor(state: EditorState, name: string) {
   return before ? markType.isInSet(before.marks) : null;
 }
 
+interface EditorHTMLElement extends HTMLElement {
+  editor?: Editor;
+}
+
 export class Editor extends EventEmitter<EditorEventMap> {
   options: ResolvedEditorOptions;
 
-  readonly extensionManager: ExtensionManager;
+  extensionManager: ExtensionManager;
 
   markdown: MarkdownParser | null = null;
 
@@ -92,7 +102,13 @@ export class Editor extends EventEmitter<EditorEventMap> {
 
   private editorView: EditorView | null = null;
 
+  private css: HTMLStyleElement | null = null;
+
+  private className = "tiptap";
+
   private customPlugins: Plugin[] = [];
+
+  isInitialized = false;
 
   isCapturingTransaction = false;
 
@@ -107,6 +123,8 @@ export class Editor extends EventEmitter<EditorEventMap> {
       element: null,
       content: null,
       contentType: undefined,
+      injectCSS: true,
+      injectNonce: undefined,
       extensions: [],
       autofocus: false,
       editable: true,
@@ -120,6 +138,8 @@ export class Editor extends EventEmitter<EditorEventMap> {
       onBeforeCreate: () => undefined,
       onBeforeTransaction: () => undefined,
       onCreate: () => undefined,
+      onMount: () => undefined,
+      onUnmount: () => undefined,
       onUpdate: () => undefined,
       onSelectionUpdate: () => undefined,
       onTransaction: () => undefined,
@@ -132,13 +152,7 @@ export class Editor extends EventEmitter<EditorEventMap> {
       ...options,
     };
 
-    this.extensionManager = new ExtensionManager(
-      [
-        ...getCoreExtensions(this.options),
-        ...this.options.extensions,
-      ],
-      this,
-    );
+    this.extensionManager = this.createExtensionManager();
     this.commandManager = new CommandManager({ editor: this });
     this.editorState = this.createState(this.options.content);
     this.emit("beforeCreate", { editor: this });
@@ -224,13 +238,22 @@ export class Editor extends EventEmitter<EditorEventMap> {
   }
 
   mount(element: HTMLElement) {
+    if (typeof document === "undefined") {
+      throw new Error(
+        "[mxm-editor error]: The editor cannot be mounted because there is no 'document' defined in this environment.",
+      );
+    }
+
     if (this.editorView) {
       this.unmount();
     }
 
-    this.options.element = element;
+    this.options = {
+      ...this.options,
+      element,
+    };
     this.editorState = this.editorState.reconfigure({
-      plugins: this.extensionManager.plugins,
+      plugins: this.allPlugins,
     });
 
     this.editorView = new EditorView(
@@ -238,15 +261,46 @@ export class Editor extends EventEmitter<EditorEventMap> {
       this.createViewProps(this.editorState),
     );
 
+    this.prependClass();
+    this.injectCSS();
+    (this.editorView.dom as EditorHTMLElement).editor = this;
+
+    this.emit("mount", { editor: this });
+    this.options.onMount({ editor: this });
     this.emit("create", { editor: this });
     this.options.onCreate({ editor: this });
 
     this.focus(this.options.autofocus);
+    this.isInitialized = true;
   }
 
   unmount() {
+    const dom = this.editorView?.dom as EditorHTMLElement | undefined;
+
+    if (dom) {
+      dom.classList.remove(this.className);
+
+      if (dom.editor) {
+        delete dom.editor;
+      }
+    }
+
     this.editorView?.destroy();
     this.editorView = null;
+    this.isInitialized = false;
+
+    if (
+      this.css
+      && typeof document !== "undefined"
+      && !document.querySelectorAll(`.${this.className}`).length
+    ) {
+      this.css.remove();
+    }
+
+    this.css = null;
+
+    this.emit("unmount", { editor: this });
+    this.options.onUnmount({ editor: this });
   }
 
   destroy() {
@@ -258,10 +312,23 @@ export class Editor extends EventEmitter<EditorEventMap> {
   }
 
   setOptions(options: Partial<EditorOptions>) {
+    const shouldRebuildExtensions = this.shouldRebuildExtensions(options);
+    const contentSnapshots = shouldRebuildExtensions
+      ? this.createDocumentSnapshots()
+      : [];
+    const previousSelection = shouldRebuildExtensions
+      ? this.state.selection
+      : null;
+
     this.options = {
       ...this.options,
       ...options,
     };
+
+    if (shouldRebuildExtensions) {
+      this.rebuildExtensions(contentSnapshots, previousSelection);
+      return;
+    }
 
     this.reconfigureState();
 
@@ -593,6 +660,119 @@ export class Editor extends EventEmitter<EditorEventMap> {
     this.editorView?.updateState(nextState);
   }
 
+  private createExtensionManager() {
+    return new ExtensionManager(
+      [
+        ...getCoreExtensions(this.options),
+        ...this.options.extensions,
+      ],
+      this,
+    );
+  }
+
+  private rebuildExtensions(
+    contentSnapshots: Array<{
+      content: Content;
+      contentType?: EditorOptions["contentType"];
+    }>,
+    previousSelection: EditorState["selection"] | null,
+  ) {
+    this.extensionManager.destroy();
+    this.extensionManager = this.createExtensionManager();
+
+    const nextDoc = this.createDocumentFromSnapshots(contentSnapshots);
+    const nextState = EditorState.create({
+      schema: this.schema,
+      doc: nextDoc,
+      selection: previousSelection
+        ? this.resolveSelectionForDocument(nextDoc, previousSelection)
+        : undefined,
+      plugins: this.allPlugins,
+    });
+
+    this.editorState = nextState;
+
+    if (this.editorView) {
+      this.editorView.setProps(this.createViewProps(nextState));
+      this.editorView.updateState(nextState);
+    }
+  }
+
+  private createDocumentSnapshots() {
+    const snapshots: Array<{
+      content: Content;
+      contentType?: EditorOptions["contentType"];
+    }> = [];
+
+    if (typeof document !== "undefined") {
+      snapshots.push({
+        content: this.getHTML(),
+        contentType: "html",
+      });
+    }
+
+    snapshots.push({
+      content: this.getJSON(),
+      contentType: "json",
+    });
+
+    snapshots.push({
+      content: this.options.content ?? null,
+      contentType: this.options.contentType,
+    });
+
+    return snapshots;
+  }
+
+  private createDocumentFromSnapshots(
+    snapshots: Array<{
+      content: Content;
+      contentType?: EditorOptions["contentType"];
+    }>,
+  ) {
+    let lastError: unknown;
+
+    for (const snapshot of snapshots) {
+      try {
+        return this.createDocument(
+          snapshot.content,
+          undefined,
+          snapshot.contentType,
+        );
+      } catch (error) {
+        lastError = error;
+      }
+    }
+
+    throw lastError ?? new Error("Unable to rebuild editor document.");
+  }
+
+  private resolveSelectionForDocument(
+    doc: ProseMirrorNode,
+    selection: EditorState["selection"],
+  ) {
+    try {
+      const from = clamp(selection.from, 0, doc.content.size);
+      const to = clamp(selection.to, 0, doc.content.size);
+
+      if (from === to) {
+        return Selection.near(doc.resolve(from));
+      }
+
+      return TextSelection.create(doc, from, to);
+    } catch {
+      return Selection.atStart(doc);
+    }
+  }
+
+  private shouldRebuildExtensions(options: Partial<EditorOptions>) {
+    return (
+      "extensions" in options
+      || "enableCoreExtensions" in options
+      || "coreExtensionOptions" in options
+    );
+  }
+
   private createViewProps(state: EditorState): DirectEditorProps {
     const editorProps = this.options.editorProps ?? {};
     const baseDispatch =
@@ -691,4 +871,24 @@ export class Editor extends EventEmitter<EditorEventMap> {
       });
     }
   };
+
+  private prependClass() {
+    if (!this.editorView) {
+      return;
+    }
+
+    const classNames = this.editorView.dom.className
+      .split(/\s+/)
+      .filter(Boolean);
+
+    if (!classNames.includes(this.className)) {
+      this.editorView.dom.className = [this.className, ...classNames].join(" ");
+    }
+  }
+
+  private injectCSS() {
+    if (this.options.injectCSS && typeof document !== "undefined") {
+      this.css = createStyleTag(style, this.options.injectNonce);
+    }
+  }
 }

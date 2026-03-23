@@ -1,6 +1,7 @@
 export * from "./callOrReturn";
 export * from "./cleanObject";
 export * from "./clamp";
+export * from "./createStyleTag";
 export * from "./escapeMarkdown";
 export * from "./findDuplicates";
 export * from "./isPlainObject";

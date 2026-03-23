@@ -382,6 +382,8 @@ export interface EditorOptions {
   element?: HTMLElement | null;
   content?: Content;
   contentType?: ContentType;
+  injectCSS?: boolean;
+  injectNonce?: string | undefined;
   extensions?: AnyExtension[];
   autofocus?: FocusPosition;
   editable?: boolean;
@@ -397,6 +399,8 @@ export interface EditorOptions {
     props: { editor: Editor; transaction: Transaction; nextState: EditorState },
   ) => void;
   onCreate?: (props: { editor: Editor }) => void;
+  onMount?: (props: { editor: Editor }) => void;
+  onUnmount?: (props: { editor: Editor }) => void;
   onUpdate?: (
     props: { editor: Editor; transaction: Transaction; appendedTransactions: Transaction[] },
   ) => void;
@@ -413,9 +417,10 @@ export interface EditorOptions {
 }
 
 export type ResolvedEditorOptions =
-  Omit<Required<EditorOptions>, "parseOptions" | "contentType"> & {
+  Omit<Required<EditorOptions>, "parseOptions" | "contentType" | "injectNonce"> & {
     parseOptions?: ParseOptions;
     contentType?: ContentType;
+    injectNonce?: string;
   };
 
 export type DeleteEvent =
@@ -445,6 +450,8 @@ export type DeleteEvent =
 export interface EditorEventMap {
   beforeCreate: { editor: Editor };
   beforeTransaction: { editor: Editor; transaction: Transaction; nextState: EditorState };
+  mount: { editor: Editor };
+  unmount: { editor: Editor };
   create: { editor: Editor };
   update: { editor: Editor; transaction: Transaction; appendedTransactions: Transaction[] };
   selectionUpdate: { editor: Editor; transaction: Transaction };

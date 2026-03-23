@@ -64,6 +64,8 @@ export class ExtensionManager {
 
   private proseMirrorPluginsCache: Plugin[] | null = null;
 
+  private removeEventListeners: Array<() => void> = [];
+
   constructor(extensions: AnyExtension[], editor: Editor) {
     this.editor = editor;
     this.baseExtensions = extensions;
@@ -453,35 +455,35 @@ export class ExtensionManager {
       ) as ((payload: EditorEventMap["destroy"]) => void) | undefined;
 
       if (onBeforeCreate) {
-        this.editor.on("beforeCreate", onBeforeCreate);
+        this.removeEventListeners.push(this.editor.on("beforeCreate", onBeforeCreate));
       }
 
       if (onCreate) {
-        this.editor.on("create", onCreate);
+        this.removeEventListeners.push(this.editor.on("create", onCreate));
       }
 
       if (onUpdate) {
-        this.editor.on("update", onUpdate);
+        this.removeEventListeners.push(this.editor.on("update", onUpdate));
       }
 
       if (onSelectionUpdate) {
-        this.editor.on("selectionUpdate", onSelectionUpdate);
+        this.removeEventListeners.push(this.editor.on("selectionUpdate", onSelectionUpdate));
       }
 
       if (onTransaction) {
-        this.editor.on("transaction", onTransaction);
+        this.removeEventListeners.push(this.editor.on("transaction", onTransaction));
       }
 
       if (onFocus) {
-        this.editor.on("focus", onFocus);
+        this.removeEventListeners.push(this.editor.on("focus", onFocus));
       }
 
       if (onBlur) {
-        this.editor.on("blur", onBlur);
+        this.removeEventListeners.push(this.editor.on("blur", onBlur));
       }
 
       if (onDestroy) {
-        this.editor.on("destroy", onDestroy);
+        this.removeEventListeners.push(this.editor.on("destroy", onDestroy));
       }
     });
   }
@@ -501,5 +503,13 @@ export class ExtensionManager {
         extensions: this.extensions,
       });
     });
+  }
+
+  destroy() {
+    this.removeEventListeners.forEach((removeListener) => {
+      removeListener();
+    });
+    this.removeEventListeners = [];
+    this.proseMirrorPluginsCache = null;
   }
 }
