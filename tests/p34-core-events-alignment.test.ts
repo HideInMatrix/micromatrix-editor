@@ -173,4 +173,90 @@ describe("P34 core event alignment", () => {
 
     editor.destroy();
   });
+
+  it("routes focus and blur through transaction meta before emitting lifecycle events", () => {
+    const optionEvents: string[] = [];
+    const emittedEvents: string[] = [];
+    const extensionEvents: string[] = [];
+    const FocusProbe = Extension.create({
+      name: "focusPipelineProbe",
+
+      onTransaction({ transaction }) {
+        if (transaction.getMeta("focus")) {
+          extensionEvents.push("transaction:focus");
+        }
+
+        if (transaction.getMeta("blur")) {
+          extensionEvents.push("transaction:blur");
+        }
+      },
+
+      onFocus({ transaction }) {
+        extensionEvents.push(`focus:${String(transaction.getMeta("addToHistory"))}`);
+      },
+
+      onBlur({ transaction }) {
+        extensionEvents.push(`blur:${String(transaction.getMeta("addToHistory"))}`);
+      },
+    });
+    const editor = createEditor({
+      extensions: [FocusProbe],
+      onTransaction: ({ transaction }) => {
+        if (transaction.getMeta("focus")) {
+          optionEvents.push("transaction:focus");
+        }
+
+        if (transaction.getMeta("blur")) {
+          optionEvents.push("transaction:blur");
+        }
+      },
+      onFocus: ({ transaction }) => {
+        optionEvents.push(`focus:${String(transaction.getMeta("addToHistory"))}`);
+      },
+      onBlur: ({ transaction }) => {
+        optionEvents.push(`blur:${String(transaction.getMeta("addToHistory"))}`);
+      },
+    });
+
+    editor.on("transaction", ({ transaction }) => {
+      if (transaction.getMeta("focus")) {
+        emittedEvents.push("transaction:focus");
+      }
+
+      if (transaction.getMeta("blur")) {
+        emittedEvents.push("transaction:blur");
+      }
+    });
+    editor.on("focus", ({ transaction }) => {
+      emittedEvents.push(`focus:${String(transaction.getMeta("addToHistory"))}`);
+    });
+    editor.on("blur", ({ transaction }) => {
+      emittedEvents.push(`blur:${String(transaction.getMeta("addToHistory"))}`);
+    });
+
+    editor.view?.dom.dispatchEvent(new FocusEvent("focus"));
+    editor.view?.dom.dispatchEvent(new FocusEvent("blur"));
+
+    expect(optionEvents).toContain("transaction:focus");
+    expect(optionEvents).toContain("focus:false");
+    expect(optionEvents.slice(-2)).toEqual([
+      "transaction:blur",
+      "blur:false",
+    ]);
+    expect(emittedEvents).toContain("transaction:focus");
+    expect(emittedEvents).toContain("focus:false");
+    expect(emittedEvents.slice(-2)).toEqual([
+      "transaction:blur",
+      "blur:false",
+    ]);
+    expect(extensionEvents).toContain("transaction:focus");
+    expect(extensionEvents).toContain("focus:false");
+    expect(extensionEvents.slice(-2)).toEqual([
+      "transaction:blur",
+      "blur:false",
+    ]);
+    expect(editor.isFocused).toBe(false);
+
+    editor.destroy();
+  });
 });

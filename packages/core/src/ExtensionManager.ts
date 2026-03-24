@@ -11,11 +11,13 @@ import {
 import type { Editor } from "./Editor";
 import { getExtensionField } from "./helpers/getExtensionField";
 import {
+  flattenExtensions,
   getAttributesFromResolvedExtensions,
   getAttributesForExtensionFromResolvedExtensions,
   getRenderedAttributes,
   getSchemaByResolvedExtensions,
   resolveExtensions,
+  sortExtensions,
 } from "./helpers/schema";
 import { pasteRulesPlugin } from "./PasteRule";
 import { callOrReturn } from "./utilities";
@@ -50,6 +52,12 @@ function includesExtension(
 }
 
 export class ExtensionManager {
+  static resolve = resolveExtensions;
+
+  static sort = sortExtensions;
+
+  static flatten = flattenExtensions;
+
   readonly editor: Editor;
 
   readonly baseExtensions: AnyExtension[];
@@ -390,9 +398,7 @@ export class ExtensionManager {
   }
 
   private getPluginExtensions() {
-    return [...this.extensions]
-      .reverse()
-      .sort((a, b) => b.priority - a.priority);
+    return sortExtensions([...this.extensions].reverse());
   }
 
   private setupExtensions() {

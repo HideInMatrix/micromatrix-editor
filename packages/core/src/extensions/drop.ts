@@ -21,12 +21,6 @@ export const Drop = Extension.create({
               slice,
               moved,
             });
-            this.editor.options.onDrop({
-              editor: this.editor,
-              event,
-              slice,
-              moved,
-            });
 
             return false;
           },

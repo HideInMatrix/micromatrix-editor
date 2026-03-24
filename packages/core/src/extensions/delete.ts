@@ -49,7 +49,6 @@ export const Delete = Extension.create({
             };
 
             this.editor.emit("delete", payload);
-            this.editor.options.onDelete(payload);
           });
         }
       });
@@ -91,7 +90,6 @@ export const Delete = Extension.create({
         };
 
         this.editor.emit("delete", payload);
-        this.editor.options.onDelete(payload);
       });
     };
 

@@ -176,11 +176,11 @@ export interface ExtensionConfig<
   ) => void;
   onFocus?: (
     this: ExtensionContext<Options, Storage>,
-    props: { event: FocusEvent },
+    props: { event: FocusEvent; transaction: Transaction },
   ) => void;
   onBlur?: (
     this: ExtensionContext<Options, Storage>,
-    props: { event: FocusEvent },
+    props: { event: FocusEvent; transaction: Transaction },
   ) => void;
   onExtensionsResolved?: (
     this: ExtensionContext<Options, Storage>,
@@ -408,8 +408,8 @@ export interface EditorOptions {
   onTransaction?: (
     props: { editor: Editor; transaction: Transaction; appendedTransactions: Transaction[] },
   ) => void;
-  onFocus?: (props: { editor: Editor; event: FocusEvent }) => void;
-  onBlur?: (props: { editor: Editor; event: FocusEvent }) => void;
+  onFocus?: (props: { editor: Editor; event: FocusEvent; transaction: Transaction }) => void;
+  onBlur?: (props: { editor: Editor; event: FocusEvent; transaction: Transaction }) => void;
   onPaste?: (props: { editor: Editor; event: ClipboardEvent; slice: Slice }) => void;
   onDrop?: (props: { editor: Editor; event: DragEvent; slice: Slice; moved: boolean }) => void;
   onDelete?: (props: DeleteEvent) => void;
@@ -456,8 +456,8 @@ export interface EditorEventMap {
   update: { editor: Editor; transaction: Transaction; appendedTransactions: Transaction[] };
   selectionUpdate: { editor: Editor; transaction: Transaction };
   transaction: { editor: Editor; transaction: Transaction; appendedTransactions: Transaction[] };
-  focus: { editor: Editor; event: FocusEvent };
-  blur: { editor: Editor; event: FocusEvent };
+  focus: { editor: Editor; event: FocusEvent; transaction: Transaction };
+  blur: { editor: Editor; event: FocusEvent; transaction: Transaction };
   paste: { editor: Editor; event: ClipboardEvent; slice: Slice };
   drop: { editor: Editor; event: DragEvent; slice: Slice; moved: boolean };
   delete: DeleteEvent;

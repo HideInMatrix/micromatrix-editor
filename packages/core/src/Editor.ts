@@ -57,6 +57,17 @@ function getPluginKeyValue(pluginKey: PluginKeySource) {
   return typeof key === "string" ? key : null;
 }
 
+function matchesPluginKey(plugin: Plugin, pluginKey: PluginKeySource) {
+  const pluginValue = getPluginKeyValue(plugin);
+  const sourceValue = getPluginKeyValue(pluginKey);
+
+  if (!pluginValue || !sourceValue) {
+    return false;
+  }
+
+  return pluginValue.startsWith(sourceValue);
+}
+
 function getMarkAtCursor(state: EditorState, name: string) {
   const markType = state.schema.marks[name];
 
@@ -89,6 +100,23 @@ interface EditorHTMLElement extends HTMLElement {
   editor?: Editor;
 }
 
+const optionEventBindings = [
+  ["beforeCreate", "onBeforeCreate"],
+  ["beforeTransaction", "onBeforeTransaction"],
+  ["mount", "onMount"],
+  ["unmount", "onUnmount"],
+  ["create", "onCreate"],
+  ["update", "onUpdate"],
+  ["selectionUpdate", "onSelectionUpdate"],
+  ["transaction", "onTransaction"],
+  ["focus", "onFocus"],
+  ["blur", "onBlur"],
+  ["paste", "onPaste"],
+  ["drop", "onDrop"],
+  ["delete", "onDelete"],
+  ["destroy", "onDestroy"],
+] as const;
+
 export class Editor extends EventEmitter<EditorEventMap> {
   options: ResolvedEditorOptions;
 
@@ -107,6 +135,8 @@ export class Editor extends EventEmitter<EditorEventMap> {
   private className = "tiptap";
 
   private customPlugins: Plugin[] = [];
+
+  private focused = false;
 
   isInitialized = false;
 
@@ -151,12 +181,12 @@ export class Editor extends EventEmitter<EditorEventMap> {
       onDestroy: () => undefined,
       ...options,
     };
+    this.bindOptionEventListeners();
 
     this.extensionManager = this.createExtensionManager();
     this.commandManager = new CommandManager({ editor: this });
     this.editorState = this.createState(this.options.content);
     this.emit("beforeCreate", { editor: this });
-    this.options.onBeforeCreate({ editor: this });
 
     if (this.options.element) {
       this.mount(this.options.element);
@@ -172,7 +202,11 @@ export class Editor extends EventEmitter<EditorEventMap> {
   }
 
   get state() {
-    return this.editorView?.state ?? this.editorState;
+    if (this.editorView) {
+      this.editorState = this.editorView.state;
+    }
+
+    return this.editorState;
   }
 
   get view() {
@@ -180,11 +214,11 @@ export class Editor extends EventEmitter<EditorEventMap> {
   }
 
   get isEditable() {
-    return this.options.editable;
+    return this.options.editable && (this.editorView ? this.editorView.editable : true);
   }
 
   get isFocused() {
-    return this.editorView?.hasFocus() ?? false;
+    return this.focused;
   }
 
   get isEmpty() {
@@ -252,23 +286,10 @@ export class Editor extends EventEmitter<EditorEventMap> {
       ...this.options,
       element,
     };
-    this.editorState = this.editorState.reconfigure({
-      plugins: this.allPlugins,
-    });
-
-    this.editorView = new EditorView(
-      element,
-      this.createViewProps(this.editorState),
-    );
-
-    this.prependClass();
-    this.injectCSS();
-    (this.editorView.dom as EditorHTMLElement).editor = this;
+    this.createView(element);
 
     this.emit("mount", { editor: this });
-    this.options.onMount({ editor: this });
     this.emit("create", { editor: this });
-    this.options.onCreate({ editor: this });
 
     this.focus(this.options.autofocus);
     this.isInitialized = true;
@@ -287,6 +308,7 @@ export class Editor extends EventEmitter<EditorEventMap> {
 
     this.editorView?.destroy();
     this.editorView = null;
+    this.focused = false;
     this.isInitialized = false;
 
     if (
@@ -300,12 +322,10 @@ export class Editor extends EventEmitter<EditorEventMap> {
     this.css = null;
 
     this.emit("unmount", { editor: this });
-    this.options.onUnmount({ editor: this });
   }
 
   destroy() {
     this.emit("destroy", { editor: this });
-    this.options.onDestroy({ editor: this });
     this.unmount();
     this.removeAllListeners();
     this.destroyed = true;
@@ -349,11 +369,6 @@ export class Editor extends EventEmitter<EditorEventMap> {
 
     if (emitUpdate) {
       this.emit("update", { editor: this, transaction: this.state.tr, appendedTransactions: [] });
-      this.options.onUpdate({
-        editor: this,
-        transaction: this.state.tr,
-        appendedTransactions: [],
-      });
     }
   }
 
@@ -382,12 +397,6 @@ export class Editor extends EventEmitter<EditorEventMap> {
         appendedTransactions: [],
       });
       this.emit("selectionUpdate", { editor: this, transaction: nextState.tr });
-      this.options.onUpdate({
-        editor: this,
-        transaction: nextState.tr,
-        appendedTransactions: [],
-      });
-      this.options.onSelectionUpdate({ editor: this, transaction: nextState.tr });
     }
   }
 
@@ -568,23 +577,28 @@ export class Editor extends EventEmitter<EditorEventMap> {
     plugin: Plugin,
     handlePlugins?: (plugin: Plugin, plugins: Plugin[]) => Plugin[],
   ) {
-    this.customPlugins = handlePlugins
-      ? handlePlugins(plugin, [...this.customPlugins])
-      : [...this.customPlugins, plugin];
-    this.reconfigureState();
+    const plugins = handlePlugins
+      ? handlePlugins(plugin, [...this.state.plugins])
+      : [...this.state.plugins, plugin];
+
+    this.customPlugins = this.getCustomPluginsFromState(plugins, plugin);
+
+    return this.updatePluginState(plugins);
   }
 
-  unregisterPlugin(pluginKey: PluginKeySource) {
-    const key = getPluginKeyValue(pluginKey);
+  unregisterPlugin(pluginKey: PluginKeySource | PluginKeySource[]) {
+    const pluginKeys = ([] as PluginKeySource[]).concat(pluginKey);
+    const plugins = this.state.plugins.filter(
+      (plugin) => !pluginKeys.some((item) => matchesPluginKey(plugin, item)),
+    );
 
-    if (!key) {
-      return;
+    if (plugins.length === this.state.plugins.length) {
+      return undefined;
     }
 
-    this.customPlugins = this.customPlugins.filter(
-      (plugin) => getPluginKeyValue(plugin) !== key,
-    );
-    this.reconfigureState();
+    this.customPlugins = this.getCustomPluginsFromState(plugins);
+
+    return this.updatePluginState(plugins);
   }
 
   focus(position?: FocusPosition, options?: FocusOptions) {
@@ -618,6 +632,17 @@ export class Editor extends EventEmitter<EditorEventMap> {
 
   blur() {
     this.editorView?.dom.blur();
+  }
+
+  createNodeViews() {
+    if (!this.editorView || this.editorView.isDestroyed) {
+      return;
+    }
+
+    this.editorView.setProps({
+      markViews: this.extensionManager.markViews,
+      nodeViews: this.extensionManager.nodeViews,
+    });
   }
 
   private get allPlugins() {
@@ -775,6 +800,7 @@ export class Editor extends EventEmitter<EditorEventMap> {
 
   private createViewProps(state: EditorState): DirectEditorProps {
     const editorProps = this.options.editorProps ?? {};
+    const attributes = editorProps.attributes;
     const baseDispatch =
       editorProps.dispatchTransaction
       ?? this.dispatchTransaction;
@@ -789,6 +815,15 @@ export class Editor extends EventEmitter<EditorEventMap> {
 
     return {
       ...editorProps,
+      attributes: typeof attributes === "function"
+        ? (viewState) => ({
+          role: "textbox",
+          ...(attributes(viewState) ?? {}),
+        })
+        : {
+          role: "textbox",
+          ...(attributes ?? {}),
+        },
       state,
       dispatchTransaction,
       transformPastedHTML,
@@ -825,11 +860,6 @@ export class Editor extends EventEmitter<EditorEventMap> {
       transaction,
       nextState: state,
     });
-    this.options.onBeforeTransaction({
-      editor: this,
-      transaction,
-      nextState: state,
-    });
 
     if (!transactions.includes(transaction)) {
       return;
@@ -843,15 +873,35 @@ export class Editor extends EventEmitter<EditorEventMap> {
       transaction,
       appendedTransactions,
     });
-    this.options.onTransaction({
-      editor: this,
-      transaction,
-      appendedTransactions,
-    });
 
     if (transaction.selectionSet || !state.selection.eq(previousSelection)) {
       this.emit("selectionUpdate", { editor: this, transaction });
-      this.options.onSelectionUpdate({ editor: this, transaction });
+    }
+
+    const focusTransaction = [...transactions]
+      .reverse()
+      .find((item) => item.getMeta("focus") || item.getMeta("blur"));
+    const focus = focusTransaction?.getMeta("focus") as { event: FocusEvent } | undefined;
+    const blur = focusTransaction?.getMeta("blur") as { event: FocusEvent } | undefined;
+
+    if (focus && focusTransaction) {
+      this.focused = true;
+
+      this.emit("focus", {
+        editor: this,
+        event: focus.event,
+        transaction: focusTransaction,
+      });
+    }
+
+    if (blur && focusTransaction) {
+      this.focused = false;
+
+      this.emit("blur", {
+        editor: this,
+        event: blur.event,
+        transaction: focusTransaction,
+      });
     }
 
     if (
@@ -864,13 +914,20 @@ export class Editor extends EventEmitter<EditorEventMap> {
         transaction,
         appendedTransactions,
       });
-      this.options.onUpdate({
-        editor: this,
-        transaction,
-        appendedTransactions,
-      });
     }
   };
+
+  private bindOptionEventListeners() {
+    optionEventBindings.forEach(([eventName, optionKey]) => {
+      this.on(eventName, (payload) => {
+        const handler = this.options[optionKey];
+
+        if (typeof handler === "function") {
+          (handler as (value: typeof payload) => void)(payload);
+        }
+      });
+    });
+  }
 
   private prependClass() {
     if (!this.editorView) {
@@ -890,5 +947,51 @@ export class Editor extends EventEmitter<EditorEventMap> {
     if (this.options.injectCSS && typeof document !== "undefined") {
       this.css = createStyleTag(style, this.options.injectNonce);
     }
+  }
+
+  private createView(element: HTMLElement) {
+    this.editorState = this.editorState.reconfigure({
+      plugins: this.allPlugins,
+    });
+
+    this.editorView = new EditorView(
+      element,
+      this.createViewProps(this.editorState),
+    );
+
+    this.createNodeViews();
+    this.prependClass();
+    this.injectCSS();
+    (this.editorView.dom as EditorHTMLElement).editor = this;
+  }
+
+  private updatePluginState(plugins: Plugin[]) {
+    const nextState = this.state.reconfigure({
+      plugins,
+    });
+
+    this.editorState = nextState;
+    this.editorView?.updateState(nextState);
+
+    return nextState;
+  }
+
+  private getCustomPluginsFromState(plugins: Plugin[], addedPlugin?: Plugin) {
+    const extensionPluginKeys = new Set(
+      this.extensionManager.plugins
+        .map((plugin) => getPluginKeyValue(plugin))
+        .filter((key): key is string => Boolean(key)),
+    );
+    const currentCustomPlugins = new Set(this.customPlugins);
+
+    return plugins.filter((plugin) => {
+      if (plugin === addedPlugin || currentCustomPlugins.has(plugin)) {
+        return true;
+      }
+
+      const pluginKey = getPluginKeyValue(plugin);
+
+      return !pluginKey || !extensionPluginKeys.has(pluginKey);
+    });
   }
 }

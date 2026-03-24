@@ -103,10 +103,10 @@ describe("P39 core mount lifecycle alignment", () => {
     expect(dom?.editor).toBeUndefined();
     expect(editor.isInitialized).toBe(false);
     expect(records).toEqual([
-      "event:mount",
       "option:mount",
-      "event:unmount",
+      "event:mount",
       "option:unmount",
+      "event:unmount",
     ]);
   });
 });

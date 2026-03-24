@@ -183,22 +183,8 @@ export function resolveExtensions(
   extensions: Extensions,
   createContext: ExtensionContextFactory = createStaticContext,
 ): Extensions {
-  const flatten = (items: Extensions): Extensions =>
-    items.flatMap((extension) => {
-      const nested = (
-        getExtensionField(
-          extension,
-          "addExtensions",
-          createContext(extension),
-        ) as (() => Extensions) | undefined
-      )?.();
-
-      return nested?.length
-        ? [extension, ...flatten(nested)]
-        : [extension];
-    });
-  const flattened = flatten(extensions);
-  const resolved = flattened.sort((a, b) => b.priority - a.priority);
+  const flattened = flattenExtensions(extensions, createContext);
+  const resolved = sortExtensions(flattened);
   const duplicateNames = findDuplicates(resolved.map((extension) => extension.name));
 
   if (duplicateNames.length) {
@@ -210,6 +196,29 @@ export function resolveExtensions(
   }
 
   return resolved;
+}
+
+export function flattenExtensions(
+  extensions: Extensions,
+  createContext: ExtensionContextFactory = createStaticContext,
+): Extensions {
+  return extensions.flatMap((extension) => {
+    const nested = (
+      getExtensionField(
+        extension,
+        "addExtensions",
+        createContext(extension),
+      ) as (() => Extensions) | undefined
+    )?.();
+
+    return nested?.length
+      ? [extension, ...flattenExtensions(nested, createContext)]
+      : [extension];
+  });
+}
+
+export function sortExtensions(extensions: Extensions): Extensions {
+  return [...extensions].sort((a, b) => b.priority - a.priority);
 }
 
 export function splitExtensions(

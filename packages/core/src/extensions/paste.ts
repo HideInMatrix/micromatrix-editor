@@ -20,11 +20,6 @@ export const Paste = Extension.create({
               event,
               slice,
             });
-            this.editor.options.onPaste({
-              editor: this.editor,
-              event,
-              slice,
-            });
 
             return false;
           },
