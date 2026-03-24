@@ -38,6 +38,9 @@ function normalizeInsertContentOptions(
     parseOptions: options?.parseOptions,
     updateSelection: options?.updateSelection ?? true,
     contentType: options?.contentType,
+    applyInputRules: options?.applyInputRules ?? false,
+    applyPasteRules: options?.applyPasteRules ?? false,
+    errorOnInvalidContent: options?.errorOnInvalidContent,
   };
 }
 
@@ -164,15 +167,55 @@ export function createContentCommands(editor: Editor): ContentCommands {
         const normalizedOptions = normalizeInsertContentOptions(options);
         let from = clamp(normalizedRange.from, 0, tr.doc.content.size);
         let to = clamp(normalizedRange.to, from, tr.doc.content.size);
-        const slice = createSliceFromContent(
-          editor.schema,
-          value,
-          {
-            parseOptions: normalizedOptions.parseOptions ?? editor.options.parseOptions,
-            contentType: normalizedOptions.contentType,
-            markdown: editor.markdown,
-          },
-        );
+        const errorOnInvalidContent =
+          normalizedOptions.errorOnInvalidContent ?? editor.options.enableContentCheck;
+
+        if (
+          !errorOnInvalidContent
+          && editor.options.emitContentError
+        ) {
+          try {
+            createSliceFromContent(
+              editor.schema,
+              value,
+              {
+                parseOptions: normalizedOptions.parseOptions ?? editor.options.parseOptions,
+                contentType: normalizedOptions.contentType,
+                markdown: editor.markdown,
+                errorOnInvalidContent: true,
+              },
+            );
+          } catch (error) {
+            if (!isInvalidContentError(error)) {
+              throw error;
+            }
+
+            editor.emitContentError(error);
+          }
+        }
+
+        let slice;
+
+        try {
+          slice = createSliceFromContent(
+            editor.schema,
+            value,
+            {
+              parseOptions: normalizedOptions.parseOptions ?? editor.options.parseOptions,
+              contentType: normalizedOptions.contentType,
+              markdown: editor.markdown,
+              errorOnInvalidContent,
+            },
+          );
+        } catch (error) {
+          if (!isInvalidContentError(error)) {
+            throw error;
+          }
+
+          editor.emitContentError(error);
+          return false;
+        }
+
         const startLength = tr.steps.length;
         const plainTextContent = getPlainTextContent(slice.content);
 
@@ -196,6 +239,20 @@ export function createContentCommands(editor: Editor): ContentCommands {
 
         if (normalizedOptions.updateSelection) {
           selectionToInsertionEnd(tr, startLength, -1);
+        }
+
+        if (normalizedOptions.applyInputRules) {
+          tr.setMeta("applyInputRules", {
+            from,
+            text: plainTextContent ?? value,
+          });
+        }
+
+        if (normalizedOptions.applyPasteRules) {
+          tr.setMeta("applyPasteRules", {
+            from,
+            text: plainTextContent ?? value,
+          });
         }
 
         return true;

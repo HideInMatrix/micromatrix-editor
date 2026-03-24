@@ -335,6 +335,9 @@ export interface InsertContentOptions {
   parseOptions?: ParseOptions;
   updateSelection?: boolean;
   contentType?: ContentType;
+  applyInputRules?: boolean;
+  applyPasteRules?: boolean;
+  errorOnInvalidContent?: boolean;
 }
 
 export interface Range {
@@ -390,6 +393,7 @@ export interface EditorOptions {
   editable?: boolean;
   parseOptions?: ParseOptions;
   enableContentCheck?: boolean;
+  emitContentError?: boolean;
   enableInputRules?: RulesSetting;
   enablePasteRules?: RulesSetting;
   coreExtensionOptions?: CoreExtensionOptions;

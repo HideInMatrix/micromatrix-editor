@@ -104,6 +104,26 @@ function ensureValidNode(
   }
 }
 
+function ensureValidFragment(
+  fragment: Fragment,
+  errorOnInvalidContent: boolean | undefined,
+  message: string,
+) {
+  if (!errorOnInvalidContent) {
+    return fragment;
+  }
+
+  try {
+    fragment.forEach((node) => {
+      node.check();
+    });
+
+    return fragment;
+  } catch (error) {
+    throw createContentError(message, error);
+  }
+}
+
 function validateHTMLContent(
   schema: Schema,
   content: string,
@@ -240,15 +260,68 @@ export function createSliceFromContent(
   }
 
   if (typeof content === "string") {
-    return parseStringContent(schema, content, options)
-      ?? Slice.empty;
+    try {
+      if (options?.errorOnInvalidContent && options.contentType !== "markdown") {
+        validateHTMLContent(schema, content, options.parseOptions);
+      }
+
+      const slice = parseStringContent(schema, content, options)
+        ?? Slice.empty;
+
+      ensureValidFragment(
+        slice.content,
+        options?.errorOnInvalidContent,
+        options?.contentType === "markdown"
+          ? invalidJsonContentErrorMessage
+          : invalidHtmlContentErrorMessage,
+      );
+
+      return slice;
+    } catch (error) {
+      if (options?.errorOnInvalidContent && isInvalidContentError(error)) {
+        throw error;
+      }
+
+      if (options?.errorOnInvalidContent) {
+        throw createContentError(
+          options?.contentType === "markdown"
+            ? invalidJsonContentErrorMessage
+            : invalidHtmlContentErrorMessage,
+          error,
+        );
+      }
+
+      warnInvalidContent(content, error);
+
+      return Slice.empty;
+    }
   }
 
-  return new Slice(
-    createFragmentFromContent(schema, content, options),
-    0,
-    0,
-  );
+  try {
+    const fragment = createFragmentFromContent(schema, content, options);
+
+    return new Slice(
+      ensureValidFragment(
+        fragment,
+        options?.errorOnInvalidContent,
+        invalidJsonContentErrorMessage,
+      ),
+      0,
+      0,
+    );
+  } catch (error) {
+    if (options?.errorOnInvalidContent && isInvalidContentError(error)) {
+      throw error;
+    }
+
+    if (options?.errorOnInvalidContent) {
+      throw createContentError(invalidJsonContentErrorMessage, error);
+    }
+
+    warnInvalidContent(content, error);
+
+    return Slice.empty;
+  }
 }
 
 export function createDocumentFromContent(

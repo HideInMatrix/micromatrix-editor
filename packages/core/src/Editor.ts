@@ -126,6 +126,8 @@ export class Editor extends EventEmitter<EditorEventMap> {
 
   extensionManager: ExtensionManager;
 
+  extensionStorage: Storage = {} as Storage;
+
   markdown: MarkdownParser | null = null;
 
   private readonly commandManager: CommandManager;
@@ -146,6 +148,8 @@ export class Editor extends EventEmitter<EditorEventMap> {
 
   isCapturingTransaction = false;
 
+  instanceId = Math.random().toString(36).slice(2, 9);
+
   private capturedTransaction: Transaction | null = null;
 
   private destroyed = false;
@@ -164,6 +168,7 @@ export class Editor extends EventEmitter<EditorEventMap> {
       editable: true,
       parseOptions: undefined,
       enableContentCheck: false,
+      emitContentError: false,
       enableInputRules: true,
       enablePasteRules: true,
       coreExtensionOptions: {},
@@ -206,7 +211,7 @@ export class Editor extends EventEmitter<EditorEventMap> {
   }
 
   get storage(): Storage {
-    return this.extensionManager.storage;
+    return this.extensionStorage;
   }
 
   get state() {
@@ -355,13 +360,22 @@ export class Editor extends EventEmitter<EditorEventMap> {
   }
 
   destroy() {
+    if (this.isDestroyed) {
+      return;
+    }
+
     this.emit("destroy", { editor: this });
     this.unmount();
+    this.extensionManager.destroy();
     this.removeAllListeners();
     this.destroyed = true;
   }
 
-  setOptions(options: Partial<EditorOptions>) {
+  setOptions(options: Partial<EditorOptions> = {}) {
+    if (this.isDestroyed) {
+      return;
+    }
+
     const shouldRebuildExtensions = this.shouldRebuildExtensions(options);
     const contentSnapshots = shouldRebuildExtensions
       ? this.createDocumentSnapshots()
@@ -388,6 +402,10 @@ export class Editor extends EventEmitter<EditorEventMap> {
   }
 
   setEditable(editable: boolean, emitUpdate = true) {
+    if (this.isDestroyed) {
+      return;
+    }
+
     this.options = {
       ...this.options,
       editable,
@@ -403,6 +421,10 @@ export class Editor extends EventEmitter<EditorEventMap> {
   }
 
   setContent(content: Content, options?: SetContentOptions | boolean) {
+    if (this.isDestroyed) {
+      return;
+    }
+
     const normalizedOptions =
       typeof options === "boolean"
         ? { emitUpdate: options }
@@ -618,6 +640,10 @@ export class Editor extends EventEmitter<EditorEventMap> {
   }
 
   unregisterPlugin(pluginKey: PluginKeySource | PluginKeySource[]) {
+    if (this.isDestroyed) {
+      return undefined;
+    }
+
     const pluginKeys = ([] as PluginKeySource[]).concat(pluginKey);
     const plugins = this.state.plugins.filter(
       (plugin) => !pluginKeys.some((item) => matchesPluginKey(plugin, item)),
@@ -743,13 +769,17 @@ export class Editor extends EventEmitter<EditorEventMap> {
   }
 
   private createExtensionManager() {
-    return new ExtensionManager(
+    const extensionManager = new ExtensionManager(
       [
         ...getCoreExtensions(this.options),
         ...this.options.extensions,
       ],
       this,
     );
+
+    this.extensionStorage = extensionManager.storage;
+
+    return extensionManager;
   }
 
   private rebuildExtensions(
