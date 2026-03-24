@@ -121,7 +121,7 @@ export class ExtensionManager {
   get attributes() {
     return getAttributesFromResolvedExtensions(
       this.extensions,
-      (extension) => this.getContext(extension),
+      (extension) => extension.createContext(this.editor),
     );
   }
 
@@ -200,7 +200,7 @@ export class ExtensionManager {
 
     return Object.fromEntries(
       nodes.map((node) => {
-        const context = this.getContext(node);
+        const context = node.createContext(this.editor);
         const addNodeView = getExtensionField(
           node,
           "addNodeView",
@@ -211,7 +211,7 @@ export class ExtensionManager {
         const attributes = getAttributesForExtensionFromResolvedExtensions(
           node,
           this.extensions,
-          (extension) => this.getContext(extension),
+          (extension) => extension.createContext(this.editor),
         );
         const renderNodeView = addNodeView?.();
 
@@ -299,7 +299,7 @@ export class ExtensionManager {
         const attributes = getAttributesForExtensionFromResolvedExtensions(
           mark,
           this.extensions,
-          (extension) => this.getContext(extension),
+          (extension) => extension.createContext(this.editor),
         );
         const createMarkView = renderMarkView?.();
 
