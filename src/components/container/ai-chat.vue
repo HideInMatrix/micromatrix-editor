@@ -26,8 +26,14 @@
       </div>
       <div v-if="isSubmitting" class="umo-ai-chat-message is-assistant">
         <div class="umo-ai-chat-message-role">{{ assistantName }}</div>
-        <div class="umo-ai-chat-message-body">
-          {{ loadingMessage }}
+        <div class="umo-ai-chat-message-body is-progress">
+          <div class="umo-ai-chat-progress-head">
+            <span>{{ loadingMessage }}</span>
+            <span>{{ requestProgress }}%</span>
+          </div>
+          <div class="umo-ai-chat-progress-track">
+            <span :style="{ width: `${requestProgress}%` }"></span>
+          </div>
         </div>
       </div>
     </div>
@@ -132,6 +138,7 @@ import prettyBytes from 'pretty-bytes'
 import {
   useAiAttachments,
   useAiEditorSnapshot,
+  useAiProgress,
   useAiRequest,
   useAiSession,
 } from '@/composables/ai'
@@ -183,6 +190,14 @@ const {
 } = useAiAttachments({
   aiOptions,
 })
+const {
+  progress: requestProgress,
+  start: startRequestProgress,
+  pulse: pulseRequestProgress,
+  finish: finishRequestProgress,
+  fail: failRequestProgress,
+  reset: resetRequestProgress,
+} = useAiProgress()
 
 const panelTitle = computed(() => {
   return (
@@ -368,6 +383,13 @@ const { submitPrompt, handlePromptKeydown } = useAiRequest({
   createMessageId,
   isSubmitting,
   canSubmit,
+  progress: {
+    start: startRequestProgress,
+    pulse: pulseRequestProgress,
+    finish: finishRequestProgress,
+    fail: failRequestProgress,
+    reset: resetRequestProgress,
+  },
   buildRequestContext: async ({ userPrompt }) => {
     const scope = resolveScope()
     const selectionSnapshot = getSelectionSnapshot()
@@ -509,6 +531,39 @@ const stopResize = () => {
     color: var(--umo-text-color);
     white-space: pre-wrap;
     word-break: break-word;
+
+    &.is-progress {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      white-space: normal;
+    }
+  }
+  .umo-ai-chat-progress-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    font-size: 12px;
+    color: var(--umo-text-color-light);
+  }
+  .umo-ai-chat-progress-track {
+    height: 6px;
+    border-radius: 999px;
+    overflow: hidden;
+    background-color: rgba(0, 0, 0, 0.08);
+
+    span {
+      display: block;
+      height: 100%;
+      border-radius: inherit;
+      transition: width 0.2s ease;
+      background: linear-gradient(
+        90deg,
+        var(--umo-primary-color),
+        rgba(56, 189, 248, 0.9)
+      );
+    }
   }
   .is-user .umo-ai-chat-message-body {
     background-color: var(--umo-button-hover-background);

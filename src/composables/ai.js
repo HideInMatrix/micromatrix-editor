@@ -18,6 +18,11 @@ const resolveValue = (value) => {
   return typeof value === 'function' ? value() : unref(value)
 }
 
+const wait = (delay = 0) =>
+  new Promise((resolve) => {
+    setTimeout(resolve, delay)
+  })
+
 const isFileLike = (value) => {
   return typeof File !== 'undefined' && value instanceof File
 }
@@ -116,6 +121,106 @@ export const useAiAttachments = ({ aiOptions } = {}) => {
     openFilePicker,
     removeAttachment,
     clearAttachments,
+  }
+}
+
+const clampProgress = (value) => {
+  const next = Number(value)
+  if (!Number.isFinite(next)) {
+    return 0
+  }
+  return Math.max(0, Math.min(100, Math.round(next)))
+}
+
+export const useAiProgress = ({
+  startAt = 10,
+  cap = 92,
+  interval = 220,
+} = {}) => {
+  const progress = ref(0)
+  const active = ref(false)
+  let timer = 0
+
+  const stopTimer = () => {
+    if (timer) {
+      clearInterval(timer)
+      timer = 0
+    }
+  }
+
+  const setProgress = (value) => {
+    progress.value = clampProgress(value)
+  }
+
+  const stepForward = (limit = cap, forceStep = null) => {
+    if (!active.value) {
+      return
+    }
+    const target = clampProgress(limit)
+    if (progress.value >= target) {
+      return
+    }
+
+    const autoStep =
+      progress.value < 30 ? 8
+      : progress.value < 55 ? 5
+      : progress.value < 75 ? 3
+      : 1
+    const nextStep = forceStep ?? autoStep
+    setProgress(Math.min(target, progress.value + nextStep))
+  }
+
+  const start = () => {
+    stopTimer()
+    active.value = true
+    setProgress(startAt)
+    timer = setInterval(() => {
+      stepForward()
+    }, interval)
+  }
+
+  const pulse = (limit = 96) => {
+    stepForward(limit, progress.value < 70 ? 6 : 2)
+  }
+
+  const finish = async () => {
+    if (!active.value) {
+      setProgress(100)
+      return
+    }
+
+    stopTimer()
+    setProgress(Math.max(progress.value, 96))
+    await wait(120)
+    setProgress(100)
+    await wait(140)
+    active.value = false
+  }
+
+  const fail = async () => {
+    stopTimer()
+    await wait(80)
+    active.value = false
+  }
+
+  const reset = () => {
+    stopTimer()
+    active.value = false
+    setProgress(0)
+  }
+
+  onUnmounted(() => {
+    stopTimer()
+  })
+
+  return {
+    progress,
+    active,
+    start,
+    pulse,
+    finish,
+    fail,
+    reset,
   }
 }
 
@@ -247,6 +352,7 @@ export const useAiRequest = ({
   isSubmitting,
   canSubmit,
   buildRequestContext,
+  progress,
 }) => {
   const submitPrompt = async () => {
     const editorInstance = editor.value
@@ -271,11 +377,19 @@ export const useAiRequest = ({
     })
     prompt.value = ''
     isSubmitting.value = true
+    progress?.start?.()
 
     try {
       const response = await requestAiChat(requestContext.payload, {
         ...aiOptions.value,
         locale: options.value.locale,
+      }, {
+        onText: async () => {
+          progress?.pulse?.()
+        },
+        onObject: async () => {
+          progress?.pulse?.()
+        },
       })
       const normalized = normalizeAiResult(
         response,
@@ -333,6 +447,7 @@ export const useAiRequest = ({
         })
       }
 
+      await progress?.finish?.()
       await pushMessage({
         id: createMessageId(),
         role: 'assistant',
@@ -353,6 +468,7 @@ export const useAiRequest = ({
         })
       }
 
+      await progress?.fail?.()
       await pushMessage({
         id: createMessageId(),
         role: 'assistant',
@@ -361,6 +477,7 @@ export const useAiRequest = ({
       })
     } finally {
       isSubmitting.value = false
+      progress?.reset?.()
     }
   }
 

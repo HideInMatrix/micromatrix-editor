@@ -60,6 +60,16 @@
           @keydown="handlePromptKeydown"
         />
 
+        <div v-if="showProgressBar" class="umo-node-ai-progress">
+          <div class="umo-node-ai-progress-head">
+            <span>{{ progressLabel }}</span>
+            <span>{{ requestProgress }}%</span>
+          </div>
+          <div class="umo-node-ai-progress-track">
+            <span :style="{ width: `${requestProgress}%` }"></span>
+          </div>
+        </div>
+
         <div v-if="resultGroups.length > 0" class="umo-node-ai-result-group">
           <div class="umo-node-ai-result-group-title">
             {{ t('node.ai.preview') }}
@@ -166,7 +176,7 @@
 <script setup>
 import { nodeViewProps, NodeViewWrapper } from '@tiptap/vue-3'
 
-import { useAiAttachments } from '@/composables/ai'
+import { useAiAttachments, useAiProgress } from '@/composables/ai'
 import {
   applyAiActions,
   canUseAiChat,
@@ -199,12 +209,22 @@ const {
 } = useAiAttachments({
   aiOptions,
 })
+const {
+  progress: requestProgress,
+  start: startRequestProgress,
+  pulse: pulseRequestProgress,
+  finish: finishRequestProgress,
+  fail: failRequestProgress,
+  reset: resetRequestProgress,
+} = useAiProgress()
 
 const nodeInsertTypes = new Set([
   'insert_echarts',
   'insert_math',
   'insert_mermaid',
   'insert_diagrams',
+  'insert_citation_with_footnote',
+  'insert_footnote',
 ])
 
 const htmlToText = (value = '') => {
@@ -294,6 +314,47 @@ const getActionPreviewText = (action) => {
       ? `图表：${title || '已生成图表节点'}`
       : `Chart: ${title || 'Chart node is ready'}`
   }
+  if (action.type === 'insert_footnote') {
+    const footnote = action.footnote || {}
+    const rawContent =
+      typeof footnote === 'string'
+        ? footnote
+        : footnote.caption ||
+          footnote.text ||
+          footnote.content ||
+          footnote.note ||
+          ''
+    const content =
+      typeof rawContent === 'string'
+        ? rawContent
+        : JSON.stringify(rawContent ?? {})
+    return locale.value === 'zh-CN'
+      ? `脚注：${toPreviewText(`${content}`, 180)}`
+      : `Footnote: ${toPreviewText(`${content}`, 180)}`
+  }
+  if (action.type === 'insert_citation_with_footnote') {
+    const citation = action.citation || {}
+    const citationRaw =
+      typeof citation === 'string'
+        ? citation
+        : citation.content || citation.text || citation.html || citation.quote || ''
+    const footnote = action.footnote || {}
+    const footnoteRaw =
+      typeof footnote === 'string'
+        ? footnote
+        : footnote.caption || footnote.text || footnote.content || footnote.note || ''
+    const citationText =
+      typeof citationRaw === 'string'
+        ? citationRaw
+        : JSON.stringify(citationRaw ?? {})
+    const footnoteText =
+      typeof footnoteRaw === 'string'
+        ? footnoteRaw
+        : JSON.stringify(footnoteRaw ?? {})
+    return locale.value === 'zh-CN'
+      ? `正文引用：${toPreviewText(`${citationText}`, 120)}\n脚注：${toPreviewText(`${footnoteText}`, 120)}`
+      : `Citation: ${toPreviewText(`${citationText}`, 120)}\nFootnote: ${toPreviewText(`${footnoteText}`, 120)}`
+  }
   return ''
 }
 
@@ -373,6 +434,20 @@ const getActionMeta = (action) => {
       label: t('node.ai.action.flowchart'),
     }
   }
+  if (action?.type === 'insert_footnote') {
+    return {
+      kind: 'footnote',
+      icon: 'footnote',
+      label: t('insert.footnote'),
+    }
+  }
+  if (action?.type === 'insert_citation_with_footnote') {
+    return {
+      kind: 'citation',
+      icon: 'footnote',
+      label: t('node.ai.action.citation'),
+    }
+  }
   return {
     kind: 'other',
     icon: 'file',
@@ -437,6 +512,9 @@ const inputPlaceholder = computed(() => {
 const uploadButtonText = computed(() => {
   return locale.value === 'zh-CN' ? '上传文件' : 'Upload files'
 })
+const progressLabel = computed(() => {
+  return locale.value === 'zh-CN' ? 'AI 正在分析并生成方案' : 'AI is preparing the response'
+})
 const canSubmit = computed(() => {
   return (
     !!localPrompt.value.trim() &&
@@ -471,6 +549,9 @@ const cancelLabel = computed(() => {
 })
 const closeNodeLabel = computed(() => {
   return locale.value === 'zh-CN' ? '关闭 AI 节点' : 'Close AI node'
+})
+const showProgressBar = computed(() => {
+  return isThinking.value && requestProgress.value > 0
 })
 
 const nodeStyle = computed(() => {
@@ -551,6 +632,7 @@ const submitPrompt = async () => {
   }
 
   const userPrompt = localPrompt.value.trim()
+  startRequestProgress()
   updateNodeAttrs({
     prompt: userPrompt,
     response: '',
@@ -564,12 +646,20 @@ const submitPrompt = async () => {
     const response = await requestAiChat(buildPayload(userPrompt), {
       ...aiOptions.value,
       locale: options.value.locale,
+    }, {
+      onText: async () => {
+        pulseRequestProgress()
+      },
+      onObject: async () => {
+        pulseRequestProgress()
+      },
     })
     const normalized = normalizeAiResult(response, 'selection', {
       locale: options.value.locale,
       autoApply: false,
       autoSave: false,
     })
+    await finishRequestProgress()
 
     updateNodeAttrs({
       prompt: userPrompt,
@@ -580,6 +670,7 @@ const submitPrompt = async () => {
       actions: normalized.actions || [],
     })
   } catch (error) {
+    await failRequestProgress()
     const errorMessage = getAiErrorMessage(error, {
       locale: options.value.locale,
     })
@@ -591,6 +682,8 @@ const submitPrompt = async () => {
       error: errorMessage,
       actions: [],
     })
+  } finally {
+    resetRequestProgress()
   }
 }
 
@@ -890,6 +983,46 @@ watch(
     }
   }
 
+  .umo-node-ai-progress {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 10px 12px;
+    border-radius: 12px;
+    background:
+      linear-gradient(180deg, rgba(37, 99, 235, 0.04), rgba(56, 189, 248, 0.02)),
+      rgba(255, 255, 255, 0.72);
+    border: 1px solid rgba(37, 99, 235, 0.08);
+  }
+
+  .umo-node-ai-progress-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    font-size: 12px;
+    color: var(--umo-text-color-light);
+  }
+
+  .umo-node-ai-progress-track {
+    height: 6px;
+    border-radius: 999px;
+    overflow: hidden;
+    background-color: rgba(15, 23, 42, 0.08);
+
+    span {
+      display: block;
+      height: 100%;
+      border-radius: inherit;
+      transition: width 0.2s ease;
+      background: linear-gradient(
+        90deg,
+        var(--umo-primary-color),
+        rgba(56, 189, 248, 0.9)
+      );
+    }
+  }
+
   .umo-node-ai-result-group {
     display: flex;
     flex-direction: column;
@@ -940,6 +1073,14 @@ watch(
       border-color: rgba(16, 185, 129, 0.18);
     }
 
+    &.is-footnote {
+      border-color: rgba(100, 116, 139, 0.18);
+    }
+
+    &.is-citation {
+      border-color: rgba(79, 70, 229, 0.18);
+    }
+
     &.is-mermaid,
     &.is-flowchart {
       border-color: rgba(249, 115, 22, 0.18);
@@ -984,6 +1125,18 @@ watch(
       background-color: rgba(16, 185, 129, 0.08);
       border-color: rgba(16, 185, 129, 0.14);
       color: #047857;
+    }
+
+    &.is-footnote {
+      background-color: rgba(100, 116, 139, 0.08);
+      border-color: rgba(100, 116, 139, 0.14);
+      color: #475569;
+    }
+
+    &.is-citation {
+      background-color: rgba(79, 70, 229, 0.08);
+      border-color: rgba(79, 70, 229, 0.14);
+      color: #4338ca;
     }
 
     &.is-mermaid,

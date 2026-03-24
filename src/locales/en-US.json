@@ -768,6 +768,7 @@
       },
       "action": {
         "chart": "Insert chart",
+        "citation": "Insert citation footnote",
         "rewrite": "Rewrite content",
         "math": "Insert formula",
         "mermaid": "Insert Mermaid",

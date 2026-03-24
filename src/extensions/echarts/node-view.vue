@@ -40,6 +40,7 @@
 import { nodeViewProps, NodeViewWrapper } from '@tiptap/vue-3'
 // 拖拽组件
 import Drager from 'es-drager'
+import ecStat from 'echarts-stat'
 
 import {
   calbaseConfigData,
@@ -60,8 +61,30 @@ let chart = null
 let chartOption = $ref(null)
 let resizeObserver = null
 let widthSyncFrame = 0
+let echartsStatRegistered = false
 
 const MAX_WIDTH_SYNC_ATTEMPTS = 12
+
+const registerEchartsStatTransforms = () => {
+  if (
+    echartsStatRegistered ||
+    typeof echarts === 'undefined' ||
+    typeof echarts.registerTransform !== 'function'
+  ) {
+    return
+  }
+
+  const transforms = [
+    ecStat?.transform?.regression,
+    ecStat?.transform?.histogram,
+    ecStat?.transform?.clustering,
+  ].filter(Boolean)
+
+  transforms.forEach((transform) => {
+    echarts.registerTransform(transform)
+  })
+  echartsStatRegistered = true
+}
 
 const getContainerWidth = () => {
   return Number(containerRef.value?.$el?.offsetWidth || 0)
@@ -178,6 +201,7 @@ const loadData = async () => {
   }
   // 等待 echarts 加载完成
   await waitForECharts()
+  registerEchartsStatTransforms()
   // 接下来的使用就跟之前一样，初始化图表，设置配置项
   if (typeof echarts !== 'undefined') {
     const { chartOptions, chartConfig, id, mode } = attrs

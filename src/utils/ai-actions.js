@@ -10,6 +10,15 @@ const MATH_ACTION_TYPES = new Set([
 ])
 const MERMAID_ACTION_TYPES = new Set(['insert_mermaid'])
 const DIAGRAM_ACTION_TYPES = new Set(['insert_diagrams', 'insert_diagram'])
+const CITATION_FOOTNOTE_ACTION_TYPES = new Set([
+  'insert_citation_with_footnote',
+  'insert_citation_footnote',
+  'insert_source_citation',
+])
+const FOOTNOTE_ACTION_TYPES = new Set([
+  'insert_footnote',
+  'insert_footnote_reference',
+])
 const FLOWCHART_ACTION_TYPES = new Set([
   'insert_flowchart',
   'insert_flow_chart',
@@ -19,6 +28,8 @@ const NODE_INSERT_ACTION_TYPES = new Set([
   'insert_math',
   'insert_mermaid',
   'insert_diagrams',
+  'insert_citation_with_footnote',
+  'insert_footnote',
 ])
 const DEFAULT_AI_API_URL = '/api/ai/generate'
 const DEFAULT_AI_MAX_OUTPUT_TOKENS = 12000
@@ -193,12 +204,18 @@ export const buildAiSystemPrompt = () => {
     'actions 支持以下类型：',
     '1. replace_document: 用新的完整 HTML 替换全文，字段包含 type、content、format。',
     '2. replace_selection: 用 HTML 替换当前选区，字段包含 type、content、format。',
-    '3. insert_echarts: 插入 ECharts 图表节点，字段包含 type、target、chart。',
+    '3. insert_echarts: 插入 ECharts 图表节点，字段包含 type、target、chart。chart 优先提供可直接渲染的 chartOptions；如果图表涉及统计分析，可使用 ECharts dataset + echarts-stat transform。',
     '4. insert_math: 插入公式节点，字段包含 type、target、math。math 可以是 LaTeX 字符串，或对象 { latex, displayMode }。',
     '5. insert_mermaid: 插入 Mermaid 节点，字段包含 type、target、mermaid。mermaid 可以是字符串源码，或对象 { content, config, width, height }。',
     '6. insert_diagrams: 插入流程图节点，字段包含 type、target、diagram。diagram 需要提供可直接显示的 src，建议同时提供 content、width、height。',
+    '7. insert_footnote: 插入脚注引用，字段包含 type、target、footnote。footnote 可以是字符串，或对象 { content, format, caption }。',
+    '8. insert_citation_with_footnote: 插入正文引用并自动附带脚注，字段包含 type、target、citation、footnote。citation 用于正文显示，footnote 用于脚注内容。',
     '如果用户要求“生成图表/可视化/趋势图/柱状图/饼图/折线图”，优先返回 insert_echarts。',
+    '如果图表需要回归线、趋势拟合、直方图分箱、聚类分析等统计能力，优先使用 echarts-stat，并在 chart.chartOptions 中使用 dataset/transform 描述，例如 ecStat:regression、ecStat:histogram、ecStat:clustering。',
+    '使用 echarts-stat 时，不要输出伪代码或额外脚本，只返回可直接给 ECharts 使用的 JSON options。',
     '如果用户要求插入公式、数学表达式、LaTeX，请返回 insert_math，并提供合法 LaTeX。',
+    '如果用户要求补充注释、参考说明、尾注样式说明，且适合脚注呈现，请返回 insert_footnote。',
+    '如果用户要求把来源、出处、参考文献拆成正文引用 + 脚注说明，优先返回 insert_citation_with_footnote。',
     '不要把独立公式作为普通文本写进 replace_document 或 replace_selection 的 content 里，除非用户明确要求保留 LaTeX 原文。',
     '如果公式必须出现在文本改写内容中，行内公式请用 $...$ 包裹，独立公式请用 $$...$$ 包裹。',
     '如果用户要求插入流程图、时序图、类图、状态图、甘特图，优先返回 insert_mermaid，并提供合法 Mermaid 源码。',
@@ -230,10 +247,14 @@ export const buildAiPrompt = ({
     '请根据用户要求返回前面约定的 JSON。',
     '如果只是文本改写，请返回 replace_document 或 replace_selection。',
     '如果需要在文档中展示 ECharts 图表，请返回 insert_echarts，并提供可直接渲染的 chartOptions。',
+    '如果图表包含回归分析、分布直方图、聚类结果、趋势拟合等统计计算，请优先使用 echarts-stat 的 transform 能力，按 ECharts dataset + transform 结构返回 chartOptions。',
+    'echarts-stat transform.type 仅使用 ecStat:regression、ecStat:histogram、ecStat:clustering 这类合法值，不要输出额外 JS 代码。',
     '如果需要插入公式，请返回 insert_math，并提供合法 LaTeX；独立公式优先使用 displayMode=true，不要把独立公式当普通文本返回。',
     '如果公式必须出现在文本内容里，行内公式请写成 $...$，独立公式请写成 $$...$$。',
     '如果需要插入流程图、时序图、类图或其他 Mermaid 图，请返回 insert_mermaid，并提供合法 Mermaid 源码。',
     '如果确实要输出 diagrams 节点，请返回 insert_diagrams，并确保 diagram.src 可直接展示；做不到时请改用 insert_mermaid。',
+    '如果需要给当前内容补充脚注说明、来源备注或补充解释，请返回 insert_footnote，并提供 footnote.content 或 footnote.caption。',
+    '如果需要把引用来源拆成正文引用和脚注解释，请返回 insert_citation_with_footnote，并同时提供 citation 与 footnote。',
     '图表或图形的数据请优先从当前选区文本、全文文本、表格或列表中提取；如果数据不完整，可以做合理补全，但要保证节点可展示。',
     '如果是选区修改，只调整选区相关内容，文档其他部分保持原状。',
     ...(attachmentMetas.length > 0
@@ -1163,6 +1184,27 @@ const inferActionTypeFromPayload = (action) => {
   if (action.src || action.image || action.svg || action.svgData) {
     return 'insert_diagrams'
   }
+  if (
+    (action.citation !== undefined ||
+      action.bodyCitation !== undefined ||
+      action.sourceCitation !== undefined ||
+      action.quote !== undefined) &&
+    (action.footnote !== undefined ||
+      action.footnoteNode !== undefined ||
+      action.footnoteText !== undefined ||
+      action.source !== undefined ||
+      action.reference !== undefined)
+  ) {
+    return 'insert_citation_with_footnote'
+  }
+  if (
+    action.footnote !== undefined ||
+    action.footnoteNode !== undefined ||
+    action.footnoteText !== undefined ||
+    action.referenceType === 'footnote'
+  ) {
+    return 'insert_footnote'
+  }
   return ''
 }
 
@@ -1303,6 +1345,74 @@ const normalizeDiagramsAction = (action, fallbackScope) => {
   }
 }
 
+const normalizeFootnoteAction = (action, fallbackScope) => {
+  const hasStructuredFootnote =
+    action.footnote !== undefined || action.footnoteNode !== undefined
+  return {
+    type: 'insert_footnote',
+    target: normalizeActionTarget(action.target, fallbackScope),
+    position: action.position || 'after',
+    footnote: hasStructuredFootnote
+      ? action.footnote ?? action.footnoteNode
+      : {
+          content:
+            action.content ??
+            action.html ??
+            action.text ??
+            action.json ??
+            action.note ??
+            action.footnoteText ??
+            '',
+          format: action.format,
+          caption: action.caption,
+        },
+  }
+}
+
+const normalizeCitationWithFootnoteAction = (action, fallbackScope) => {
+  const hasStructuredCitation =
+    action.citation !== undefined ||
+    action.bodyCitation !== undefined ||
+    action.sourceCitation !== undefined
+  const hasStructuredFootnote =
+    action.footnote !== undefined ||
+    action.footnoteNode !== undefined ||
+    action.reference !== undefined ||
+    action.source !== undefined
+
+  return {
+    type: 'insert_citation_with_footnote',
+    target: normalizeActionTarget(action.target, fallbackScope),
+    position: action.position || 'after',
+    citation: hasStructuredCitation
+      ? action.citation ?? action.bodyCitation ?? action.sourceCitation
+      : {
+          content:
+            action.content ??
+            action.html ??
+            action.text ??
+            action.json ??
+            action.quote ??
+            '',
+          format: action.format,
+        },
+    footnote: hasStructuredFootnote
+      ? action.footnote ??
+        action.footnoteNode ??
+        action.reference ??
+        action.source
+      : {
+          content:
+            action.note ??
+            action.footnoteText ??
+            action.caption ??
+            '',
+          format: action.footnoteFormat,
+          caption: action.caption,
+        },
+  }
+}
+
 const normalizeFlowchartAction = (action, fallbackScope) => {
   const flowchartPayload =
     action.flowchart ??
@@ -1413,6 +1523,12 @@ const normalizeStructuredAction = (action, fallbackScope) => {
   }
   if (DIAGRAM_ACTION_TYPES.has(type)) {
     return normalizeDiagramsAction(action, fallbackScope)
+  }
+  if (CITATION_FOOTNOTE_ACTION_TYPES.has(type)) {
+    return normalizeCitationWithFootnoteAction(action, fallbackScope)
+  }
+  if (FOOTNOTE_ACTION_TYPES.has(type)) {
+    return normalizeFootnoteAction(action, fallbackScope)
   }
   if (FLOWCHART_ACTION_TYPES.has(type)) {
     return normalizeFlowchartAction(action, fallbackScope)
@@ -1593,6 +1709,16 @@ export const getAiApplyMeta = (result, config = {}) => {
     return locale === 'zh-CN'
       ? `已在${insertionTargetText}插入流程图节点`
       : `Inserted a flowchart node ${insertionTargetText}`
+  }
+  if (result.mode === 'insert_footnote') {
+    return locale === 'zh-CN'
+      ? `已在${insertionTargetText}插入脚注`
+      : `Inserted a footnote ${insertionTargetText}`
+  }
+  if (result.mode === 'insert_citation_with_footnote') {
+    return locale === 'zh-CN'
+      ? `已在${insertionTargetText}插入正文引用与脚注`
+      : `Inserted a citation with footnote ${insertionTargetText}`
   }
   const targetText =
     result.target === 'selection'
@@ -2047,6 +2173,241 @@ const normalizeDiagramsPayload = (diagram) => {
   }
 }
 
+const normalizeFootnoteText = (value = '') => {
+  return `${value || ''}`
+    .replace(/\s+/g, ' ')
+    .trim()
+}
+
+const getPlainTextFromAnyHtml = (value = '') => {
+  if (!value || typeof value !== 'string') {
+    return ''
+  }
+  if (typeof DOMParser === 'undefined') {
+    return normalizeFootnoteText(value)
+  }
+  try {
+    const doc = new DOMParser().parseFromString(value, 'text/html')
+    return normalizeFootnoteText(doc.body?.textContent || '')
+  } catch {
+    return normalizeFootnoteText(value)
+  }
+}
+
+const getPlainTextFromJsonContent = (value, seen = new Set()) => {
+  if (value === undefined || value === null) {
+    return ''
+  }
+  if (typeof value === 'string') {
+    return normalizeFootnoteText(value)
+  }
+  if (typeof value === 'number' || typeof value === 'boolean') {
+    return normalizeFootnoteText(`${value}`)
+  }
+  if (Array.isArray(value)) {
+    return normalizeFootnoteText(
+      value
+        .map((item) => getPlainTextFromJsonContent(item, seen))
+        .filter(Boolean)
+        .join(' '),
+    )
+  }
+  if (typeof value !== 'object' || seen.has(value)) {
+    return ''
+  }
+
+  seen.add(value)
+  return normalizeFootnoteText(
+    [
+      value.text,
+      value.content,
+      value.caption,
+      value.message,
+      value.children,
+    ]
+      .map((item) => getPlainTextFromJsonContent(item, seen))
+      .filter(Boolean)
+      .join(' '),
+  )
+}
+
+const normalizeFootnotePayload = (footnote) => {
+  if (typeof footnote === 'string') {
+    const caption = normalizeFootnoteText(footnote)
+    if (!caption) {
+      return null
+    }
+    return {
+      id: shortId(10),
+      caption,
+      content: contentTransform(caption),
+      hasExplicitContent: true,
+    }
+  }
+
+  const normalizedFootnote = normalizeObjectInput(footnote)
+  if (!normalizedFootnote) {
+    return null
+  }
+
+  const rawContent =
+    normalizedFootnote.content ??
+    normalizedFootnote.html ??
+    normalizedFootnote.text ??
+    normalizedFootnote.json ??
+    normalizedFootnote.body ??
+    normalizedFootnote.note ??
+    normalizedFootnote.value
+  const format =
+    normalizedFootnote.format ||
+    (normalizedFootnote.html !== undefined
+      ? 'html'
+      : normalizedFootnote.json !== undefined ||
+          (rawContent && typeof rawContent === 'object')
+        ? 'json'
+        : 'text')
+
+  let normalizedContent = null
+  if (rawContent !== undefined && rawContent !== null && rawContent !== '') {
+    if (format === 'json') {
+      if (Array.isArray(rawContent)) {
+        normalizedContent = rawContent
+      } else if (rawContent?.type === 'doc' && Array.isArray(rawContent.content)) {
+        normalizedContent = rawContent.content
+      } else {
+        normalizedContent = rawContent
+      }
+    } else if (format === 'html') {
+      normalizedContent = `${rawContent}`.trim()
+    } else {
+      const textContent = `${rawContent}`.trim()
+      normalizedContent = textContent ? contentTransform(textContent) : ''
+    }
+  }
+
+  const caption =
+    normalizeFootnoteText(normalizedFootnote.caption) ||
+    (format === 'html'
+      ? getPlainTextFromAnyHtml(`${rawContent || ''}`)
+      : format === 'json'
+        ? getPlainTextFromJsonContent(rawContent)
+        : normalizeFootnoteText(`${rawContent || ''}`))
+
+  if (!caption && !normalizedContent) {
+    return null
+  }
+
+  return {
+    id: normalizedFootnote.id || shortId(10),
+    caption,
+    content: normalizedContent || contentTransform(caption),
+    hasExplicitContent:
+      normalizedContent !== null &&
+      normalizedContent !== undefined &&
+      normalizedContent !== '',
+  }
+}
+
+const normalizeCitationPayload = (citation) => {
+  if (typeof citation === 'string') {
+    const content = citation.trim()
+    if (!content) {
+      return null
+    }
+    return {
+      content,
+      format: content.startsWith('<') ? 'html' : 'text',
+    }
+  }
+
+  const normalizedCitation = normalizeObjectInput(citation)
+  if (!normalizedCitation) {
+    return null
+  }
+
+  const content =
+    normalizedCitation.content ??
+    normalizedCitation.html ??
+    normalizedCitation.text ??
+    normalizedCitation.json ??
+    normalizedCitation.body ??
+    normalizedCitation.quote ??
+    normalizedCitation.value
+  if (content === undefined || content === null || content === '') {
+    return null
+  }
+
+  const format =
+    normalizedCitation.format ||
+    (normalizedCitation.html !== undefined
+      ? 'html'
+      : normalizedCitation.json !== undefined ||
+          (content && typeof content === 'object')
+        ? 'json'
+        : typeof content === 'string' && content.trim().startsWith('<')
+          ? 'html'
+          : 'text')
+
+  return {
+    content,
+    format,
+  }
+}
+
+const resolveCitationPatchMode = (action, selectionRange) => {
+  const normalized = `${action?.position || action?.mode || 'after'}`
+    .trim()
+    .toLowerCase()
+  if (
+    normalized === 'replace' &&
+    selectionRange &&
+    selectionRange.from !== undefined &&
+    selectionRange.to !== undefined &&
+    selectionRange.from !== selectionRange.to
+  ) {
+    return 'replace'
+  }
+  if (['before', 'start', 'prepend'].includes(normalized)) {
+    return 'prepend'
+  }
+  return 'append'
+}
+
+const findNodeByAttr = (doc, nodeType, attrName, attrValue) => {
+  let matched = null
+  doc?.descendants((node, pos) => {
+    if (
+      node.type.name === nodeType &&
+      (attrName === undefined || node.attrs?.[attrName] === attrValue)
+    ) {
+      matched = { node, pos }
+      return false
+    }
+  })
+  return matched
+}
+
+const focusFootnoteInsertTarget = (editor, target, position, selectionRange) => {
+  if (target === 'selection') {
+    return focusInsertTarget(editor, target, position, selectionRange)
+  }
+
+  if (position === 'before' || position === 'start') {
+    return focusInsertTarget(editor, 'document', 'start', selectionRange)
+  }
+
+  const footnotesNode = findNodeByAttr(
+    editor?.state?.doc,
+    'footnotes',
+  )
+  if (!footnotesNode) {
+    return focusInsertTarget(editor, 'document', 'end', selectionRange)
+  }
+
+  const insertPosition = clampPosition(editor, footnotesNode.pos)
+  return editor.chain().focus().setTextSelection(insertPosition)
+}
+
 const focusInsertTarget = (editor, target, position, selectionRange) => {
   if (target === 'selection' && selectionRange) {
     const from = clampPosition(editor, selectionRange.from)
@@ -2262,6 +2623,113 @@ const applyDiagramsAction = (action, fallbackScope, context) => {
   }
 }
 
+const applyFootnoteAction = (action, fallbackScope, context) => {
+  const editor = resolveValue(context.editor)
+  if (!editor) {
+    return { changed: false }
+  }
+  if (!editor.schema?.nodes?.footnoteReference || !editor.schema?.nodes?.footnote) {
+    return { changed: false, target: action.target || fallbackScope, mode: 'insert_footnote' }
+  }
+
+  const target = action.target || fallbackScope
+  const footnote = normalizeFootnotePayload(action.footnote)
+  if (!footnote) {
+    return { changed: false, target, mode: 'insert_footnote' }
+  }
+
+  const insertChain = focusFootnoteInsertTarget(
+    editor,
+    target,
+    action.position || 'after',
+    context.selectionRange,
+  )
+  const changed = insertChain
+    .insertContent({
+      type: 'footnoteReference',
+      attrs: {
+        'data-fn-id': footnote.id,
+        caption: footnote.caption,
+      },
+    })
+    .run()
+
+  if (!changed) {
+    return { changed: false, target, mode: 'insert_footnote' }
+  }
+
+  const footnoteNode = findNodeByAttr(
+    editor.state.doc,
+    'footnote',
+    'data-fn-id',
+    footnote.id,
+  )
+
+  if (footnoteNode?.node && footnote.hasExplicitContent) {
+    const from = footnoteNode.pos + 1
+    const to = footnoteNode.pos + footnoteNode.node.nodeSize - 1
+    editor.chain().insertContentAt({ from, to }, footnote.content).run()
+  }
+
+  return {
+    changed: true,
+    target,
+    mode: 'insert_footnote',
+  }
+}
+
+const applyCitationWithFootnoteAction = async (action, fallbackScope, context) => {
+  const editor = resolveValue(context.editor)
+  if (!editor) {
+    return { changed: false }
+  }
+
+  const target = action.target || fallbackScope
+  const citation = normalizeCitationPayload(action.citation)
+  const footnote = normalizeFootnotePayload(action.footnote)
+  if (!citation && !footnote) {
+    return { changed: false, target, mode: 'insert_citation_with_footnote' }
+  }
+
+  let citationChanged = false
+  if (citation) {
+    const citationPatch = {
+      type: 'patch',
+      target,
+      mode: resolveCitationPatchMode(action, context.selectionRange),
+      format: citation.format,
+      content: citation.content,
+    }
+    const citationResult = applyAiPatch(citationPatch, fallbackScope, context)
+    citationChanged = !!citationResult?.changed
+  }
+
+  let footnoteChanged = false
+  if (footnote) {
+    const currentSelectionRange = getSelectionSnapshot(editor, context.selectionRange)
+    const footnoteResult = applyFootnoteAction(
+      {
+        type: 'insert_footnote',
+        target: citationChanged ? 'selection' : target,
+        position: citationChanged ? 'after' : action.position,
+        footnote,
+      },
+      citationChanged ? 'selection' : fallbackScope,
+      {
+        ...context,
+        selectionRange: currentSelectionRange,
+      },
+    )
+    footnoteChanged = !!footnoteResult?.changed
+  }
+
+  return {
+    changed: citationChanged || footnoteChanged,
+    target,
+    mode: 'insert_citation_with_footnote',
+  }
+}
+
 const applyAiPatch = (patch, fallbackScope, context) => {
   const editor = resolveValue(context.editor)
   if (!editor || !patch) {
@@ -2353,6 +2821,12 @@ const applyAiAction = async (action, fallbackScope, context) => {
   }
   if (action.type === 'insert_diagrams') {
     return applyDiagramsAction(action, fallbackScope, context)
+  }
+  if (action.type === 'insert_citation_with_footnote') {
+    return applyCitationWithFootnoteAction(action, fallbackScope, context)
+  }
+  if (action.type === 'insert_footnote') {
+    return applyFootnoteAction(action, fallbackScope, context)
   }
   return applyAiPatch(action, fallbackScope, context)
 }

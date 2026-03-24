@@ -767,6 +767,7 @@
       },
       "action": {
         "chart": "插入图表",
+        "citation": "插入引文脚注",
         "rewrite": "改写内容",
         "math": "插入公式",
         "mermaid": "插入 Mermaid",
