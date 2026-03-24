@@ -6,6 +6,7 @@ import {
 } from "vitest";
 import { Editor } from "@mxm-editor/core";
 import { StarterKit } from "@mxm-editor/starter-kit";
+import { flushEditorCreate } from "./helpers/flushEditorCreate";
 
 function createExtensions() {
   return [
@@ -70,7 +71,7 @@ describe("P39 core mount lifecycle alignment", () => {
     editor.destroy();
   });
 
-  it("emits mount and unmount callbacks and stores the mounted editor on the DOM node", () => {
+  it("emits mount and unmount callbacks and stores the mounted editor on the DOM node", async () => {
     const records: string[] = [];
     const editor = new Editor({
       content: "<p>Lifecycle</p>",
@@ -96,6 +97,10 @@ describe("P39 core mount lifecycle alignment", () => {
 
     expect(dom?.classList.contains("tiptap")).toBe(true);
     expect(dom?.editor).toBe(editor);
+    expect(editor.isInitialized).toBe(false);
+
+    await flushEditorCreate();
+
     expect(editor.isInitialized).toBe(true);
 
     editor.unmount();

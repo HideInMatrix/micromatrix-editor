@@ -9,6 +9,7 @@ import {
   type PagesStorage,
 } from "@mxm-editor/extension-pages";
 import { StarterKit } from "@mxm-editor/starter-kit";
+import { flushEditorCreate } from "./helpers/flushEditorCreate";
 
 afterEach(() => {
   vi.restoreAllMocks();
@@ -19,6 +20,7 @@ afterEach(() => {
 });
 
 async function flushPagesLayout() {
+  await flushEditorCreate();
   await Promise.resolve();
   await new Promise<void>((resolve) => {
     window.requestAnimationFrame(() => resolve());

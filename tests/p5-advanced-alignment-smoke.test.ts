@@ -9,6 +9,7 @@ import {
   UniqueID,
 } from "@mxm-editor/extension-unique-id";
 import { StarterKit } from "@mxm-editor/starter-kit";
+import { flushEditorCreate } from "./helpers/flushEditorCreate";
 
 afterEach(() => {
   document.body.innerHTML = "";
@@ -99,7 +100,7 @@ describe("P5 advanced alignment smoke", () => {
     expect(editor.getText()).toBe("“Hello” — 2×3...");
   });
 
-  it("assigns unique ids to configured nodes and fixes duplicates after updates", () => {
+  it("assigns unique ids to configured nodes and fixes duplicates after updates", async () => {
     const element = document.createElement("div");
 
     document.body.appendChild(element);
@@ -118,6 +119,8 @@ describe("P5 advanced alignment smoke", () => {
       ],
       content: "<h1>Title</h1><p>One</p><p>Two</p>",
     });
+
+    await flushEditorCreate();
 
     const initialDocument = editor.getJSON();
     const initialIds = getTopLevelIds(initialDocument);

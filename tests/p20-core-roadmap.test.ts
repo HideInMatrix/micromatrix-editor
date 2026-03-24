@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it } from "vitest";
 import { Editor, Extension } from "@mxm-editor/core";
 import { StarterKit } from "@mxm-editor/starter-kit";
+import { flushEditorCreate } from "./helpers/flushEditorCreate";
 
 afterEach(() => {
   document.body.innerHTML = "";
@@ -90,7 +91,7 @@ describe("P20 core roadmap", () => {
     editor.destroy();
   });
 
-  it("emits lifecycle hooks and applies core editor extensions", () => {
+  it("emits lifecycle hooks and applies core editor extensions", async () => {
     const element = document.createElement("div");
     const extensionEvents: string[] = [];
     const optionEvents: string[] = [];
@@ -154,6 +155,8 @@ describe("P20 core roadmap", () => {
     editor.on("transaction", () => emittedEvents.push("event:transaction"));
     editor.on("focus", () => emittedEvents.push("event:focus"));
     editor.on("blur", () => emittedEvents.push("event:blur"));
+
+    await flushEditorCreate();
 
     expect(element.querySelector(".ProseMirror")?.getAttribute("tabindex")).toBe("0");
 

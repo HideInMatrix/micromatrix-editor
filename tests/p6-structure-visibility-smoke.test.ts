@@ -12,6 +12,7 @@ import {
   getLinearIndexes,
 } from "@mxm-editor/extension-table-of-contents";
 import { StarterKit } from "@mxm-editor/starter-kit";
+import { flushEditorCreate } from "./helpers/flushEditorCreate";
 
 afterEach(() => {
   document.body.innerHTML = "";
@@ -23,7 +24,7 @@ afterEach(() => {
 });
 
 describe("P6 structure and visibility smoke", () => {
-  it("renders invisible characters and toggles their visibility", () => {
+  it("renders invisible characters and toggles their visibility", async () => {
     const element = document.createElement("div");
 
     document.body.appendChild(element);
@@ -40,6 +41,8 @@ describe("P6 structure and visibility smoke", () => {
       content: "<p>a b<br>c</p><p>next</p>",
     });
     const storage = editor.storage.invisibleCharacters as InvisibleCharactersStorage;
+
+    await flushEditorCreate();
 
     expect(storage.visibility()).toBe(true);
     expect(
@@ -68,7 +71,7 @@ describe("P6 structure and visibility smoke", () => {
     editor.destroy();
   });
 
-  it("persists heading ids and exposes table-of-contents helpers", () => {
+  it("persists heading ids and exposes table-of-contents helpers", async () => {
     const element = document.createElement("div");
     const updates: Array<{ count: number; isCreate: boolean }> = [];
 
@@ -104,6 +107,9 @@ describe("P6 structure and visibility smoke", () => {
       ].join(""),
     });
     const storage = editor.storage.tableOfContents as TableOfContentsStorage;
+
+    await flushEditorCreate();
+
     const [first, second, third, fourth] = storage.content;
 
     if (!first || !second || !third || !fourth) {

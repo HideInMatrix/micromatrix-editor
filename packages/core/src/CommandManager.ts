@@ -39,8 +39,12 @@ export class CommandManager {
           const executeCommand = command as (...commandArgs: any[]) => ReturnType<typeof command>;
           const handled = executeCommand(...args)(props);
 
-          if (!this.hasCustomState && this.editor.view && !this.shouldSkipDispatch(tr)) {
-            this.editor.view.dispatch(tr);
+          if (!this.hasCustomState && !this.shouldSkipDispatch(tr)) {
+            if (this.editor.view) {
+              this.editor.view.dispatch(tr);
+            } else {
+              this.editor.dispatchTransaction(tr);
+            }
           }
 
           return handled;
@@ -82,10 +86,13 @@ export class CommandManager {
           !hasStartTransaction
           && shouldDispatch
           && !this.hasCustomState
-          && this.editor.view
           && !this.shouldSkipDispatch(transaction)
         ) {
-          this.editor.view.dispatch(transaction);
+          if (this.editor.view) {
+            this.editor.view.dispatch(transaction);
+          } else {
+            this.editor.dispatchTransaction(transaction);
+          }
         }
 
         return callbacks.every(Boolean);

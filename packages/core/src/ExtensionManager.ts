@@ -66,6 +66,8 @@ export class ExtensionManager {
 
   readonly schema: Schema;
 
+  readonly extensionOptions: Record<string, any>;
+
   readonly storage: Storage;
 
   readonly splittableMarks: string[] = [];
@@ -80,6 +82,9 @@ export class ExtensionManager {
     this.extensions = resolveExtensions(
       extensions,
       (extension) => extension.createContext(this.editor),
+    );
+    this.extensionOptions = Object.fromEntries(
+      this.extensions.map((extension) => [extension.name, extension.options]),
     );
     this.schema = getSchemaByResolvedExtensions(
       this.extensions,
@@ -116,7 +121,7 @@ export class ExtensionManager {
   get attributes() {
     return getAttributesFromResolvedExtensions(
       this.extensions,
-      (extension) => extension.createContext(this.editor),
+      (extension) => this.getContext(extension),
     );
   }
 
@@ -195,7 +200,7 @@ export class ExtensionManager {
 
     return Object.fromEntries(
       nodes.map((node) => {
-        const context = node.createContext(this.editor);
+        const context = this.getContext(node);
         const addNodeView = getExtensionField(
           node,
           "addNodeView",
@@ -206,7 +211,7 @@ export class ExtensionManager {
         const attributes = getAttributesForExtensionFromResolvedExtensions(
           node,
           this.extensions,
-          (extension) => extension.createContext(this.editor),
+          (extension) => this.getContext(extension),
         );
         const renderNodeView = addNodeView?.();
 
@@ -294,7 +299,7 @@ export class ExtensionManager {
         const attributes = getAttributesForExtensionFromResolvedExtensions(
           mark,
           this.extensions,
-          (extension) => extension.createContext(this.editor),
+          (extension) => this.getContext(extension),
         );
         const createMarkView = renderMarkView?.();
 
@@ -394,7 +399,13 @@ export class ExtensionManager {
   }
 
   private getContext(extension: AnyExtension) {
-    return extension.createContext(this.editor);
+    const context = extension.createContext(this.editor);
+
+    return {
+      ...context,
+      options: this.extensionOptions[extension.name] ?? context.options,
+      storage: this.storage[extension.name] ?? context.storage,
+    };
   }
 
   private getPluginExtensions() {

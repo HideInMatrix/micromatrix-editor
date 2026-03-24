@@ -61,6 +61,16 @@ function refreshCommentsContext(storage: CommentsStorage) {
   refreshCommentsStorage(storage);
 }
 
+function syncCommentsPluginState(
+  storage: CommentsStorage,
+  editor: { state: CommandProps["state"] },
+) {
+  const pluginState = commentsPluginKey.getState(editor.state);
+
+  storage.selectedThreadId = pluginState?.selectedThreadId ?? null;
+  storage.hoveredThreadId = pluginState?.hoveredThreadId ?? null;
+}
+
 function createThreadId(storage: CommentsStorage) {
   const provider = getProvider(storage);
 
@@ -170,13 +180,6 @@ export const Comments = Extension.create<CommentsOptions, CommentsStorage>({
   },
 
   onCreate() {
-    const syncPluginState = () => {
-      const pluginState = commentsPluginKey.getState(this.editor.state);
-
-      this.storage.selectedThreadId = pluginState?.selectedThreadId ?? null;
-      this.storage.hoveredThreadId = pluginState?.hoveredThreadId ?? null;
-    };
-
     this.storage.unsubscribe = subscribeToThreads({
       provider: this.storage.provider,
       callback: (threads) => {
@@ -185,16 +188,16 @@ export const Comments = Extension.create<CommentsOptions, CommentsStorage>({
     });
 
     refreshCommentsContext(this.storage);
-    syncPluginState();
+    syncCommentsPluginState(this.storage, this.editor);
+  },
+
+  onTransaction() {
+    syncCommentsPluginState(this.storage, this.editor);
   },
 
   onUpdate({ transaction }) {
     const provider = this.storage.provider;
     const markType = this.editor.schema.marks[this.options.markTypeName];
-    const pluginState = commentsPluginKey.getState(this.editor.state);
-
-    this.storage.selectedThreadId = pluginState?.selectedThreadId ?? null;
-    this.storage.hoveredThreadId = pluginState?.hoveredThreadId ?? null;
 
     if (!provider || !markType || !transaction.docChanged) {
       return;

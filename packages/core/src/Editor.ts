@@ -99,6 +99,42 @@ function getMarkAtCursor(state: EditorState, name: string) {
   return before ? markType.isInSet(before.marks) : null;
 }
 
+function resolveInitialSelection(
+  doc: ProseMirrorNode,
+  position: FocusPosition | undefined,
+) {
+  if (!position) {
+    return null;
+  }
+
+  const selectionAtStart = Selection.atStart(doc);
+  const selectionAtEnd = Selection.atEnd(doc);
+  const minPos = selectionAtStart.from;
+  const maxPos = selectionAtEnd.to;
+
+  if (position === "start" || position === true) {
+    return selectionAtStart;
+  }
+
+  if (position === "end") {
+    return selectionAtEnd;
+  }
+
+  if (position === "all") {
+    return TextSelection.create(
+      doc,
+      clamp(0, minPos, maxPos),
+      clamp(doc.content.size, minPos, maxPos),
+    );
+  }
+
+  return TextSelection.create(
+    doc,
+    clamp(position, minPos, maxPos),
+    clamp(position, minPos, maxPos),
+  );
+}
+
 interface EditorHTMLElement extends HTMLElement {
   editor?: Editor;
 }
@@ -153,6 +189,10 @@ export class Editor extends EventEmitter<EditorEventMap> {
   private capturedTransaction: Transaction | null = null;
 
   private destroyed = false;
+
+  private createTimeout: ReturnType<typeof setTimeout> | null = null;
+
+  private createRequestId = 0;
 
   constructor(options: EditorOptions = {}) {
     super();
@@ -268,6 +308,92 @@ export class Editor extends EventEmitter<EditorEventMap> {
     return this.commandManager.can();
   }
 
+  dispatchTransaction = (transaction: Transaction) => {
+    if (this.isDestroyed) {
+      return;
+    }
+
+    const previousState = this.editorView?.state ?? this.editorState;
+    const previousSelection = previousState.selection;
+
+    if (this.isCapturingTransaction) {
+      if (!this.capturedTransaction) {
+        this.capturedTransaction = transaction;
+        return;
+      }
+
+      transaction.steps.forEach((step) => {
+        this.capturedTransaction?.step(step);
+      });
+
+      return;
+    }
+
+    const { state, transactions } = previousState.applyTransaction(transaction);
+    const appendedTransactions = transactions.slice(1);
+
+    this.emit("beforeTransaction", {
+      editor: this,
+      transaction,
+      nextState: state,
+    });
+
+    if (!transactions.includes(transaction)) {
+      return;
+    }
+
+    this.editorState = state;
+    this.editorView?.updateState(state);
+
+    this.emit("transaction", {
+      editor: this,
+      transaction,
+      appendedTransactions,
+    });
+
+    if (!state.selection.eq(previousSelection)) {
+      this.emit("selectionUpdate", { editor: this, transaction });
+    }
+
+    const focusTransaction = [...transactions]
+      .reverse()
+      .find((item) => item.getMeta("focus") || item.getMeta("blur"));
+    const focus = focusTransaction?.getMeta("focus") as { event: FocusEvent } | undefined;
+    const blur = focusTransaction?.getMeta("blur") as { event: FocusEvent } | undefined;
+
+    if (focus && focusTransaction) {
+      this.focused = true;
+
+      this.emit("focus", {
+        editor: this,
+        event: focus.event,
+        transaction: focusTransaction,
+      });
+    }
+
+    if (blur && focusTransaction) {
+      this.focused = false;
+
+      this.emit("blur", {
+        editor: this,
+        event: blur.event,
+        transaction: focusTransaction,
+      });
+    }
+
+    if (
+      transaction.getMeta("preventUpdate") !== true
+      && transactions.some((item) => item.docChanged)
+      && !previousState.doc.eq(state.doc)
+    ) {
+      this.emit("update", {
+        editor: this,
+        transaction,
+        appendedTransactions,
+      });
+    }
+  };
+
   captureTransaction(fn: () => void) {
     this.isCapturingTransaction = true;
 
@@ -324,13 +450,13 @@ export class Editor extends EventEmitter<EditorEventMap> {
     this.createView(element);
 
     this.emit("mount", { editor: this });
-    this.emit("create", { editor: this });
-
-    this.focus(this.options.autofocus);
-    this.isInitialized = true;
+    this.scheduleCreateLifecycle();
   }
 
   unmount() {
+    this.clearPendingCreateLifecycle();
+    this.createRequestId += 1;
+
     const dom = this.editorView?.dom as EditorHTMLElement | undefined;
 
     if (dom) {
@@ -710,14 +836,18 @@ export class Editor extends EventEmitter<EditorEventMap> {
   }
 
   private createState(content: EditorOptions["content"]) {
+    const doc = this.createDocument(
+      content,
+      undefined,
+      this.options.contentType,
+      this.options.enableContentCheck,
+    );
+    const selection = resolveInitialSelection(doc, this.options.autofocus);
+
     return EditorState.create({
       schema: this.schema,
-      doc: this.createDocument(
-        content,
-        undefined,
-        this.options.contentType,
-        this.options.enableContentCheck,
-      ),
+      doc,
+      selection: selection ?? undefined,
       plugins: this.allPlugins,
     });
   }
@@ -919,91 +1049,6 @@ export class Editor extends EventEmitter<EditorEventMap> {
     };
   }
 
-  private dispatchTransaction = (transaction: Transaction) => {
-    if (!this.editorView) {
-      return;
-    }
-
-    if (this.isCapturingTransaction) {
-      if (!this.capturedTransaction) {
-        this.capturedTransaction = transaction;
-        return;
-      }
-
-      transaction.steps.forEach((step) => {
-        this.capturedTransaction?.step(step);
-      });
-
-      return;
-    }
-
-    const previousState = this.editorView.state;
-    const previousSelection = previousState.selection;
-    const { state, transactions } = previousState.applyTransaction(transaction);
-    const appendedTransactions = transactions.slice(1);
-
-    this.emit("beforeTransaction", {
-      editor: this,
-      transaction,
-      nextState: state,
-    });
-
-    if (!transactions.includes(transaction)) {
-      return;
-    }
-
-    this.editorState = state;
-    this.editorView.updateState(state);
-
-    this.emit("transaction", {
-      editor: this,
-      transaction,
-      appendedTransactions,
-    });
-
-    if (transaction.selectionSet || !state.selection.eq(previousSelection)) {
-      this.emit("selectionUpdate", { editor: this, transaction });
-    }
-
-    const focusTransaction = [...transactions]
-      .reverse()
-      .find((item) => item.getMeta("focus") || item.getMeta("blur"));
-    const focus = focusTransaction?.getMeta("focus") as { event: FocusEvent } | undefined;
-    const blur = focusTransaction?.getMeta("blur") as { event: FocusEvent } | undefined;
-
-    if (focus && focusTransaction) {
-      this.focused = true;
-
-      this.emit("focus", {
-        editor: this,
-        event: focus.event,
-        transaction: focusTransaction,
-      });
-    }
-
-    if (blur && focusTransaction) {
-      this.focused = false;
-
-      this.emit("blur", {
-        editor: this,
-        event: blur.event,
-        transaction: focusTransaction,
-      });
-    }
-
-    if (
-      transaction.getMeta("preventUpdate") !== true
-      && transactions.some((item) => item.docChanged)
-      && !previousState.doc.eq(state.doc)
-    ) {
-      this.emit("update", {
-        editor: this,
-        transaction,
-        appendedTransactions,
-      });
-    }
-  };
-
   private bindOptionEventListeners() {
     optionEventBindings.forEach(([eventName, optionKey]) => {
       this.on(eventName, (payload) => {
@@ -1050,6 +1095,51 @@ export class Editor extends EventEmitter<EditorEventMap> {
     this.prependClass();
     this.injectCSS();
     (this.editorView.dom as EditorHTMLElement).editor = this;
+  }
+
+  private clearPendingCreateLifecycle() {
+    if (this.createTimeout === null) {
+      return;
+    }
+
+    clearTimeout(this.createTimeout);
+    this.createTimeout = null;
+  }
+
+  private scheduleCreateLifecycle() {
+    const requestId = this.createRequestId + 1;
+
+    this.createRequestId = requestId;
+    this.isInitialized = false;
+    this.clearPendingCreateLifecycle();
+    this.createTimeout = setTimeout(() => {
+      this.createTimeout = null;
+
+      if (
+        this.isDestroyed
+        || requestId !== this.createRequestId
+        || !this.editorView
+        || this.editorView.isDestroyed
+      ) {
+        return;
+      }
+
+      if (this.options.autofocus !== false && this.options.autofocus !== null) {
+        this.focus(this.options.autofocus);
+      }
+
+      if (
+        this.isDestroyed
+        || requestId !== this.createRequestId
+        || !this.editorView
+        || this.editorView.isDestroyed
+      ) {
+        return;
+      }
+
+      this.emit("create", { editor: this });
+      this.isInitialized = true;
+    }, 0);
   }
 
   private updatePluginState(plugins: Plugin[]) {

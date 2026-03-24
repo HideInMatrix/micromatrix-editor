@@ -10,6 +10,7 @@ import { Placeholder } from "@mxm-editor/extension-placeholder";
 import { TextAlign } from "@mxm-editor/extension-text-align";
 import { MarkdownManager } from "@mxm-editor/markdown";
 import { StarterKit } from "@mxm-editor/starter-kit";
+import { flushEditorCreate } from "./helpers/flushEditorCreate";
 
 afterEach(() => {
   document.body.innerHTML = "";
@@ -31,7 +32,7 @@ function createExtensions() {
 }
 
 describe("P1 smoke", () => {
-  it("supports placeholder, character count, text align, and image", () => {
+  it("supports placeholder, character count, text align, and image", async () => {
     const element = document.createElement("div");
 
     document.body.appendChild(element);
@@ -42,6 +43,8 @@ describe("P1 smoke", () => {
       content: "<p></p>",
     });
     const characterCount = editor.storage.characterCount as CharacterCountStorage;
+
+    await flushEditorCreate();
 
     expect(element.querySelector("[data-placeholder]")).not.toBeNull();
     expect(characterCount.characters()).toBe(0);
@@ -67,7 +70,7 @@ describe("P1 smoke", () => {
     expect(editor.getHTML()).toContain('src="https://example.com/mxm.png"');
   });
 
-  it("enforces character count limits without blocking reductions", () => {
+  it("enforces character count limits without blocking reductions", async () => {
     const element = document.createElement("div");
 
     document.body.appendChild(element);
@@ -85,6 +88,8 @@ describe("P1 smoke", () => {
       content: "<p>hello</p>",
     });
     const characterCount = editor.storage.characterCount as CharacterCountStorage;
+
+    await flushEditorCreate();
 
     editor.commands.setTextSelection(6);
     editor.commands.insertContent("!");
