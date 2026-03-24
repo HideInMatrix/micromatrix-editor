@@ -1,10 +1,10 @@
 import {
   DOMParser as ProseMirrorDOMParser,
   Fragment,
+  Schema,
   Slice,
   type Node as ProseMirrorNode,
   type ParseOptions,
-  type Schema,
 } from "@mxm-editor/pm";
 import type {
   Content,
@@ -17,7 +17,11 @@ export interface ContentParseOptions {
   parseOptions?: ParseOptions;
   contentType?: ContentType;
   markdown?: MarkdownParser | null;
+  errorOnInvalidContent?: boolean;
 }
+
+const invalidJsonContentErrorMessage = "[mxm-editor error]: Invalid JSON content";
+const invalidHtmlContentErrorMessage = "[mxm-editor error]: Invalid HTML content";
 
 function isJSONContent(value: Content): value is JSONContent {
   return Boolean(
@@ -46,6 +50,117 @@ function normalizeProseMirrorNode(
     : schema.nodeFromJSON(node.toJSON() as JSONContent);
 }
 
+function createEmptyDocument(schema: Schema) {
+  return schema.topNodeType.createAndFill() ?? schema.topNodeType.create();
+}
+
+function createContentError(message: string, cause: unknown) {
+  return new Error(message, {
+    cause: cause instanceof Error ? cause : undefined,
+  });
+}
+
+function warnInvalidContent(content: Content, error: unknown) {
+  console.warn("[mxm-editor warn]: Invalid content.", "Passed value:", content, "Error:", error);
+}
+
+function createInvalidJSONContentFallback(
+  schema: Schema,
+  content: Content,
+  options: ContentParseOptions | undefined,
+  error: unknown,
+) {
+  if (options?.errorOnInvalidContent) {
+    throw createContentError(invalidJsonContentErrorMessage, error);
+  }
+
+  warnInvalidContent(content, error);
+
+  return createEmptyDocument(schema);
+}
+
+function createContentElement(content: string) {
+  const element = document.createElement("div");
+
+  element.innerHTML = content;
+
+  return element;
+}
+
+function ensureValidNode(
+  node: ProseMirrorNode,
+  errorOnInvalidContent: boolean | undefined,
+  message: string,
+) {
+  if (!errorOnInvalidContent) {
+    return node;
+  }
+
+  try {
+    node.check();
+    return node;
+  } catch (error) {
+    throw createContentError(message, error);
+  }
+}
+
+function validateHTMLContent(
+  schema: Schema,
+  content: string,
+  parseOptions: ParseOptions | undefined,
+) {
+  if (typeof document === "undefined") {
+    return;
+  }
+
+  let hasInvalidContent = false;
+  let invalidContent = "";
+  const contentCheckSchema = new Schema({
+    topNode: schema.spec.topNode,
+    marks: schema.spec.marks,
+    nodes: schema.spec.nodes.append({
+      __mxm_editor_private_unknown_catch_all_node: {
+        content: "inline*",
+        group: "block",
+        parseDOM: [
+          {
+            tag: "*",
+            getAttrs: (value) => {
+              hasInvalidContent = true;
+              invalidContent = typeof value === "string"
+                ? value
+                : value instanceof HTMLElement
+                  ? value.outerHTML
+                  : String(value);
+              return null;
+            },
+          },
+        ],
+      },
+    }),
+  });
+
+  ProseMirrorDOMParser.fromSchema(contentCheckSchema).parse(
+    createContentElement(content),
+    parseOptions,
+  );
+
+  if (hasInvalidContent) {
+    throw createContentError(
+      invalidHtmlContentErrorMessage,
+      new Error(`Invalid element found: ${invalidContent}`),
+    );
+  }
+}
+
+export function isInvalidContentError(error: unknown): error is Error {
+  return error instanceof Error
+    && [
+      invalidJsonContentErrorMessage,
+      invalidHtmlContentErrorMessage,
+    ].includes(error.message);
+}
+
 function parseStringContent(
   schema: Schema,
   content: string,
@@ -68,9 +183,7 @@ function parseStringContent(
     return null;
   }
 
-  const element = document.createElement("div");
-
-  element.innerHTML = content;
+  const element = createContentElement(content);
 
   return ProseMirrorDOMParser.fromSchema(schema).parseSlice(
     element,
@@ -144,43 +257,71 @@ export function createDocumentFromContent(
   options?: ContentParseOptions,
 ) {
   if (content === null) {
-    return schema.topNodeType.createAndFill() ?? schema.topNodeType.create();
+    return createEmptyDocument(schema);
   }
 
   if (isProseMirrorNode(content)) {
-    const normalizedNode = normalizeProseMirrorNode(schema, content);
+    try {
+      const normalizedNode = normalizeProseMirrorNode(schema, content);
+      const documentNode = normalizedNode.type === schema.topNodeType
+        ? normalizedNode
+        : (
+          schema.topNodeType.createAndFill(
+            null,
+            Fragment.from(normalizedNode),
+          ) ?? schema.topNodeType.create(null, Fragment.from(normalizedNode))
+        );
 
-    if (normalizedNode.type === schema.topNodeType) {
-      return normalizedNode;
+      return ensureValidNode(
+        documentNode,
+        options?.errorOnInvalidContent,
+        invalidJsonContentErrorMessage,
+      );
+    } catch (error) {
+      return createInvalidJSONContentFallback(schema, content, options, error);
     }
-
-    return schema.topNodeType.createAndFill(
-      null,
-      Fragment.from(normalizedNode),
-    ) ?? schema.topNodeType.create(null, Fragment.from(normalizedNode));
   }
 
   if (Array.isArray(content)) {
-    return schema.topNodeType.createAndFill(
-      null,
-      Fragment.fromArray(content.map((item) => schema.nodeFromJSON(item))),
-    ) ?? schema.topNodeType.create(
-      null,
-      Fragment.fromArray(content.map((item) => schema.nodeFromJSON(item))),
-    );
+    try {
+      const documentNode = schema.topNodeType.createAndFill(
+        null,
+        Fragment.fromArray(content.map((item) => schema.nodeFromJSON(item))),
+      ) ?? schema.topNodeType.create(
+        null,
+        Fragment.fromArray(content.map((item) => schema.nodeFromJSON(item))),
+      );
+
+      return ensureValidNode(
+        documentNode,
+        options?.errorOnInvalidContent,
+        invalidJsonContentErrorMessage,
+      );
+    } catch (error) {
+      return createInvalidJSONContentFallback(schema, content, options, error);
+    }
   }
 
   if (isJSONContent(content)) {
-    const node = schema.nodeFromJSON(content as JSONContent);
+    try {
+      const node = schema.nodeFromJSON(content as JSONContent);
+      const documentNode = node.type === schema.topNodeType
+        ? node
+        : (
+          schema.topNodeType.createAndFill(
+            null,
+            Fragment.from(node),
+          ) ?? schema.topNodeType.create(null, Fragment.from(node))
+        );
 
-    if (node.type === schema.topNodeType) {
-      return node;
+      return ensureValidNode(
+        documentNode,
+        options?.errorOnInvalidContent,
+        invalidJsonContentErrorMessage,
+      );
+    } catch (error) {
+      return createInvalidJSONContentFallback(schema, content, options, error);
     }
-
-    return schema.topNodeType.createAndFill(
-      null,
-      Fragment.from(node),
-    ) ?? schema.topNodeType.create(null, Fragment.from(node));
   }
 
   if (typeof content === "string" && options?.contentType === "markdown") {
@@ -188,31 +329,44 @@ export function createDocumentFromContent(
       throw new Error("Markdown content requires the Markdown extension.");
     }
 
-    const node = normalizeProseMirrorNode(
-      schema,
-      options.markdown.parse(content),
-    );
+    try {
+      const node = normalizeProseMirrorNode(
+        schema,
+        options.markdown.parse(content),
+      );
+      const documentNode = node.type === schema.topNodeType
+        ? node
+        : (
+          schema.topNodeType.createAndFill(
+            null,
+            Fragment.from(node),
+          ) ?? schema.topNodeType.create(null, Fragment.from(node))
+        );
 
-    if (node.type === schema.topNodeType) {
-      return node;
+      return ensureValidNode(
+        documentNode,
+        options?.errorOnInvalidContent,
+        invalidJsonContentErrorMessage,
+      );
+    } catch (error) {
+      return createInvalidJSONContentFallback(schema, content, options, error);
     }
-
-    return schema.topNodeType.createAndFill(
-      null,
-      Fragment.from(node),
-    ) ?? schema.topNodeType.create(null, Fragment.from(node));
   }
 
   if (typeof content === "string" && typeof document !== "undefined") {
-    const element = document.createElement("div");
+    if (options?.errorOnInvalidContent) {
+      validateHTMLContent(schema, content, options.parseOptions);
+    }
 
-    element.innerHTML = content;
-
-    return ProseMirrorDOMParser.fromSchema(schema).parse(
-      element,
-      options?.parseOptions,
+    return ensureValidNode(
+      ProseMirrorDOMParser.fromSchema(schema).parse(
+        createContentElement(content),
+        options?.parseOptions,
+      ),
+      options?.errorOnInvalidContent,
+      invalidHtmlContentErrorMessage,
     );
   }
 
-  return schema.topNodeType.createAndFill() ?? schema.topNodeType.create();
+  return createEmptyDocument(schema);
 }

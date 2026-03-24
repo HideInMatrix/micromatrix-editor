@@ -19,7 +19,10 @@ import { resolveFocusSelection } from "./commands";
 import { getCoreExtensions } from "./extensions";
 import { EventEmitter } from "./EventEmitter";
 import { ExtensionManager } from "./ExtensionManager";
-import { createDocumentFromContent } from "./helpers/content";
+import {
+  createDocumentFromContent,
+  isInvalidContentError,
+} from "./helpers/content";
 import {
   getTextBetween,
   getTextSerializersFromSchema,
@@ -102,6 +105,7 @@ interface EditorHTMLElement extends HTMLElement {
 
 const optionEventBindings = [
   ["beforeCreate", "onBeforeCreate"],
+  ["contentError", "onContentError"],
   ["beforeTransaction", "onBeforeTransaction"],
   ["mount", "onMount"],
   ["unmount", "onUnmount"],
@@ -159,6 +163,7 @@ export class Editor extends EventEmitter<EditorEventMap> {
       autofocus: false,
       editable: true,
       parseOptions: undefined,
+      enableContentCheck: false,
       enableInputRules: true,
       enablePasteRules: true,
       coreExtensionOptions: {},
@@ -166,6 +171,9 @@ export class Editor extends EventEmitter<EditorEventMap> {
       enableExtensionDispatchTransaction: true,
       editorProps: {},
       onBeforeCreate: () => undefined,
+      onContentError: ({ error }) => {
+        throw error;
+      },
       onBeforeTransaction: () => undefined,
       onCreate: () => undefined,
       onMount: () => undefined,
@@ -269,6 +277,28 @@ export class Editor extends EventEmitter<EditorEventMap> {
     this.capturedTransaction = null;
 
     return transaction;
+  }
+
+  emitContentError(error: Error) {
+    this.emit("contentError", {
+      editor: this,
+      error,
+      disableCollaboration: () => {
+        if (
+          "collaboration" in this.storage
+          && typeof this.storage.collaboration === "object"
+          && this.storage.collaboration
+        ) {
+          (this.storage.collaboration as { isDisabled?: boolean }).isDisabled = true;
+        }
+
+        this.options.extensions = this.options.extensions.filter(
+          (extension) => extension.name !== "collaboration",
+        );
+        this.extensionManager.destroy();
+        this.extensionManager = this.createExtensionManager();
+      },
+    });
   }
 
   mount(element: HTMLElement) {
@@ -383,6 +413,7 @@ export class Editor extends EventEmitter<EditorEventMap> {
         content ?? null,
         normalizedOptions.parseOptions,
         normalizedOptions.contentType,
+        normalizedOptions.errorOnInvalidContent,
       ),
       plugins: this.allPlugins,
     });
@@ -655,7 +686,12 @@ export class Editor extends EventEmitter<EditorEventMap> {
   private createState(content: EditorOptions["content"]) {
     return EditorState.create({
       schema: this.schema,
-      doc: this.createDocument(content, undefined, this.options.contentType),
+      doc: this.createDocument(
+        content,
+        undefined,
+        this.options.contentType,
+        this.options.enableContentCheck,
+      ),
       plugins: this.allPlugins,
     });
   }
@@ -664,16 +700,37 @@ export class Editor extends EventEmitter<EditorEventMap> {
     content: EditorOptions["content"],
     parseOptions?: ParseOptions,
     contentType?: EditorOptions["contentType"],
+    errorOnInvalidContent = false,
   ): ProseMirrorNode {
-    return createDocumentFromContent(
-      this.schema,
-      content ?? null,
-      {
-        parseOptions: parseOptions ?? this.options.parseOptions,
-        contentType,
-        markdown: this.markdown,
-      },
-    );
+    try {
+      return createDocumentFromContent(
+        this.schema,
+        content ?? null,
+        {
+          parseOptions: parseOptions ?? this.options.parseOptions,
+          contentType,
+          markdown: this.markdown,
+          errorOnInvalidContent,
+        },
+      );
+    } catch (error) {
+      if (!isInvalidContentError(error)) {
+        throw error;
+      }
+
+      this.emitContentError(error);
+
+      return createDocumentFromContent(
+        this.schema,
+        content ?? null,
+        {
+          parseOptions: parseOptions ?? this.options.parseOptions,
+          contentType,
+          markdown: this.markdown,
+          errorOnInvalidContent: false,
+        },
+      );
+    }
   }
 
   private reconfigureState() {

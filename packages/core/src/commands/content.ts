@@ -5,6 +5,7 @@ import {
 import {
   createDocumentFromContent,
   createSliceFromContent,
+  isInvalidContentError,
 } from "../helpers/content";
 import { selectionToInsertionEnd } from "../helpers";
 import type {
@@ -94,15 +95,37 @@ export function createContentCommands(editor: Editor): ContentCommands {
       (content: Content, options?: SetContentOptions | boolean) =>
       ({ tr }) => {
         const normalizedOptions = normalizeSetContentOptions(options);
-        const document = createDocumentFromContent(
-          editor.schema,
-          content,
-          {
-            parseOptions: normalizedOptions.parseOptions ?? editor.options.parseOptions,
-            contentType: normalizedOptions.contentType,
-            markdown: editor.markdown,
-          },
-        );
+        let document;
+
+        try {
+          document = createDocumentFromContent(
+            editor.schema,
+            content,
+            {
+              parseOptions: normalizedOptions.parseOptions ?? editor.options.parseOptions,
+              contentType: normalizedOptions.contentType,
+              markdown: editor.markdown,
+              errorOnInvalidContent:
+                normalizedOptions.errorOnInvalidContent ?? editor.options.enableContentCheck,
+            },
+          );
+        } catch (error) {
+          if (!isInvalidContentError(error)) {
+            throw error;
+          }
+
+          editor.emitContentError(error);
+          document = createDocumentFromContent(
+            editor.schema,
+            content,
+            {
+              parseOptions: normalizedOptions.parseOptions ?? editor.options.parseOptions,
+              contentType: normalizedOptions.contentType,
+              markdown: editor.markdown,
+              errorOnInvalidContent: false,
+            },
+          );
+        }
 
         tr.replaceWith(0, tr.doc.content.size, document.content);
         tr.setSelection(Selection.atStart(tr.doc));

@@ -328,6 +328,7 @@ export interface SetContentOptions {
   emitUpdate?: boolean;
   parseOptions?: ParseOptions;
   contentType?: ContentType;
+  errorOnInvalidContent?: boolean;
 }
 
 export interface InsertContentOptions {
@@ -388,6 +389,7 @@ export interface EditorOptions {
   autofocus?: FocusPosition;
   editable?: boolean;
   parseOptions?: ParseOptions;
+  enableContentCheck?: boolean;
   enableInputRules?: RulesSetting;
   enablePasteRules?: RulesSetting;
   coreExtensionOptions?: CoreExtensionOptions;
@@ -395,6 +397,7 @@ export interface EditorOptions {
   enableExtensionDispatchTransaction?: boolean;
   editorProps?: Partial<DirectEditorProps>;
   onBeforeCreate?: (props: { editor: Editor }) => void;
+  onContentError?: (props: ContentErrorEvent) => void;
   onBeforeTransaction?: (
     props: { editor: Editor; transaction: Transaction; nextState: EditorState },
   ) => void;
@@ -423,6 +426,12 @@ export type ResolvedEditorOptions =
     injectNonce?: string;
   };
 
+export interface ContentErrorEvent {
+  editor: Editor;
+  error: Error;
+  disableCollaboration: () => void;
+}
+
 export type DeleteEvent =
   {
     editor: Editor;
@@ -449,6 +458,7 @@ export type DeleteEvent =
 
 export interface EditorEventMap {
   beforeCreate: { editor: Editor };
+  contentError: ContentErrorEvent;
   beforeTransaction: { editor: Editor; transaction: Transaction; nextState: EditorState };
   mount: { editor: Editor };
   unmount: { editor: Editor };
