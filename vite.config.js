@@ -43,7 +43,7 @@ const buildConfig = {
   lib: {
     entry: `${process.cwd()}/src/components/index.js`,
     name: pkg.name,
-    fileName: 'umo-editor',
+    fileName: 'editor',
   },
   outDir: 'dist',
   copyPublicDir: false,
@@ -53,7 +53,7 @@ const buildConfig = {
     output: [
       {
         banner: copyright,
-        intro: `import './umo-editor.css'`,
+        intro: `import './editor.css'`,
         format: 'es',
       },
     ],
@@ -94,7 +94,7 @@ const cssConfig = {
 }
 
 export default defineConfig({
-  base: '/umo-editor',
+  base: '/editor',
   plugins: [ReactivityTransform(), ...Object.values(vuePlugins)],
   css: cssConfig,
   server: {

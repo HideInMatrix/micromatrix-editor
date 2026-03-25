@@ -354,9 +354,6 @@ export const useAiChatPanel = () => {
           onText: async () => {
             pulseRequestProgress()
           },
-          onObject: async () => {
-            pulseRequestProgress()
-          },
         },
       )
       const normalized = normalizeAiResult(response, scope, {
@@ -425,7 +422,6 @@ export const useAiChatPanel = () => {
         pendingResult.value?.scope || 'document',
         {
           editor: editor.value,
-          options: options.value,
           selectionRange: pendingResult.value?.selectionRange,
           selectionAnchor: pendingResult.value?.selectionAnchor,
         },
@@ -568,6 +564,7 @@ export const useAiChatPanel = () => {
 
   return {
     assistantName,
+    allowMultipleAttachments,
     attachmentAccept,
     attachments,
     canApplyReplace,
@@ -584,6 +581,7 @@ export const useAiChatPanel = () => {
     handleAttachmentChange,
     handleClose,
     handlePromptKeydown,
+    hasSelection,
     insertButtonText,
     inputPlaceholder,
     isReadonly,

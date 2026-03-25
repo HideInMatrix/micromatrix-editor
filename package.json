@@ -38,10 +38,10 @@
   "type": "module",
   "exports": {
     ".": {
-      "import": "./dist/umo-editor.js"
+      "import": "./dist/editor.js"
     },
     "./style": {
-      "import": "./dist/umo-editor.css"
+      "import": "./dist/editor.css"
     }
   },
   "scripts": {

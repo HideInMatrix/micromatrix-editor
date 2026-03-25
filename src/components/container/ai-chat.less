@@ -11,7 +11,7 @@
 .umo-ai-chat-overlay {
   position: absolute;
   inset: 0;
-  z-index: 30;
+  z-index: 201;
   display: flex;
   justify-content: flex-end;
   padding: 16px;
@@ -155,11 +155,9 @@
       height: 100%;
       border-radius: inherit;
       transition: width 0.2s ease;
-      background: linear-gradient(
-        90deg,
-        var(--umo-primary-color),
-        rgba(56, 189, 248, 0.9)
-      );
+      background: linear-gradient(90deg,
+          var(--umo-primary-color),
+          rgba(56, 189, 248, 0.9));
     }
   }
 
@@ -242,8 +240,7 @@
     border-radius: 16px;
     border: solid 1px rgba(15, 23, 42, 0.08);
     background:
-      linear-gradient(180deg, rgba(37, 99, 235, 0.02), rgba(37, 99, 235, 0.008))
-        padding-box,
+      linear-gradient(180deg, rgba(37, 99, 235, 0.02), rgba(37, 99, 235, 0.008)) padding-box,
       rgba(255, 255, 255, 0.96);
 
     &.has-pending {
@@ -374,6 +371,7 @@
   }
 
   .umo-ai-chat-textarea {
+
     :deep(.t-textarea),
     :deep(.umo-textarea) {
       border: none;
@@ -400,6 +398,7 @@
   .umo-ai-chat-composer-footer {
     display: flex;
     align-items: flex-end;
+    flex-direction: column;
     gap: 12px;
   }
 
@@ -499,6 +498,7 @@
   }
 
   .umo-ai-chat-container {
+
     .umo-ai-chat-notice,
     .umo-ai-chat-message-body,
     .umo-ai-chat-attachment,
