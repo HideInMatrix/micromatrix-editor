@@ -1,115 +1,123 @@
-import { computed, nextTick, ref, unref, watch, onUnmounted } from 'vue'
+import { computed, nextTick, ref, unref, watch, onUnmounted } from "vue";
 
-import { l } from '@/composables/i18n'
+import { l } from "@/composables/i18n";
 import {
   applyAiActions,
   getAiApplyMeta,
   getAiErrorMessage,
   normalizeAiResult,
   requestAiChat,
-} from '@/utils/ai-actions'
-import { getSelectionText } from '@/utils/selection'
+} from "@/utils/ai-actions";
+import { getSelectionTextForAi } from "@/utils/selection";
 
 const resolveParam = (value, context) => {
-  return typeof value === 'function' ? value(context) : value
-}
+  return typeof value === "function" ? value(context) : value;
+};
 
 const resolveValue = (value) => {
-  return typeof value === 'function' ? value() : unref(value)
-}
+  return typeof value === "function" ? value() : unref(value);
+};
 
 const wait = (delay = 0) =>
   new Promise((resolve) => {
-    setTimeout(resolve, delay)
-  })
+    setTimeout(resolve, delay);
+  });
 
 const isFileLike = (value) => {
-  return typeof File !== 'undefined' && value instanceof File
-}
+  return typeof File !== "undefined" && value instanceof File;
+};
 
 const createAttachmentId = () => {
-  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
-    return crypto.randomUUID()
+  if (
+    typeof crypto !== "undefined" &&
+    typeof crypto.randomUUID === "function"
+  ) {
+    return crypto.randomUUID();
   }
-  return `ai-file-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
-}
+  return `ai-file-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+};
 
 const normalizeAttachment = (item) => {
-  const file = isFileLike(item) ? item : isFileLike(item?.file) ? item.file : null
+  const file = isFileLike(item)
+    ? item
+    : isFileLike(item?.file)
+      ? item.file
+      : null;
   if (!file) {
-    return null
+    return null;
   }
   return {
     id: item?.id || createAttachmentId(),
     file,
-    name: item?.name || file.name || 'attachment',
-    type: item?.type || file.type || '',
+    name: item?.name || file.name || "attachment",
+    type: item?.type || file.type || "",
     size: Number.isFinite(item?.size) ? item.size : file.size || 0,
-    lastModified:
-      Number.isFinite(item?.lastModified) ?
-        item.lastModified
+    lastModified: Number.isFinite(item?.lastModified)
+      ? item.lastModified
       : file.lastModified || Date.now(),
-  }
-}
+  };
+};
 
 const getAttachmentSignature = (item) => {
-  return [item.name, item.size, item.type, item.lastModified].join('::')
-}
+  return [item.name, item.size, item.type, item.lastModified].join("::");
+};
 
 export const useAiAttachments = ({ aiOptions } = {}) => {
-  const attachments = ref([])
-  const fileInputRef = ref(null)
-  const resolvedAiOptions = computed(() => resolveValue(aiOptions) || {})
-  const accept = computed(() => resolvedAiOptions.value.accept || '')
-  const multiple = computed(() => resolvedAiOptions.value.multiple !== false)
+  const attachments = ref([]);
+  const fileInputRef = ref(null);
+  const resolvedAiOptions = computed(() => resolveValue(aiOptions) || {});
+  const accept = computed(() => resolvedAiOptions.value.accept || "");
+  const multiple = computed(() => resolvedAiOptions.value.multiple !== false);
 
   const resetInputValue = () => {
     if (fileInputRef.value) {
-      fileInputRef.value.value = ''
+      fileInputRef.value.value = "";
     }
-  }
+  };
 
   const addAttachments = (items = []) => {
     const nextItems = items
       .map((item) => normalizeAttachment(item))
-      .filter(Boolean)
+      .filter(Boolean);
     if (!nextItems.length) {
-      resetInputValue()
-      return
+      resetInputValue();
+      return;
     }
 
-    const exists = new Set(attachments.value.map(getAttachmentSignature))
+    const exists = new Set(attachments.value.map(getAttachmentSignature));
     attachments.value = [
       ...attachments.value,
       ...nextItems.filter((item) => {
-        const signature = getAttachmentSignature(item)
+        const signature = getAttachmentSignature(item);
         if (exists.has(signature)) {
-          return false
+          return false;
         }
-        exists.add(signature)
-        return true
+        exists.add(signature);
+        return true;
       }),
-    ]
-    resetInputValue()
-  }
+    ];
+    resetInputValue();
+  };
 
   const handleFileChange = (event) => {
-    addAttachments(Array.from(event?.target?.files || []))
-  }
+    addAttachments(Array.from(event?.target?.files || []));
+  };
 
   const openFilePicker = () => {
-    fileInputRef.value?.click?.()
-  }
+    fileInputRef.value?.click?.();
+  };
 
   const removeAttachment = (attachmentId) => {
-    attachments.value = attachments.value.filter((item) => item.id !== attachmentId)
-    resetInputValue()
-  }
+    attachments.value = attachments.value.filter(
+      (item) => item.id !== attachmentId,
+    );
+    resetInputValue();
+  };
 
   const clearAttachments = () => {
-    attachments.value = []
-    resetInputValue()
-  }
+    attachments.value = [];
+    resetInputValue();
+  };
 
   return {
     attachments,
@@ -121,97 +129,100 @@ export const useAiAttachments = ({ aiOptions } = {}) => {
     openFilePicker,
     removeAttachment,
     clearAttachments,
-  }
-}
+  };
+};
 
 const clampProgress = (value) => {
-  const next = Number(value)
+  const next = Number(value);
   if (!Number.isFinite(next)) {
-    return 0
+    return 0;
   }
-  return Math.max(0, Math.min(100, Math.round(next)))
-}
+  return Math.max(0, Math.min(100, Math.round(next)));
+};
 
 export const useAiProgress = ({
   startAt = 10,
   cap = 92,
   interval = 220,
 } = {}) => {
-  const progress = ref(0)
-  const active = ref(false)
-  let timer = 0
+  const progress = ref(0);
+  const active = ref(false);
+  let timer = 0;
 
   const stopTimer = () => {
     if (timer) {
-      clearInterval(timer)
-      timer = 0
+      clearInterval(timer);
+      timer = 0;
     }
-  }
+  };
 
   const setProgress = (value) => {
-    progress.value = clampProgress(value)
-  }
+    progress.value = clampProgress(value);
+  };
 
   const stepForward = (limit = cap, forceStep = null) => {
     if (!active.value) {
-      return
+      return;
     }
-    const target = clampProgress(limit)
+    const target = clampProgress(limit);
     if (progress.value >= target) {
-      return
+      return;
     }
 
     const autoStep =
-      progress.value < 30 ? 8
-      : progress.value < 55 ? 5
-      : progress.value < 75 ? 3
-      : 1
-    const nextStep = forceStep ?? autoStep
-    setProgress(Math.min(target, progress.value + nextStep))
-  }
+      progress.value < 30
+        ? 8
+        : progress.value < 55
+          ? 5
+          : progress.value < 75
+            ? 3
+            : 1;
+    const nextStep = forceStep ?? autoStep;
+    setProgress(Math.min(target, progress.value + nextStep));
+  };
 
   const start = () => {
-    stopTimer()
-    active.value = true
-    setProgress(startAt)
+    stopTimer();
+    active.value = true;
+    setProgress(startAt);
     timer = setInterval(() => {
-      stepForward()
-    }, interval)
-  }
+      stepForward();
+    }, interval);
+  };
 
   const pulse = (limit = 96) => {
-    stepForward(limit, progress.value < 70 ? 6 : 2)
-  }
+    stepForward(limit, progress.value < 70 ? 6 : 2);
+  };
 
   const finish = async () => {
     if (!active.value) {
-      setProgress(100)
-      return
+      setProgress(100);
+      return;
     }
 
-    stopTimer()
-    setProgress(Math.max(progress.value, 96))
-    await wait(120)
-    setProgress(100)
-    await wait(140)
-    active.value = false
-  }
+    stopTimer();
+    setProgress(Math.max(progress.value, 96));
+    await wait(120);
+    setProgress(100);
+    await wait(140);
+    active.value = false;
+  };
 
   const fail = async () => {
-    stopTimer()
-    await wait(80)
-    active.value = false
-  }
+    stopTimer();
+    await wait(80);
+    active.value = false;
+  };
 
   const reset = () => {
-    stopTimer()
-    active.value = false
-    setProgress(0)
-  }
+    stopTimer();
+    active.value = false;
+    setProgress(0);
+  };
 
   onUnmounted(() => {
-    stopTimer()
-  })
+    stopTimer();
+  });
 
   return {
     progress,
@@ -221,8 +232,8 @@ export const useAiProgress = ({
     finish,
     fail,
     reset,
-  }
-}
+  };
+};
 
 export const useAiSession = ({
   options,
@@ -231,96 +242,98 @@ export const useAiSession = ({
   getInputPlaceholder,
   getMaxMessages,
 }) => {
-  const aiOptions = computed(() => options.value.ai || {})
-  const locale = computed(() => options.value.locale || 'zh-CN')
+  const aiOptions = computed(() => options.value.ai || {});
+  const locale = computed(() => options.value.locale || "zh-CN");
   const assistantName = computed(() =>
-    locale.value === 'zh-CN' ? 'AI 助手' : 'AI Assistant',
-  )
+    locale.value === "zh-CN" ? "AI 助手" : "AI Assistant",
+  );
   const userName = computed(() => {
     if (options.value.user?.label) {
-      return options.value.user.label
+      return options.value.user.label;
     }
-    return locale.value === 'zh-CN' ? '你' : 'You'
-  })
+    return locale.value === "zh-CN" ? "你" : "You";
+  });
   const isReadonly = computed(() => {
-    return options.value.document?.readOnly || !editor.value?.isEditable
-  })
-  const prompt = ref('')
-  const messages = ref([])
-  const isSubmitting = ref(false)
-  const messageListRef = ref(null)
+    return options.value.document?.readOnly || !editor.value?.isEditable;
+  });
+  const prompt = ref("");
+  const messages = ref([]);
+  const isSubmitting = ref(false);
+  const messageListRef = ref(null);
 
   const inputPlaceholder = computed(() => {
     if (isReadonly.value) {
-      return locale.value === 'zh-CN'
-        ? '当前文档为只读，无法应用 AI 修改。'
-        : 'The document is read-only, so AI changes cannot be applied.'
+      return locale.value === "zh-CN"
+        ? "当前文档为只读，无法应用 AI 修改。"
+        : "The document is read-only, so AI changes cannot be applied.";
     }
 
     const custom = resolveParam(getInputPlaceholder, {
       aiOptions: aiOptions.value,
       locale: locale.value,
       options: options.value,
-    })
+    });
     if (custom) {
-      return custom
+      return custom;
     }
 
     return (
       l(aiOptions.value.placeholder) ||
-      'Describe how AI should revise the document...'
-    )
-  })
+      "Describe how AI should revise the document..."
+    );
+  });
 
   const createMessageId = () => {
-    return `ai-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
-  }
+    return `ai-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+  };
 
   const buildWelcomeMessage = () => {
     const custom = resolveParam(getWelcomeContent, {
       aiOptions: aiOptions.value,
       locale: locale.value,
       options: options.value,
-    })
+    });
     return {
       id: createMessageId(),
-      role: 'assistant',
+      role: "assistant",
       content:
         custom ||
         l(aiOptions.value.welcomeMessage) ||
-        (locale.value === 'zh-CN'
-          ? '告诉我你希望如何修改文档。'
-          : 'Tell me how you want the document changed.'),
-    }
-  }
+        (locale.value === "zh-CN"
+          ? "告诉我你希望如何修改文档。"
+          : "Tell me how you want the document changed."),
+    };
+  };
 
   const scrollMessagesToBottom = async () => {
-    await nextTick()
+    await nextTick();
     messageListRef.value?.scrollTo({
       top: messageListRef.value.scrollHeight,
-      behavior: 'smooth',
-    })
-  }
+      behavior: "smooth",
+    });
+  };
 
   const resetMessages = () => {
-    messages.value = [buildWelcomeMessage()]
-  }
+    messages.value = [buildWelcomeMessage()];
+  };
 
   const pushMessage = async (message) => {
     const context = {
       aiOptions: aiOptions.value,
       locale: locale.value,
       options: options.value,
-    }
+    };
     const limit =
-      resolveParam(getMaxMessages, context) || aiOptions.value.maxMessages || 20
-    let next = [...messages.value, message]
+      resolveParam(getMaxMessages, context) ||
+      aiOptions.value.maxMessages ||
+      20;
+    let next = [...messages.value, message];
     if (next.length > limit) {
-      next = [next[0], ...next.slice(-(limit - 1))]
+      next = [next[0], ...next.slice(-(limit - 1))];
     }
-    messages.value = next
-    await scrollMessagesToBottom()
-  }
+    messages.value = next;
+    await scrollMessagesToBottom();
+  };
 
   return {
     aiOptions,
@@ -338,8 +351,8 @@ export const useAiSession = ({
     resetMessages,
     pushMessage,
     scrollMessagesToBottom,
-  }
-}
+  };
+};
 
 export const useAiRequest = ({
   editor,
@@ -355,224 +368,242 @@ export const useAiRequest = ({
   progress,
 }) => {
   const submitPrompt = async () => {
-    const editorInstance = editor.value
+    const editorInstance = editor.value;
     if (!editorInstance || !resolveValue(canSubmit)) {
-      return
+      return;
     }
 
-    const userPrompt = prompt.value.trim()
-    const requestContext = await buildRequestContext({ userPrompt })
+    const userPrompt = prompt.value.trim();
+    const requestContext = await buildRequestContext({ userPrompt });
     if (!requestContext) {
-      return
+      return;
     }
 
-    if (typeof requestContext.beforeSend === 'function') {
-      await requestContext.beforeSend()
+    if (typeof requestContext.beforeSend === "function") {
+      await requestContext.beforeSend();
     }
 
     await pushMessage({
       id: createMessageId(),
-      role: 'user',
+      role: "user",
       content: userPrompt,
-    })
-    prompt.value = ''
-    isSubmitting.value = true
-    progress?.start?.()
+    });
+    prompt.value = "";
+    isSubmitting.value = true;
+    progress?.start?.();
 
     try {
-      const response = await requestAiChat(requestContext.payload, {
-        ...aiOptions.value,
-        locale: options.value.locale,
-      }, {
-        onText: async () => {
-          progress?.pulse?.()
+      const response = await requestAiChat(
+        requestContext.payload,
+        {
+          ...aiOptions.value,
+          locale: options.value.locale,
         },
-        onObject: async () => {
-          progress?.pulse?.()
+        {
+          onText: async () => {
+            progress?.pulse?.();
+          },
+          onObject: async () => {
+            progress?.pulse?.();
+          },
         },
-      })
+      );
       const normalized = normalizeAiResult(
         response,
-        requestContext.fallbackScope || 'selection',
+        requestContext.fallbackScope || "selection",
         {
           locale: options.value.locale,
           autoApply: aiOptions.value.autoApply !== false,
           autoSave: aiOptions.value.autoSave === true,
         },
-      )
+      );
 
-      let applyResult = []
+      let applyResult = [];
       if (normalized.autoApply && normalized.actions?.length) {
         applyResult = await applyAiActions(
           normalized.actions,
-          requestContext.fallbackScope || 'selection',
+          requestContext.fallbackScope || "selection",
           {
             editor: editorInstance,
             options: options.value,
             selectionRange: requestContext.selectionRange,
             ...requestContext.applyContext,
           },
-        )
+        );
 
         if (
           applyResult.some((item) => item?.changed) &&
           normalized.autoSave &&
           saveContent
         ) {
-          await saveContent(false)
+          await saveContent(false);
         }
       }
 
       const applyMeta = getAiApplyMeta(applyResult, {
         locale: options.value.locale,
-      })
+      });
 
-      if (typeof requestContext.afterApply === 'function') {
+      if (typeof requestContext.afterApply === "function") {
         await requestContext.afterApply({
           applyMeta,
           applyResult,
           normalized,
           requestContext,
           userPrompt,
-        })
+        });
       }
 
-      if (typeof requestContext.onSuccess === 'function') {
+      if (typeof requestContext.onSuccess === "function") {
         await requestContext.onSuccess({
           applyMeta,
           applyResult,
           normalized,
           requestContext,
           userPrompt,
-        })
+        });
       }
 
-      await progress?.finish?.()
+      await progress?.finish?.();
       await pushMessage({
         id: createMessageId(),
-        role: 'assistant',
+        role: "assistant",
         content: normalized.message,
         meta: applyMeta,
-      })
+      });
     } catch (error) {
       const errorMessage = getAiErrorMessage(error, {
         locale: options.value.locale,
-      })
+      });
 
-      if (typeof requestContext.onError === 'function') {
+      if (typeof requestContext.onError === "function") {
         await requestContext.onError({
           error,
           errorMessage,
           requestContext,
           userPrompt,
-        })
+        });
       }
 
-      await progress?.fail?.()
+      await progress?.fail?.();
       await pushMessage({
         id: createMessageId(),
-        role: 'assistant',
-        status: 'error',
+        role: "assistant",
+        status: "error",
         content: errorMessage,
-      })
+      });
     } finally {
-      isSubmitting.value = false
-      progress?.reset?.()
+      isSubmitting.value = false;
+      progress?.reset?.();
     }
-  }
+  };
 
   const handlePromptKeydown = (event) => {
-    if (event.key === 'Enter' && !event.shiftKey) {
-      event.preventDefault()
-      submitPrompt()
+    if (event.key === "Enter" && !event.shiftKey) {
+      event.preventDefault();
+      submitPrompt();
     }
-  }
+  };
 
   return {
     submitPrompt,
     handlePromptKeydown,
-  }
-}
+  };
+};
 
 export const useAiEditorSnapshot = ({ editor }) => {
-  const documentHtml = ref('')
-  const documentText = ref('')
-  const documentJson = ref(null)
-  const selectionText = ref('')
+  const documentHtml = ref("");
+  const documentText = ref("");
+  const documentJson = ref(null);
+  const documentCharacters = ref(0);
+  const selectionText = ref("");
+  const selectionCharacters = ref(0);
   const selectionRange = ref({
     from: 0,
     to: 0,
     empty: true,
-  })
-  const hasSelection = computed(() => !!selectionText.value.trim())
+  });
+  const hasSelection = computed(() => !!selectionText.value.trim());
 
   const syncEditorSnapshot = () => {
     if (!editor.value) {
-      return
+      return;
     }
-    documentHtml.value = editor.value.getHTML()
-    documentText.value = editor.value.getText()
-    documentJson.value = editor.value.getJSON()
-    selectionText.value = getSelectionText(editor.value)
-    const { from, to, empty } = editor.value.state.selection
-    selectionRange.value = { from, to, empty }
-  }
+    documentHtml.value = editor.value.getHTML();
+    documentText.value = editor.value.getText();
+    documentJson.value = editor.value.getJSON();
+    selectionText.value = getSelectionTextForAi(editor.value);
 
-  let removeEditorListeners = () => {}
+    const totalCount = editor.value.storage?.characterCount?.characters?.();
+    documentCharacters.value =
+      typeof totalCount === "number" ? totalCount : documentText.value.length;
+
+    const { from, to, empty } = editor.value.state.selection;
+    selectionCharacters.value = editor.value.state.doc.textBetween(
+      from,
+      to,
+      "",
+    ).length;
+    selectionRange.value = { from, to, empty };
+  };
+
+  let removeEditorListeners = () => {};
   watch(
     () => editor.value,
     (instance) => {
-      removeEditorListeners()
+      removeEditorListeners();
       if (!instance) {
-        return
+        return;
       }
 
       const onEditorChange = () => {
-        syncEditorSnapshot()
-      }
+        syncEditorSnapshot();
+      };
 
-      instance.on('selectionUpdate', onEditorChange)
-      instance.on('update', onEditorChange)
-      instance.on('focus', onEditorChange)
-      syncEditorSnapshot()
+      instance.on("selectionUpdate", onEditorChange);
+      instance.on("update", onEditorChange);
+      instance.on("focus", onEditorChange);
+      syncEditorSnapshot();
 
       removeEditorListeners = () => {
-        instance.off('selectionUpdate', onEditorChange)
-        instance.off('update', onEditorChange)
-        instance.off('focus', onEditorChange)
-      }
+        instance.off("selectionUpdate", onEditorChange);
+        instance.off("update", onEditorChange);
+        instance.off("focus", onEditorChange);
+      };
     },
     { immediate: true },
-  )
+  );
 
   onUnmounted(() => {
-    removeEditorListeners()
-  })
+    removeEditorListeners();
+  });
 
   const getDocumentSnapshot = () => {
     return {
       html: documentHtml.value,
       text: documentText.value,
       json: documentJson.value,
-    }
-  }
+    };
+  };
 
   const getSelectionSnapshot = () => {
     return {
       ...selectionRange.value,
       text: selectionText.value,
-    }
-  }
+    };
+  };
 
   return {
     documentHtml,
     documentText,
     documentJson,
+    documentCharacters,
     selectionText,
+    selectionCharacters,
     selectionRange,
     hasSelection,
     syncEditorSnapshot,
     getDocumentSnapshot,
     getSelectionSnapshot,
-  }
-}
+  };
+};

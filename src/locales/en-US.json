@@ -742,40 +742,6 @@
     "reset": "Back to 100%"
   },
   "node": {
-    "ai": {
-      "title": "AI Revision Assistant",
-      "context": "Current Context",
-      "prompt": "Prompt",
-      "response": "AI Response",
-      "preview": "Result Preview",
-      "placeholder": "Describe how AI should revise the current content, for example: polish this paragraph and add a conclusion.",
-      "generate": "Generate",
-      "regenerate": "Regenerate",
-      "discard": "Discard",
-      "idle": "Ready",
-      "thinking": "Thinking",
-      "done": "Done",
-      "failed": "Failed",
-      "emptyPrompt": "No prompt yet",
-      "emptyResponse": "AI has not returned content yet",
-      "error": "AI execution failed",
-      "apply": {
-        "append": "Insert below",
-        "replace": "Replace current content",
-        "cancel": "Discard result",
-        "empty": "AI did not generate any applicable content.",
-        "success": "AI result has been applied to the document."
-      },
-      "action": {
-        "chart": "Insert chart",
-        "citation": "Insert citation footnote",
-        "rewrite": "Rewrite content",
-        "math": "Insert formula",
-        "mermaid": "Insert Mermaid",
-        "flowchart": "Insert flowchart",
-        "other": "Other action"
-      }
-    },
     "codeBlock": {
       "menu": "Menu"
     },

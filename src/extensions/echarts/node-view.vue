@@ -40,7 +40,6 @@
 import { nodeViewProps, NodeViewWrapper } from '@tiptap/vue-3'
 // 拖拽组件
 import Drager from 'es-drager'
-import ecStat from 'echarts-stat'
 
 import {
   calbaseConfigData,
@@ -178,6 +177,7 @@ const loadData = async () => {
   await nextTick()
   // 确保 loadData 在 echarts 加载完毕后调用
   await loadResource(`${options.value.cdnUrl}/libs/echarts/echarts.min.js`)
+  await loadResource(`https://unpkg.com/echarts-stat@1.2.0/dist/ecStat.min.js`)
 
   // 等待 echarts 加载完成
   const waitForECharts = () => {
@@ -202,6 +202,7 @@ const loadData = async () => {
   // 等待 echarts 加载完成
   await waitForECharts()
   registerEchartsStatTransforms()
+  
   // 接下来的使用就跟之前一样，初始化图表，设置配置项
   if (typeof echarts !== 'undefined') {
     const { chartOptions, chartConfig, id, mode } = attrs

@@ -455,84 +455,6 @@ export const createBlockSerializers = (runtime) => {
     ]
   }
 
-  const createAiBlocks = async (node) => {
-    const title = node?.attrs?.title || 'AI'
-    const prompt = `${node?.attrs?.prompt || ''}`.trim()
-    const response =
-      `${node?.attrs?.response || ''}`.trim() ||
-      `${node?.attrs?.summary || ''}`.trim() ||
-      `${node?.attrs?.error || ''}`.trim()
-
-    const blocks = [
-      createPlainParagraph(
-        title,
-        {
-          spacing: {
-            before: 120,
-            after: 60,
-          },
-          border: {
-            left: helpers.createBorder(
-              context.docx.BorderStyle.SINGLE,
-              'C7D2FE',
-              12,
-            ),
-          },
-          shading: {
-            fill: 'EEF2FF',
-          },
-        },
-        {
-          bold: true,
-        },
-      ),
-    ]
-
-    if (prompt) {
-      blocks.push(
-        ...createPlainParagraphs(
-          prompt,
-          {
-            border: {
-              left: helpers.createBorder(
-                context.docx.BorderStyle.SINGLE,
-                'C7D2FE',
-                12,
-              ),
-            },
-            shading: {
-              fill: 'EEF2FF',
-            },
-          },
-          {},
-        ),
-      )
-    }
-
-    if (response) {
-      blocks.push(
-        ...createPlainParagraphs(
-          response,
-          {
-            border: {
-              left: helpers.createBorder(
-                context.docx.BorderStyle.SINGLE,
-                'C7D2FE',
-                12,
-              ),
-            },
-            shading: {
-              fill: 'EEF2FF',
-            },
-          },
-          {},
-        ),
-      )
-    }
-
-    return blocks
-  }
-
   const createMediaBlocks = async (node) => {
     switch (node?.type) {
       case 'image':
@@ -675,8 +597,6 @@ export const createBlockSerializers = (runtime) => {
         ]
       case 'toc':
         return [createTableOfContents(node)]
-      case 'ai':
-        return await createAiBlocks(node)
       case 'footnotes':
       case 'footnote':
         return []

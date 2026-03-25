@@ -31,7 +31,6 @@ import { getImageDimensions } from '@/utils/file'
 import { shortId } from '@/utils/short-id'
 
 import Audio from './audio'
-import Ai from './ai'
 import Bookmark from './bookmark'
 import BreakMarks from './break-marks'
 import BulletList from './bullet-list'
@@ -102,7 +101,6 @@ const nodeTypes = [
   'datetime',
   'optionBox',
   'iframe',
-  'ai',
   'echarts',
   'toc',
   'tag',
@@ -242,9 +240,7 @@ export const getDefaultExtensions = ({
     TableRow,
     TableCell,
     TableHeader,
-
     // 工具
-    Ai,
     Echarts,
 
     // 页面

@@ -92,7 +92,6 @@
     "@vueuse/core": "14.2.1",
     "docx": "^9.6.1",
     "dom-to-image-more": "3.7.2",
-    "echarts-stat": "^1.2.0",
     "es-drager": "1.2.11",
     "fast-glob": "3.3.3",
     "file-saver": "2.0.5",
