@@ -1,0 +1,542 @@
+@keyframes umo-ai-chat-spin {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.umo-ai-chat-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 30;
+  display: flex;
+  justify-content: flex-end;
+  padding: 16px;
+  box-sizing: border-box;
+  background-color: rgba(15, 23, 42, 0.08);
+}
+
+.umo-ai-chat-container {
+  width: 320px;
+  min-width: 213px;
+  max-width: min(480px, 100%);
+  height: 100%;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  background-color: var(--umo-color-white);
+  border-radius: 16px;
+  border: solid 1px var(--umo-border-color);
+  box-shadow: 0 20px 60px rgba(15, 23, 42, 0.16);
+  overflow: hidden;
+
+  .umo-ai-chat-header {
+    padding: 14px 16px 10px;
+    border-bottom: solid 1px var(--umo-border-color-light);
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  .umo-ai-chat-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--umo-text-color);
+  }
+
+  .umo-ai-chat-subtitle {
+    font-size: 12px;
+    line-height: 1.5;
+    margin-top: 4px;
+    color: var(--umo-text-color-light);
+  }
+
+  .umo-ai-chat-close {
+    width: 32px;
+    height: 32px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    border-radius: 999px;
+    padding: 0;
+    background-color: transparent;
+    color: var(--umo-text-color-light);
+    cursor: pointer;
+
+    &:hover {
+      color: var(--umo-text-color);
+      background-color: rgba(0, 0, 0, 0.05);
+    }
+  }
+
+  .umo-ai-chat-messages {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 16px;
+  }
+
+  .umo-ai-chat-notice {
+    font-size: 12px;
+    line-height: 1.6;
+    color: var(--umo-text-color-light);
+    padding: 10px 12px;
+    border-radius: var(--umo-radius);
+    background-color: rgba(0, 0, 0, 0.03);
+  }
+
+  .umo-ai-chat-message {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+
+    &.is-user {
+      align-items: flex-end;
+    }
+
+    &.is-error .umo-ai-chat-message-body {
+      border-color: rgba(214, 48, 49, 0.18);
+      background-color: rgba(214, 48, 49, 0.06);
+      color: var(--umo-error-color);
+    }
+  }
+
+  .umo-ai-chat-message-role {
+    font-size: 12px;
+    color: var(--umo-text-color-light);
+  }
+
+  .umo-ai-chat-message-body {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 12px;
+    border-radius: 12px;
+    border: solid 1px rgba(0, 0, 0, 0.05);
+    background-color: rgba(0, 0, 0, 0.025);
+    line-height: 1.7;
+    font-size: 13px;
+    color: var(--umo-text-color);
+    white-space: pre-wrap;
+    word-break: break-word;
+
+    &.is-progress {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      white-space: normal;
+    }
+  }
+
+  .umo-ai-chat-progress-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    font-size: 12px;
+    color: var(--umo-text-color-light);
+  }
+
+  .umo-ai-chat-progress-track {
+    height: 6px;
+    border-radius: 999px;
+    overflow: hidden;
+    background-color: rgba(0, 0, 0, 0.08);
+
+    span {
+      display: block;
+      height: 100%;
+      border-radius: inherit;
+      transition: width 0.2s ease;
+      background: linear-gradient(
+        90deg,
+        var(--umo-primary-color),
+        rgba(56, 189, 248, 0.9)
+      );
+    }
+  }
+
+  .is-user .umo-ai-chat-message-body {
+    background-color: var(--umo-button-hover-background);
+    border-color: rgba(0, 0, 0, 0.06);
+  }
+
+  .umo-ai-chat-message-meta {
+    font-size: 12px;
+    color: var(--umo-primary-color);
+  }
+
+  .umo-ai-chat-toolbar {
+    padding: 0 16px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .umo-ai-chat-scope {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .umo-ai-chat-scope-button {
+    border: solid 1px var(--umo-border-color);
+    background-color: var(--umo-color-white);
+    border-radius: var(--umo-radius);
+    padding: 8px 10px;
+    font-size: 12px;
+    color: var(--umo-text-color);
+    cursor: pointer;
+    transition:
+      border-color 0.2s ease,
+      background-color 0.2s ease,
+      color 0.2s ease;
+
+    &.active {
+      color: var(--umo-primary-color);
+      border-color: rgba(0, 0, 0, 0.08);
+      background-color: var(--umo-button-hover-background);
+    }
+
+    &.disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+  }
+
+  .umo-ai-chat-stats {
+    font-size: 12px;
+    color: var(--umo-text-color-light);
+  }
+
+  .umo-ai-chat-tip {
+    margin: 0 16px 12px;
+    font-size: 12px;
+    line-height: 1.6;
+    color: var(--umo-text-color-light);
+  }
+
+  .umo-ai-chat-input {
+    padding: 0 16px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+
+    .umo-ai-chat-file-input {
+      display: none;
+    }
+  }
+
+  .umo-ai-chat-composer {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 12px;
+    border-radius: 16px;
+    border: solid 1px rgba(15, 23, 42, 0.08);
+    background:
+      linear-gradient(180deg, rgba(37, 99, 235, 0.02), rgba(37, 99, 235, 0.008))
+        padding-box,
+      rgba(255, 255, 255, 0.96);
+
+    &.has-pending {
+      border-color: rgba(37, 99, 235, 0.18);
+      box-shadow: 0 10px 28px rgba(37, 99, 235, 0.08);
+    }
+  }
+
+  .umo-ai-chat-pending {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding-bottom: 2px;
+  }
+
+  .umo-ai-chat-pending-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    font-size: 12px;
+    color: var(--umo-text-color-light);
+  }
+
+  .umo-ai-chat-pending-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    max-height: 180px;
+    overflow: auto;
+  }
+
+  .umo-ai-chat-pending-item {
+    display: flex;
+    gap: 10px;
+    padding: 10px 12px;
+    border-radius: 12px;
+    background-color: rgba(0, 0, 0, 0.028);
+    border: solid 1px rgba(0, 0, 0, 0.04);
+  }
+
+  .umo-ai-chat-pending-icon {
+    width: 28px;
+    height: 28px;
+    flex: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 10px;
+    background-color: rgba(37, 99, 235, 0.08);
+    color: var(--umo-primary-color);
+  }
+
+  .umo-ai-chat-pending-main {
+    min-width: 0;
+    flex: 1;
+  }
+
+  .umo-ai-chat-pending-label {
+    font-size: 12px;
+    color: var(--umo-text-color-light);
+  }
+
+  .umo-ai-chat-pending-text {
+    margin-top: 4px;
+    font-size: 13px;
+    line-height: 1.6;
+    color: var(--umo-text-color);
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+
+  .umo-ai-chat-attachments {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    max-height: 180px;
+    overflow: auto;
+  }
+
+  .umo-ai-chat-attachment {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 12px;
+    border-radius: 12px;
+    background-color: rgba(0, 0, 0, 0.03);
+    border: solid 1px rgba(0, 0, 0, 0.04);
+  }
+
+  .umo-ai-chat-attachment-main {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .umo-ai-chat-attachment-name {
+    font-size: 13px;
+    line-height: 1.4;
+    color: var(--umo-text-color);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .umo-ai-chat-attachment-meta {
+    margin-top: 4px;
+    font-size: 12px;
+    color: var(--umo-text-color-light);
+  }
+
+  .umo-ai-chat-attachment-remove {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border: none;
+    border-radius: 999px;
+    padding: 0;
+    background-color: transparent;
+    color: var(--umo-text-color-light);
+    cursor: pointer;
+
+    &:hover {
+      background-color: rgba(0, 0, 0, 0.05);
+      color: var(--umo-text-color);
+    }
+  }
+
+  .umo-ai-chat-textarea {
+    :deep(.t-textarea),
+    :deep(.umo-textarea) {
+      border: none;
+      background: transparent;
+      box-shadow: none;
+      border-radius: 0;
+    }
+
+    :deep(.t-textarea__inner),
+    :deep(.umo-textarea__inner),
+    :deep(textarea) {
+      min-height: 108px;
+      border: none;
+      box-shadow: none;
+      padding: 0;
+      background: transparent;
+      font-size: 13px;
+      line-height: 1.7;
+      resize: none;
+      color: var(--umo-text-color);
+    }
+  }
+
+  .umo-ai-chat-composer-footer {
+    display: flex;
+    align-items: flex-end;
+    gap: 12px;
+  }
+
+  .umo-ai-chat-composer-tip {
+    flex: 1;
+    min-width: 0;
+    font-size: 12px;
+    line-height: 1.5;
+    color: var(--umo-text-color-light);
+  }
+
+  .umo-ai-chat-composer-actions {
+    display: inline-flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 8px;
+  }
+
+  .umo-ai-chat-icon-button {
+    width: 34px;
+    height: 34px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 10px;
+    border: solid 1px rgba(15, 23, 42, 0.08);
+    background-color: rgba(255, 255, 255, 0.9);
+    color: var(--umo-text-color);
+    cursor: pointer;
+    transition:
+      border-color 0.2s ease,
+      background-color 0.2s ease,
+      color 0.2s ease,
+      transform 0.2s ease;
+
+    &:hover:not(:disabled) {
+      transform: translateY(-1px);
+      border-color: rgba(37, 99, 235, 0.16);
+      color: var(--umo-primary-color);
+      background-color: rgba(37, 99, 235, 0.05);
+    }
+
+    &:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    &.is-primary {
+      background-color: var(--umo-primary-color);
+      border-color: var(--umo-primary-color);
+      color: var(--umo-color-white);
+
+      &:hover:not(:disabled) {
+        color: var(--umo-color-white);
+        background-color: var(--umo-primary-color);
+        border-color: var(--umo-primary-color);
+      }
+    }
+
+    &.is-danger:hover:not(:disabled) {
+      color: var(--umo-error-color);
+      border-color: rgba(214, 48, 49, 0.18);
+      background-color: rgba(214, 48, 49, 0.06);
+    }
+
+    &.is-loading .umo-icon {
+      animation: umo-ai-chat-spin 1s linear infinite;
+    }
+  }
+
+  .umo-ai-chat-resize-handle {
+    position: absolute;
+    top: 0;
+    left: -2px;
+    width: 3px;
+    height: 100%;
+    opacity: 0.5;
+    background-color: transparent;
+
+    &:hover {
+      background-color: var(--umo-primary-color);
+      cursor: col-resize;
+    }
+  }
+}
+
+.umo-editor-container.umo-skin-default {
+  .umo-ai-chat-container {
+    border: solid 1px var(--umo-border-color);
+  }
+}
+
+[theme-mode='dark'] {
+  .umo-ai-chat-overlay {
+    background-color: rgba(2, 6, 23, 0.24);
+  }
+
+  .umo-ai-chat-container {
+    .umo-ai-chat-notice,
+    .umo-ai-chat-message-body,
+    .umo-ai-chat-attachment,
+    .umo-ai-chat-pending-item {
+      background-color: rgba(255, 255, 255, 0.04);
+      border-color: rgba(255, 255, 255, 0.06);
+    }
+
+    .umo-ai-chat-composer {
+      background: rgba(15, 23, 42, 0.72);
+      border-color: rgba(255, 255, 255, 0.08);
+    }
+
+    .umo-ai-chat-pending-icon,
+    .umo-ai-chat-icon-button {
+      background-color: rgba(255, 255, 255, 0.04);
+      border-color: rgba(255, 255, 255, 0.08);
+    }
+  }
+}
+
+@media screen and (max-width: 900px) {
+  .umo-ai-chat-overlay {
+    padding: 12px;
+  }
+
+  .umo-ai-chat-container {
+    width: 100%;
+    min-width: 0;
+
+    .umo-ai-chat-composer-footer {
+      align-items: stretch;
+      flex-direction: column;
+    }
+
+    .umo-ai-chat-composer-actions {
+      width: 100%;
+      justify-content: space-between;
+    }
+  }
+}
