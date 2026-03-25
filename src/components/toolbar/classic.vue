@@ -161,16 +161,16 @@
       </template>
       <template v-if="currentMenu === 'tools'">
         <div class="umo-virtual-group">
-          <menus-toolbar-tools-qrcode v-if="!disableMenu('qrcode')" />
-          <menus-toolbar-tools-barcode v-if="!disableMenu('barcode')" />
-          <menus-toolbar-tools-signature v-if="!disableMenu('signature')" />
+          <ToolbarToolsQrcode v-if="!disableMenu('qrcode')" />
+          <ToolbarToolsBarcode v-if="!disableMenu('barcode')" />
+          <ToolbarToolsSignature v-if="!disableMenu('signature')" />
         </div>
         <div class="umo-virtual-group">
-          <menus-toolbar-tools-math v-if="!disableMenu('math')" />
-          <menus-toolbar-tools-diagrams v-if="!disableMenu('diagrams')" />
-          <menus-toolbar-tools-echarts v-if="!disableMenu('echarts')" />
+          <ToolbarToolsMath v-if="!disableMenu('math')" />
+          <ToolbarToolsDiagrams v-if="!disableMenu('diagrams')" />
+          <ToolbarToolsEcharts v-if="!disableMenu('echarts')" />
           <!-- <menus-toolbar-tools-mind-map v-if="!disableMenu('mind-map')" /> -->
-          <menus-toolbar-tools-mermaid v-if="!disableMenu('mermaid')" />
+          <ToolbarToolsMermaid v-if="!disableMenu('mermaid')" />
         </div>
         <div class="umo-virtual-group">
           <menus-toolbar-tools-chinese-case
@@ -229,14 +229,14 @@
       </template>
       <template v-if="currentMenu === 'export'">
         <div class="umo-virtual-group">
-          <menus-toolbar-export-docx v-if="!disableMenu('export-docx')" />
-          <menus-toolbar-export-image v-if="!disableMenu('export-image')" />
-          <menus-toolbar-export-pdf v-if="!disableMenu('export-pdf')" />
-          <menus-toolbar-export-text v-if="!disableMenu('export-text')" />
+          <ToolbarExportDocx v-if="!disableMenu('export-docx')" />
+          <ToolbarExportImage v-if="!disableMenu('export-image')" />
+          <ToolbarExportPdf v-if="!disableMenu('export-pdf')" />
+          <ToolbarExportText v-if="!disableMenu('export-text')" />
         </div>
         <div class="umo-virtual-group">
-          <menus-toolbar-export-share v-if="!disableMenu('share')" />
-          <menus-toolbar-export-embed v-if="!disableMenu('embed')" />
+          <ToolbarExportShare v-if="!disableMenu('share')" />
+          <ToolbarExportEmbed v-if="!disableMenu('embed')" />
         </div>
         <div class="virtual-group is-slot">
           <slot name="toolbar_export" toolbar-mode="classic" />
@@ -247,6 +247,48 @@
 </template>
 
 <script setup>
+import { defineAsyncComponent } from 'vue'
+
+const ToolbarExportDocx = defineAsyncComponent(
+  () => import('@/components/menus/toolbar/export/docx.vue'),
+)
+const ToolbarExportEmbed = defineAsyncComponent(
+  () => import('@/components/menus/toolbar/export/embed.vue'),
+)
+const ToolbarExportImage = defineAsyncComponent(
+  () => import('@/components/menus/toolbar/export/image.vue'),
+)
+const ToolbarExportPdf = defineAsyncComponent(
+  () => import('@/components/menus/toolbar/export/pdf.vue'),
+)
+const ToolbarExportShare = defineAsyncComponent(
+  () => import('@/components/menus/toolbar/export/share.vue'),
+)
+const ToolbarExportText = defineAsyncComponent(
+  () => import('@/components/menus/toolbar/export/text.vue'),
+)
+const ToolbarToolsBarcode = defineAsyncComponent(
+  () => import('@/components/menus/toolbar/tools/barcode.vue'),
+)
+const ToolbarToolsDiagrams = defineAsyncComponent(
+  () => import('@/components/menus/toolbar/tools/diagrams.vue'),
+)
+const ToolbarToolsEcharts = defineAsyncComponent(
+  () => import('@/components/menus/toolbar/tools/echarts.vue'),
+)
+const ToolbarToolsMath = defineAsyncComponent(
+  () => import('@/components/menus/toolbar/tools/math.vue'),
+)
+const ToolbarToolsMermaid = defineAsyncComponent(
+  () => import('@/components/menus/toolbar/tools/mermaid.vue'),
+)
+const ToolbarToolsQrcode = defineAsyncComponent(
+  () => import('@/components/menus/toolbar/tools/qrcode.vue'),
+)
+const ToolbarToolsSignature = defineAsyncComponent(
+  () => import('@/components/menus/toolbar/tools/signature.vue'),
+)
+
 const props = defineProps({
   menus: {
     type: Array,

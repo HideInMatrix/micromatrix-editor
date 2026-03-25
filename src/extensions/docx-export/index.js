@@ -1,7 +1,13 @@
 import { Extension } from '@tiptap/core'
 import { saveAs } from 'file-saver'
 
-import { createDocxBlob, createDocxDocument } from './serializer'
+let serializerLoader = null
+const loadSerializer = async () => {
+  if (!serializerLoader) {
+    serializerLoader = import('./serializer')
+  }
+  return await serializerLoader
+}
 
 const buildFilename = (title = '') => {
   const normalized = `${title || ''}`.trim()
@@ -14,12 +20,15 @@ export default Extension.create({
     const storage = {
       editor: null,
       createDocument: async (options = {}) => {
+        const { createDocxDocument } = await loadSerializer()
         return await createDocxDocument(storage.editor, options)
       },
       getBlob: async (options = {}) => {
+        const { createDocxBlob } = await loadSerializer()
         return await createDocxBlob(storage.editor, options)
       },
       download: async (options = {}) => {
+        const { createDocxBlob } = await loadSerializer()
         const blob = await createDocxBlob(storage.editor, options)
         saveAs(blob, options.filename || buildFilename(options.title))
         return blob

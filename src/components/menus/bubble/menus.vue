@@ -101,7 +101,7 @@
     <menus-toolbar-base-align-center />
     <menus-toolbar-base-align-right />
     <div class="umo-bubble-menu-divider"></div>
-    <menus-toolbar-tools-echarts ico="setting" />
+    <ToolbarToolsEcharts ico="setting" />
     <menus-bubble-node-delete />
   </template>
   <template v-else-if="is('optionBox')">
@@ -172,54 +172,59 @@
 </template>
 
 <script setup>
-import { CellSelection } from "@tiptap/pm/tables";
+import { defineAsyncComponent } from 'vue'
+import { CellSelection } from '@tiptap/pm/tables'
 
-import { hasAiSelection } from "@/utils/selection";
+import { hasAiSelection } from '@/utils/selection'
 
-const editor = inject("editor");
-const options = inject("options");
+const ToolbarToolsEcharts = defineAsyncComponent(
+  () => import('@/components/menus/toolbar/tools/echarts.vue'),
+)
+
+const editor = inject('editor')
+const options = inject('options')
 
 const disable = (name) => {
-  return options.value.disableExtensions.includes(name);
-};
+  return options.value.disableExtensions.includes(name)
+}
 const is = (type) => {
-  const editorIns = editor.value;
-  if (!editorIns) return false;
+  const editorIns = editor.value
+  if (!editorIns) return false
 
-  if (type === "table") {
-    const { selection } = editorIns.state;
-    return selection instanceof CellSelection;
+  if (type === 'table') {
+    const { selection } = editorIns.state
+    return selection instanceof CellSelection
   }
 
-  return editorIns.isActive(type);
-};
+  return editorIns.isActive(type)
+}
 const attrs = (type) => {
-  return editor.value.getAttributes(type);
-};
+  return editor.value.getAttributes(type)
+}
 const hasTextSelection = computed(() => {
-  const editorIns = editor.value;
-  const selection = editorIns?.state?.selection;
+  const editorIns = editor.value
+  const selection = editorIns?.state?.selection
   if (!editorIns || !selection) {
-    return false;
+    return false
   }
   if (selection instanceof CellSelection) {
-    return false;
+    return false
   }
-  return hasAiSelection(editorIns);
-});
+  return hasAiSelection(editorIns)
+})
 
 const getCurrentNode = (type) => {
-  const { state } = editor.value;
-  const { selection } = state;
-  const { $from } = selection;
-  const currentNode = selection.node || $from.parent;
-  if (type === "name") {
-    return currentNode.type.name;
+  const { state } = editor.value
+  const { selection } = state
+  const { $from } = selection
+  const currentNode = selection.node || $from.parent
+  if (type === 'name') {
+    return currentNode.type.name
   }
-  if (type === "attrs") {
-    return currentNode.type.attrs;
+  if (type === 'attrs') {
+    return currentNode.type.attrs
   }
-};
+}
 </script>
 
 <style lang="less">

@@ -215,7 +215,7 @@
 </template>
 
 <script setup>
-import { Input } from 'tdesign-vue-next'
+import { Input } from 'tdesign-vue-next/esm/input'
 
 import {
   calbaseConfigData,

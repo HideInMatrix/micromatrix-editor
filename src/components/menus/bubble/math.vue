@@ -1,5 +1,5 @@
 <template>
-  <menus-toolbar-tools-math
+  <ToolbarToolsMath
     ico="edit"
     :tooltip="t('tools.math.edit')"
     :latex="latex"
@@ -8,6 +8,12 @@
 </template>
 
 <script setup>
+import { defineAsyncComponent } from 'vue'
+
+const ToolbarToolsMath = defineAsyncComponent(
+  () => import('@/components/menus/toolbar/tools/math.vue'),
+)
+
 const editor = inject('editor')
 
 const type = computed(() => {

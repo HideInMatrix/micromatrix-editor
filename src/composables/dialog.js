@@ -1,4 +1,5 @@
-import { DialogPlugin, MessagePlugin } from 'tdesign-vue-next'
+import DialogPlugin from 'tdesign-vue-next/esm/dialog/plugin'
+import MessagePlugin from 'tdesign-vue-next/esm/message/plugin'
 
 import { t } from '@/composables/i18n'
 

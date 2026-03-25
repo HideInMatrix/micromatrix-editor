@@ -11,7 +11,7 @@
 </template>
 
 <script setup>
-import { Dialog } from 'tdesign-vue-next'
+import { Dialog } from 'tdesign-vue-next/esm/dialog'
 import { h } from 'vue'
 
 const container = inject('container', 'body')

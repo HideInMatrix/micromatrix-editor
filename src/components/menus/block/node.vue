@@ -68,29 +68,25 @@
         <menus-toolbar-insert-web-page :huge="false" :tooltip="false" />
       </t-dropdown-item>
       <t-dropdown-item v-if="!disableMenu('qrcode')">
-        <menus-toolbar-tools-qrcode :huge="false" :tooltip="false" />
+        <ToolbarToolsQrcode :huge="false" :tooltip="false" />
       </t-dropdown-item>
       <t-dropdown-item v-if="!disableMenu('barcode')">
-        <menus-toolbar-tools-barcode :huge="false" :tooltip="false" />
+        <ToolbarToolsBarcode :huge="false" :tooltip="false" />
       </t-dropdown-item>
       <t-dropdown-item v-if="!disableMenu('signature')">
-        <menus-toolbar-tools-signature :huge="false" :tooltip="false" />
+        <ToolbarToolsSignature :huge="false" :tooltip="false" />
       </t-dropdown-item>
       <t-dropdown-item v-if="!disableMenu('diagrams')">
-        <menus-toolbar-tools-diagrams :huge="false" :tooltip="false" />
+        <ToolbarToolsDiagrams :huge="false" :tooltip="false" />
       </t-dropdown-item>
       <t-dropdown-item v-if="!disableMenu('math')">
-        <menus-toolbar-tools-math :huge="false" :tooltip="false" />
+        <ToolbarToolsMath :huge="false" :tooltip="false" />
       </t-dropdown-item>
       <t-dropdown-item v-if="!disableMenu('echarts')">
-        <menus-toolbar-tools-echarts
-          :huge="false"
-          :tooltip="false"
-          mode="add"
-        />
+        <ToolbarToolsEcharts :huge="false" :tooltip="false" mode="add" />
       </t-dropdown-item>
       <t-dropdown-item v-if="!disableMenu('mermaid')">
-        <menus-toolbar-tools-mermaid :huge="false" :tooltip="false" />
+        <ToolbarToolsMermaid :huge="false" :tooltip="false" />
       </t-dropdown-item>
       <t-dropdown-item v-if="options.templates.length > 0">
         <menus-button
@@ -118,6 +114,30 @@
 </template>
 
 <script setup>
+import { defineAsyncComponent } from 'vue'
+
+const ToolbarToolsBarcode = defineAsyncComponent(
+  () => import('@/components/menus/toolbar/tools/barcode.vue'),
+)
+const ToolbarToolsDiagrams = defineAsyncComponent(
+  () => import('@/components/menus/toolbar/tools/diagrams.vue'),
+)
+const ToolbarToolsEcharts = defineAsyncComponent(
+  () => import('@/components/menus/toolbar/tools/echarts.vue'),
+)
+const ToolbarToolsMath = defineAsyncComponent(
+  () => import('@/components/menus/toolbar/tools/math.vue'),
+)
+const ToolbarToolsMermaid = defineAsyncComponent(
+  () => import('@/components/menus/toolbar/tools/mermaid.vue'),
+)
+const ToolbarToolsQrcode = defineAsyncComponent(
+  () => import('@/components/menus/toolbar/tools/qrcode.vue'),
+)
+const ToolbarToolsSignature = defineAsyncComponent(
+  () => import('@/components/menus/toolbar/tools/signature.vue'),
+)
+
 const props = defineProps({
   node: {
     type: Object,

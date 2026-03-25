@@ -1,9 +1,6 @@
 <template>
   <div class="umo-main-container">
-    <container-toc
-      v-if="pageOptions.showToc"
-      @close="pageOptions.showToc = false"
-    />
+    <AsyncToc v-if="pageOptions.showToc" @close="pageOptions.showToc = false" />
     <div
       :class="`umo-zoomable-container umo-${pageOptions.layout}-container umo-scrollbar`"
     >
@@ -68,7 +65,7 @@
         </t-watermark>
       </div>
     </div>
-    <container-ai-chat v-if="aiOptions.enabled" />
+    <AsyncAiChat v-if="showAiChat" />
     <div class="umo-main-floating-actions">
       <t-back-top
         style="position: relative"
@@ -77,25 +74,73 @@
         size="small"
       />
     </div>
-    <t-image-viewer
-      :attach="container"
-      v-model:visible="imageViewer.visible"
-      v-model:index="currentImageIndex"
+    <AsyncImageViewer
+      v-if="imageViewerLoaded"
       :images="previewImages"
-      :trigger="() => {}"
-      @close="imageViewer.visible = false"
+      :index="currentImageIndex"
+      @update:index="(value) => (currentImageIndex = value)"
     />
-    <container-search-replace />
-    <container-print />
+    <AsyncSearchReplace v-if="searchReplaceLoaded" />
+    <AsyncPrint v-if="printLoaded" />
   </div>
 </template>
 
 <script setup>
+import { defineAsyncComponent } from 'vue'
+
+const AsyncAiChat = defineAsyncComponent(() => import('./ai-chat.vue'))
+const AsyncImageViewer = defineAsyncComponent(
+  () => import('./image-viewer.vue'),
+)
+const AsyncPrint = defineAsyncComponent(() => import('./print.vue'))
+const AsyncSearchReplace = defineAsyncComponent(
+  () => import('./search-replace.vue'),
+)
+const AsyncToc = defineAsyncComponent(() => import('./toc.vue'))
+
+const aiChat = inject('aiChat')
 const container = inject('container')
 const imageViewer = inject('imageViewer')
 const options = inject('options')
 const pageOptions = inject('page')
+const printing = inject('printing')
+const searchReplace = inject('searchReplace')
 const aiOptions = computed(() => options.value.ai || {})
+
+const aiChatLoaded = ref(false)
+const printLoaded = ref(false)
+const searchReplaceLoaded = ref(false)
+const showAiChat = computed(() => aiOptions.value.enabled && aiChatLoaded.value)
+
+watch(
+  () => aiChat.value?.visible,
+  (visible) => {
+    if (visible) {
+      aiChatLoaded.value = true
+    }
+  },
+  { immediate: true },
+)
+
+watch(
+  () => printing.value,
+  (visible) => {
+    if (visible) {
+      printLoaded.value = true
+    }
+  },
+  { immediate: true },
+)
+
+watch(
+  () => searchReplace.value,
+  (visible) => {
+    if (visible) {
+      searchReplaceLoaded.value = true
+    }
+  },
+  { immediate: true },
+)
 
 // 页面大小
 const pageSize = $computed(() => {
@@ -204,6 +249,7 @@ watch(
 // 图片预览
 let previewImages = $ref([])
 let currentImageIndex = $ref(0)
+const imageViewerLoaded = ref(false)
 
 watch(
   () => imageViewer.value.visible,
@@ -213,6 +259,7 @@ watch(
       currentImageIndex = 0
       return
     }
+    imageViewerLoaded.value = true
     await nextTick()
     const images = document.querySelectorAll(
       `${container} .umo-page-node-content img[src][data-preview]`,
@@ -356,7 +403,7 @@ watch(
 .umo-page-node-content {
   position: relative;
   box-sizing: border-box;
-  flex:1 1 auto;
+  flex: 1 1 auto;
 }
 
 .umo-main-floating-actions {
