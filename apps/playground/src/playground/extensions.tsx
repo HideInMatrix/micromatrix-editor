@@ -57,13 +57,15 @@ interface PlaygroundExtensionOptions {
   interactive?: boolean;
 }
 
-interface SlashItem {
+export interface SlashItem {
   id: string;
   label: string;
   description: string;
   keywords: string[];
   execute: (editor: Editor) => void;
 }
+
+export { slashPluginKey };
 
 function filterMentionItems(query: string) {
   const normalizedQuery = query.trim().toLowerCase();
@@ -366,7 +368,7 @@ const slashItems: SlashItem[] = [
   },
 ];
 
-function filterSlashItems(query: string) {
+export function filterSlashItems(query: string) {
   const normalizedQuery = query.trim().toLowerCase();
 
   if (!normalizedQuery) {
@@ -378,6 +380,20 @@ function filterSlashItems(query: string) {
     || item.description.toLowerCase().includes(normalizedQuery)
     || item.keywords.some((keyword) => keyword.includes(normalizedQuery)),
   );
+}
+
+export function executeSlashItem(
+  editor: Editor,
+  range: {
+    from: number;
+    to: number;
+  },
+  item: SlashItem,
+) {
+  editor.view?.dispatch(
+    editor.view.state.tr.delete(range.from, range.to).scrollIntoView(),
+  );
+  item.execute(editor);
 }
 
 function createSlashRenderer() {
@@ -531,7 +547,6 @@ function createSlashCommand() {
           startOfLine: true,
           allowedPrefixes: null,
           items: ({ query }) => filterSlashItems(query),
-          render: createSlashRenderer,
           decorationTag: "span",
           decorationClass: "slash-suggestion",
           decorationEmptyClass: "is-empty",
@@ -544,10 +559,7 @@ function createSlashCommand() {
             );
           },
           command: ({ editor, range, props }) => {
-            editor.view?.dispatch(
-              editor.view.state.tr.delete(range.from, range.to).scrollIntoView(),
-            );
-            props.execute(editor);
+            executeSlashItem(editor, range, props);
           },
         }),
       ];

@@ -13,6 +13,16 @@ import { createPortal } from "react-dom";
 import type { MenuVisibilityContextWithEditor } from "./menuContext";
 import { useCurrentEditor } from "./useCurrentEditor";
 
+function getPluginKeyValue(pluginKey: string | PluginKey) {
+  if (typeof pluginKey === "string") {
+    return pluginKey;
+  }
+
+  const key = (pluginKey as { key?: unknown }).key;
+
+  return typeof key === "string" ? key : "";
+}
+
 export interface BubbleMenuProps
   extends Omit<HTMLAttributes<HTMLDivElement>, "content"> {
   editor?: Editor | null;
@@ -120,8 +130,14 @@ export function BubbleMenu({
       }),
       pluginKey: resolvedPluginKey,
     });
+    const pluginKeyValue = getPluginKeyValue(resolvedPluginKey);
 
-    resolvedEditor.registerPlugin(plugin);
+    resolvedEditor.registerPlugin(plugin, (nextPlugin, plugins) => [
+      ...plugins.filter((currentPlugin) =>
+        (currentPlugin as { key?: unknown }).key !== pluginKeyValue
+      ),
+      nextPlugin,
+    ]);
 
     return () => {
       resolvedEditor.unregisterPlugin(resolvedPluginKey);

@@ -1,5 +1,8 @@
-import type { MouseEventHandler } from "react";
-import type { CharacterCountStorage } from "@mxm-editor/extension-character-count";
+import {
+  useCallback,
+  useRef,
+  type MouseEventHandler,
+} from "react";
 import {
   AlignCenter,
   AlignLeft,
@@ -37,6 +40,11 @@ import {
   bubbleMenuShouldShow,
   floatingMenuShouldShow,
 } from "../constants";
+import {
+  SlashFloatingMenu,
+  useSlashSuggestionState,
+} from "./SlashFloatingMenu";
+import { useContentStats } from "../hooks/useContentStats";
 import { useLocalPlayground } from "../hooks/useLocalPlayground";
 
 interface LocalEditorPanelProps {
@@ -307,18 +315,7 @@ function EditorToolbar({
 function EditorFooter({
   resetTemplate,
 }: Pick<LocalEditorPanelProps, "resetTemplate">) {
-  const meta = useEditorState({
-    selector: ({ editor }) => {
-      const characterCountStorage = editor?.storage.characterCount as
-        | CharacterCountStorage
-        | undefined;
-
-      return {
-        characters: characterCountStorage?.characters() ?? 0,
-        words: characterCountStorage?.words() ?? 0,
-      };
-    },
-  });
+  const meta = useContentStats();
 
   return (
     <div className="flex flex-wrap items-center justify-between gap-3 border-t border-[var(--panel-border)] px-4 py-3 text-xs text-[var(--muted-text)]">
@@ -418,6 +415,15 @@ function EmptyLineFloatingMenu({
   insertImage,
 }: Pick<LocalEditorPanelProps, "insertImage">) {
   const { editor } = useCurrentEditor();
+  const slashState = useSlashSuggestionState(editor);
+  const slashStateRef = useRef(slashState);
+
+  slashStateRef.current = slashState;
+  const shouldShow = useCallback(
+    (props: Parameters<typeof floatingMenuShouldShow>[0]) =>
+      !slashStateRef.current.active && floatingMenuShouldShow(props),
+    [],
+  );
 
   if (!editor) {
     return null;
@@ -427,7 +433,8 @@ function EmptyLineFloatingMenu({
     <FloatingMenu
       className="floating-menu"
       editor={editor}
-      shouldShow={floatingMenuShouldShow}
+      pluginKey="emptyLineFloatingMenu"
+      shouldShow={shouldShow}
     >
       <div className="ui-toolbar-group">
         <ToolbarIconButton
@@ -473,6 +480,7 @@ function LocalEditorPanel({
         setLink={setLink}
       />
       <SelectionBubbleMenu setLink={setLink} />
+      <SlashFloatingMenu editor={editor} />
       <EmptyLineFloatingMenu insertImage={insertImage} />
       <EditorContent
         className="editor-surface min-h-0 flex-1 overscroll-contain"

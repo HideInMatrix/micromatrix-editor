@@ -19,6 +19,12 @@ import {
 } from "lucide-react";
 import { pagesDemoContent } from "../constants";
 import { createPlaygroundExtensions } from "../extensions";
+import { useContentStats } from "../hooks/useContentStats";
+
+interface PagesSectionProps {
+  interactive?: boolean;
+  showContentStats?: boolean;
+}
 
 type PagesPresetId = "editorial" | "briefing";
 
@@ -226,7 +232,10 @@ function applyPaperFormat(
   editor.commands.repaginate();
 }
 
-export function PagesSection() {
+export function PagesSection({
+  interactive = false,
+  showContentStats = false,
+}: PagesSectionProps) {
   const initialPreset = getPresetById("editorial");
   const [activePresetId, setActivePresetId] = useState<PagesPresetId>(initialPreset.id);
   const [selectedFormat, setSelectedFormat] = useState<PagesFormatName>(initialPreset.formatName);
@@ -243,7 +252,7 @@ export function PagesSection() {
   const editor = useEditor({
     extensions: [
       ...createPlaygroundExtensions({
-        interactive: false,
+        interactive,
       }),
       Pages.configure({
         pageFormat: initialPreset.pageFormat,
@@ -297,6 +306,7 @@ export function PagesSection() {
       };
     },
   });
+  const contentStats = useContentStats(editor);
 
   if (!editor) {
     return null;
@@ -407,6 +417,22 @@ export function PagesSection() {
                 <strong>{roundPixels(pagesMeta.metrics.availableContentHeight)}px</strong>
                 <p>可用于正文的纵向空间。</p>
               </article>
+
+              {showContentStats ? (
+                <article className="pages-stat-card">
+                  <span>词数</span>
+                  <strong>{contentStats.words}</strong>
+                  <p>基于当前文档正文实时统计。</p>
+                </article>
+              ) : null}
+
+              {showContentStats ? (
+                <article className="pages-stat-card">
+                  <span>字符</span>
+                  <strong>{contentStats.characters}</strong>
+                  <p>用于观察长文编辑时的内容体量。</p>
+                </article>
+              ) : null}
             </div>
           </section>
 

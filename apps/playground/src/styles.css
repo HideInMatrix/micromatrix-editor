@@ -145,7 +145,6 @@ pre {
 
 .editor-surface {
   position: relative;
-  overflow-y: auto;
 }
 
 .editor-surface .ProseMirror {
@@ -394,10 +393,21 @@ pre {
 }
 
 .bubble-menu,
-.floating-menu,
 .mention-palette,
 .slash-palette {
   z-index: 1100;
+  border: 1px solid var(--panel-border);
+  border-radius: 1rem;
+  background: var(--toolbar-bg);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.32);
+  backdrop-filter: blur(14px);
+}
+
+[data-mxm-editor-menu="floating"] {
+  z-index: 1;
+}
+
+.floating-menu {
   border: 1px solid var(--panel-border);
   border-radius: 1rem;
   background: var(--toolbar-bg);
@@ -410,6 +420,7 @@ pre {
   padding: 0.4rem;
 }
 
+.slash-floating-menu,
 .mention-palette,
 .slash-palette {
   min-width: 240px;

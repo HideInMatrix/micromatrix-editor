@@ -39,6 +39,10 @@ function RouteIcon({ routeId }: { routeId: PlaygroundRouteId }) {
 export function App() {
   const [theme, setTheme] = useState<PlaygroundTheme>("dark");
   const { route, routes, navigate } = usePlaygroundRoute();
+  const pagesRouteProps = {
+    interactive: true,
+    showContentStats: true,
+  } as const;
 
   const renderRoute = () => {
     if (route.id === "comments") {
@@ -46,7 +50,7 @@ export function App() {
     }
 
     if (route.id === "pages") {
-      return <PagesSection />;
+      return <PagesSection {...pagesRouteProps} />;
     }
 
     if (route.id === "collaboration") {
@@ -58,7 +62,7 @@ export function App() {
 
   return (
     <main
-      className="app-shell relative min-h-screen overflow-hidden px-3 py-4 sm:px-6 sm:py-6"
+      className="app-shell relative min-h-screen overflow-x-hidden overflow-y-auto px-3 py-4 sm:px-6 sm:py-6"
       data-theme={theme}
     >
       <div className="pointer-events-none absolute inset-0 overflow-hidden">

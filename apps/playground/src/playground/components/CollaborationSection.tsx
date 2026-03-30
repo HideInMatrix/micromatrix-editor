@@ -2,6 +2,7 @@ import { useState } from "react";
 import type { Editor } from "@mxm-editor/core";
 import type { CollaborationCaretStorage } from "@mxm-editor/extension-collaboration-caret";
 import { EditorContent, useEditorState } from "@mxm-editor/react";
+import { SlashFloatingMenu } from "./SlashFloatingMenu";
 import { useCollaborationPlayground } from "../hooks/useCollaborationPlayground";
 
 interface CollaborationEditorPanelProps {
@@ -47,6 +48,7 @@ function CollaborationEditorPanel({
     <div className="collaboration-panel">
       <div className="collaboration-panel__label">{label}</div>
       <PresenceChips editor={editor} />
+      <SlashFloatingMenu editor={editor} />
       <EditorContent
         editor={editor}
         className="editor-surface editor-surface--collaboration"
