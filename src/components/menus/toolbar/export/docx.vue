@@ -32,75 +32,25 @@
       </div>
       <t-form :data="formData" label-align="top">
         <div class="umo-docx-export-grid">
-          <t-form-item label="纸张大小">
-            <t-select v-model="formData.pageSizeIndex">
+          <t-form-item label="正文中文字体">
+            <t-select v-model="formData.bodyChineseFont" filterable>
               <t-option
-                v-for="(item, index) in pageSizes"
-                :key="index"
-                :label="`${l(item.label)} (${item.width} × ${item.height} cm)`"
-                :value="index"
+                v-for="item in fontOptions"
+                :key="`body-zh-${item.value}`"
+                :label="item.label"
+                :value="item.value"
               />
             </t-select>
           </t-form-item>
-          <t-form-item label="页面方向">
-            <t-radio-group v-model="formData.orientation" variant="default-filled">
-              <t-radio-button value="portrait">纵向</t-radio-button>
-              <t-radio-button value="landscape">横向</t-radio-button>
-            </t-radio-group>
-          </t-form-item>
-        </div>
-
-        <t-form-item label="页边距（cm）">
-          <div class="umo-docx-export-grid margin">
-            <t-input-number
-              v-model="formData.marginTop"
-              :min="0"
-              :step="0.1"
-              theme="normal"
-              align="center"
-            />
-            <t-input-number
-              v-model="formData.marginRight"
-              :min="0"
-              :step="0.1"
-              theme="normal"
-              align="center"
-            />
-            <t-input-number
-              v-model="formData.marginBottom"
-              :min="0"
-              :step="0.1"
-              theme="normal"
-              align="center"
-            />
-            <t-input-number
-              v-model="formData.marginLeft"
-              :min="0"
-              :step="0.1"
-              theme="normal"
-              align="center"
-            />
-          </div>
-          <div class="umo-docx-export-grid margin-label">
-            <span>上边距</span>
-            <span>右边距</span>
-            <span>下边距</span>
-            <span>左边距</span>
-          </div>
-        </t-form-item>
-
-        <div class="umo-docx-export-grid">
-          <t-form-item label="正文中文字体">
-            <t-input
-              v-model.trim="formData.bodyChineseFont"
-              placeholder="例如：宋体"
-            />
-          </t-form-item>
           <t-form-item label="正文英文字体">
-            <t-input
-              v-model.trim="formData.bodyWesternFont"
-              placeholder="例如：Times New Roman"
-            />
+            <t-select v-model="formData.bodyWesternFont" filterable>
+              <t-option
+                v-for="item in fontOptions"
+                :key="`body-en-${item.value}`"
+                :label="item.label"
+                :value="item.value"
+              />
+            </t-select>
           </t-form-item>
         </div>
 
@@ -129,10 +79,14 @@
 
         <div class="umo-docx-export-grid">
           <t-form-item label="章标题字体（H1）">
-            <t-input
-              v-model.trim="formData.chapterFont"
-              placeholder="例如：黑体"
-            />
+            <t-select v-model="formData.chapterFont" filterable>
+              <t-option
+                v-for="item in fontOptions"
+                :key="`chapter-font-${item.value}`"
+                :label="item.label"
+                :value="item.value"
+              />
+            </t-select>
           </t-form-item>
           <t-form-item label="章标题字号（H1）">
             <t-select v-model="formData.chapterFontSize">
@@ -148,16 +102,112 @@
 
         <div class="umo-docx-export-grid">
           <t-form-item label="节标题字体（H2）">
-            <t-input
-              v-model.trim="formData.sectionFont"
-              placeholder="例如：黑体"
-            />
+            <t-select v-model="formData.sectionFont" filterable>
+              <t-option
+                v-for="item in fontOptions"
+                :key="`section-font-${item.value}`"
+                :label="item.label"
+                :value="item.value"
+              />
+            </t-select>
           </t-form-item>
           <t-form-item label="节标题字号（H2）">
             <t-select v-model="formData.sectionFontSize">
               <t-option
                 v-for="item in fontSizeOptions"
                 :key="`h2-${item.value}`"
+                :label="item.label"
+                :value="item.value"
+              />
+            </t-select>
+          </t-form-item>
+        </div>
+
+        <div class="umo-docx-export-grid">
+          <t-form-item label="三级标题字体（H3）">
+            <t-select v-model="formData.heading3Font" filterable>
+              <t-option
+                v-for="item in fontOptions"
+                :key="`heading3-font-${item.value}`"
+                :label="item.label"
+                :value="item.value"
+              />
+            </t-select>
+          </t-form-item>
+          <t-form-item label="三级标题字号（H3）">
+            <t-select v-model="formData.heading3FontSize">
+              <t-option
+                v-for="item in fontSizeOptions"
+                :key="`h3-${item.value}`"
+                :label="item.label"
+                :value="item.value"
+              />
+            </t-select>
+          </t-form-item>
+        </div>
+
+        <div class="umo-docx-export-grid">
+          <t-form-item label="四级标题字体（H4）">
+            <t-select v-model="formData.heading4Font" filterable>
+              <t-option
+                v-for="item in fontOptions"
+                :key="`heading4-font-${item.value}`"
+                :label="item.label"
+                :value="item.value"
+              />
+            </t-select>
+          </t-form-item>
+          <t-form-item label="四级标题字号（H4）">
+            <t-select v-model="formData.heading4FontSize">
+              <t-option
+                v-for="item in fontSizeOptions"
+                :key="`h4-${item.value}`"
+                :label="item.label"
+                :value="item.value"
+              />
+            </t-select>
+          </t-form-item>
+        </div>
+
+        <div class="umo-docx-export-grid">
+          <t-form-item label="五级标题字体（H5）">
+            <t-select v-model="formData.heading5Font" filterable>
+              <t-option
+                v-for="item in fontOptions"
+                :key="`heading5-font-${item.value}`"
+                :label="item.label"
+                :value="item.value"
+              />
+            </t-select>
+          </t-form-item>
+          <t-form-item label="五级标题字号（H5）">
+            <t-select v-model="formData.heading5FontSize">
+              <t-option
+                v-for="item in fontSizeOptions"
+                :key="`h5-${item.value}`"
+                :label="item.label"
+                :value="item.value"
+              />
+            </t-select>
+          </t-form-item>
+        </div>
+
+        <div class="umo-docx-export-grid">
+          <t-form-item label="六级标题字体（H6）">
+            <t-select v-model="formData.heading6Font" filterable>
+              <t-option
+                v-for="item in fontOptions"
+                :key="`heading6-font-${item.value}`"
+                :label="item.label"
+                :value="item.value"
+              />
+            </t-select>
+          </t-form-item>
+          <t-form-item label="六级标题字号（H6）">
+            <t-select v-model="formData.heading6FontSize">
+              <t-option
+                v-for="item in fontSizeOptions"
+                :key="`h6-${item.value}`"
                 :label="item.label"
                 :value="item.value"
               />
@@ -180,7 +230,10 @@
         <div class="umo-docx-export-note-title">论文规范提醒</div>
         <ul>
           <li>正文默认按“小四号宋体 + Times New Roman”导出，可在上方调整。</li>
-          <li>图表标题常见要求为五号宋体，图号/表号通常按章编号，如“图 2-1”“表 3-2”。</li>
+          <li>
+            图表标题常见要求为五号宋体，图号/表号通常按章编号，如“图 2-1”“表
+            3-2”。
+          </li>
           <li>公式通常居中排版，编号右对齐，例如“（3-5）”。</li>
           <li>参考文献通常采用 GB/T 7714 顺序编码制。</li>
           <li>
@@ -202,6 +255,7 @@ const page = inject('page')
 const exportDocxDocument = inject('exportDocxDocument', null)
 
 const fontSizeOptions = [
+  { label: '小五（9pt）', value: '9pt' },
   { label: '五号（10.5pt）', value: '10.5pt' },
   { label: '小四（12pt）', value: '12pt' },
   { label: '四号（14pt）', value: '14pt' },
@@ -215,7 +269,12 @@ const lineSpacingOptions = [
   { label: '固定 20 磅', value: 'exact:20' },
 ]
 
-const pageSizes = computed(() => options.value.dicts?.pageSizes || [])
+const fontOptions = computed(() =>
+  (options.value.dicts?.fonts || []).map((item) => ({
+    label: l(item.label),
+    value: item.value || '',
+  })),
+)
 
 let dialogVisible = $ref(false)
 let loading = $ref(false)
@@ -245,38 +304,23 @@ const createFontOptions = (eastAsia, western) => {
   }
 }
 
-const getCurrentPageSizeIndex = () => {
-  const currentSize = page.value?.size
-  const currentIndex = pageSizes.value.findIndex(
-    (item) =>
-      Number(item.width) === Number(currentSize?.width) &&
-      Number(item.height) === Number(currentSize?.height),
-  )
-
-  if (currentIndex >= 0) {
-    return currentIndex
-  }
-
-  const defaultIndex = pageSizes.value.findIndex((item) => item.default)
-  return defaultIndex >= 0 ? defaultIndex : 0
-}
-
 const createDefaultForm = () => {
   return {
-    pageSizeIndex: getCurrentPageSizeIndex(),
-    orientation:
-      page.value?.orientation || options.value.page?.defaultOrientation || 'portrait',
-    marginTop: 2.5,
-    marginRight: 2.5,
-    marginBottom: 2.5,
-    marginLeft: 2.5,
-    bodyChineseFont: '宋体',
+    bodyChineseFont: 'SimSun',
     bodyWesternFont: 'Times New Roman',
     bodyFontSize: '12pt',
-    chapterFont: '黑体',
+    chapterFont: 'SimHei',
     chapterFontSize: '22pt',
-    sectionFont: '黑体',
+    sectionFont: 'SimHei',
     sectionFontSize: '16pt',
+    heading3Font: 'SimHei',
+    heading3FontSize: '14pt',
+    heading4Font: 'SimHei',
+    heading4FontSize: '12pt',
+    heading5Font: 'SimHei',
+    heading5FontSize: '10.5pt',
+    heading6Font: 'SimHei',
+    heading6FontSize: '9pt',
     lineSpacingPreset: 'multiple:1.5',
     firstLineIndentChars: 2,
   }
@@ -292,24 +336,13 @@ const openDialog = () => {
 }
 
 const buildExportOptions = () => {
-  const [lineSpacingType, lineSpacingRaw] = `${formData.lineSpacingPreset}`.split(
-    ':',
-  )
-  const selectedPageSize =
-    pageSizes.value[Number(formData.pageSizeIndex)] || page.value?.size
+  const [lineSpacingType, lineSpacingRaw] =
+    `${formData.lineSpacingPreset}`.split(':')
 
   return {
     title: options.value.document?.title,
     page: {
       ...page.value,
-      size: selectedPageSize,
-      orientation: formData.orientation,
-      margin: {
-        top: clampNumber(formData.marginTop, 2.5),
-        right: clampNumber(formData.marginRight, 2.5),
-        bottom: clampNumber(formData.marginBottom, 2.5),
-        left: clampNumber(formData.marginLeft, 2.5),
-      },
     },
     defaultFontSize: formData.bodyFontSize,
     defaultFonts: createFontOptions(
@@ -323,26 +356,49 @@ const buildExportOptions = () => {
     defaultParagraphLineSpacing:
       Number.parseFloat(lineSpacingRaw) ||
       (lineSpacingType === 'exact' ? 20 : 1.5),
-    defaultFirstLineIndentChars: clampNumber(
-      formData.firstLineIndentChars,
-      2,
-    ),
+    defaultFirstLineIndentChars: clampNumber(formData.firstLineIndentChars, 2),
     headingStyles: {
       1: {
         bold: true,
-        font: createFontOptions(
-          formData.chapterFont,
-          formData.bodyWesternFont,
-        ),
+        font: createFontOptions(formData.chapterFont, formData.bodyWesternFont),
         size: formData.chapterFontSize,
       },
       2: {
         bold: true,
+        font: createFontOptions(formData.sectionFont, formData.bodyWesternFont),
+        size: formData.sectionFontSize,
+      },
+      3: {
+        bold: true,
         font: createFontOptions(
-          formData.sectionFont,
+          formData.heading3Font,
           formData.bodyWesternFont,
         ),
-        size: formData.sectionFontSize,
+        size: formData.heading3FontSize,
+      },
+      4: {
+        bold: true,
+        font: createFontOptions(
+          formData.heading4Font,
+          formData.bodyWesternFont,
+        ),
+        size: formData.heading4FontSize,
+      },
+      5: {
+        bold: true,
+        font: createFontOptions(
+          formData.heading5Font,
+          formData.bodyWesternFont,
+        ),
+        size: formData.heading5FontSize,
+      },
+      6: {
+        bold: true,
+        font: createFontOptions(
+          formData.heading6Font,
+          formData.bodyWesternFont,
+        ),
+        size: formData.heading6FontSize,
       },
     },
   }
@@ -397,17 +453,6 @@ const saveDocxFile = async () => {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 0 12px;
-
-    &.margin {
-      gap: 8px;
-      margin-bottom: 6px;
-    }
-
-    &.margin-label {
-      color: var(--umo-text-color-light);
-      font-size: 12px;
-      line-height: 1.4;
-    }
   }
 
   &-note {

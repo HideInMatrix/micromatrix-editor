@@ -210,9 +210,7 @@ export const useAiChatPanel = () => {
           ? '当前建议更适合插入，无法直接执行替换。'
           : 'This suggestion is better suited for insertion and cannot directly replace the document.'
     }
-    return isZhLocale.value
-      ? 'Enter 发送，Shift + Enter 换行。'
-      : 'Press Enter to send, Shift + Enter for a new line.'
+    return ""
   })
   const configTipText = computed(() => {
     return isZhLocale.value
