@@ -898,6 +898,12 @@ importers:
         specifier: ^1.39.1
         version: 1.41.6
 
+  packages/pretext:
+    dependencies:
+      '@mxm-editor/core':
+        specifier: workspace:*
+        version: link:../core
+
   packages/react:
     dependencies:
       '@mxm-editor/core':

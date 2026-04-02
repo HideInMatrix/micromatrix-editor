@@ -114,6 +114,7 @@ const editorPackages = [
   "/packages/extension-file-handler/",
   "/packages/extension-floating-menu/",
   "/packages/extension-mention/",
+  "/packages/pretext/",
   "/packages/extension-unique-id/",
   "/packages/suggestion/",
   "/packages/markdown/",
@@ -364,6 +365,9 @@ export default defineConfig(({ mode }) => {
       "@mxm-editor/extension-mention": fromRoot(
         "../../packages/extension-mention/src/index.ts",
       ),
+      "@mxm-editor/pretext": fromRoot(
+        "../../packages/pretext/src/index.ts",
+      ),
       "@mxm-editor/extension-callout": fromRoot(
         "../../packages/extension-callout/src/index.ts",
       ),
@@ -406,6 +410,7 @@ export default defineConfig(({ mode }) => {
       "@mxm-editor/text-style-kit": fromRoot(
         "../../packages/text-style-kit/src/index.ts",
       ),
+      "@chenglou/pretext": fromRoot("../../../pretext/src/layout.ts"),
       },
     },
   };

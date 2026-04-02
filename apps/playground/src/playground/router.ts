@@ -1,6 +1,11 @@
 import { useEffect, useState } from "react";
 
-export type PlaygroundRouteId = "editor" | "collaboration" | "comments" | "pages";
+export type PlaygroundRouteId =
+  | "editor"
+  | "collaboration"
+  | "comments"
+  | "pages"
+  | "pretext";
 
 export interface PlaygroundRoute {
   id: PlaygroundRouteId;
@@ -34,6 +39,12 @@ export const playgroundRoutes: PlaygroundRoute[] = [
     description: "支持纸张格式、页眉页脚与分页流式布局的页面演示。",
     path: "/pages",
   },
+  {
+    id: "pretext",
+    label: "Pretext",
+    description: "通过 textEngine 切换 DOM 与 Pretext 两种文本测量模式。",
+    path: "/pretext",
+  },
 ];
 
 const routeAliases = new Map<string, PlaygroundRouteId>([
@@ -42,6 +53,7 @@ const routeAliases = new Map<string, PlaygroundRouteId>([
   ["/collaboration", "collaboration"],
   ["/comments", "comments"],
   ["/pages", "pages"],
+  ["/pretext", "pretext"],
 ]);
 
 function normalizeBasePath(basePath: string) {

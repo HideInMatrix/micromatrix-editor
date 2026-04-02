@@ -31,6 +31,7 @@
     "@mxm-editor/extension-text-align": "workspace:*",
     "@mxm-editor/extension-text-style": "workspace:*",
     "@mxm-editor/markdown": "workspace:*",
+    "@mxm-editor/pretext": "workspace:*",
     "@mxm-editor/react": "workspace:*",
     "@mxm-editor/starter-kit": "workspace:*",
     "@mxm-editor/suggestion": "workspace:*",

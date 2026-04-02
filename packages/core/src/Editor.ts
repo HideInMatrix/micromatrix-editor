@@ -201,6 +201,7 @@ export class Editor extends EventEmitter<EditorEventMap> {
       element: null,
       content: null,
       contentType: undefined,
+      textEngine: null,
       injectCSS: true,
       injectNonce: undefined,
       extensions: [],
@@ -248,6 +249,10 @@ export class Editor extends EventEmitter<EditorEventMap> {
 
   get schema() {
     return this.extensionManager.schema;
+  }
+
+  get textEngine() {
+    return this.options.textEngine;
   }
 
   get storage(): Storage {

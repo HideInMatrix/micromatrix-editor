@@ -127,6 +127,37 @@ export const pagesDemoContent = [
   "<p></p>",
 ].join("");
 
+export const pretextDemoContent = [
+  "<h1>Pretext 模式试验台</h1>",
+  "<p>这页把 <code>editor.textEngine</code> 切换到 <strong>Pretext</strong>，让 Pages 在测量标题与段落时不再直接依赖 DOM 高度，而是复用预处理后的文本宽度缓存来完成分页。</p>",
+  `<p>为了让换行压力更真实，这份文档刻意混入了 <span style="font-family: Georgia, 'Times New Roman', serif; font-size: 22px;">更宽的 serif 短句</span>、<span style="font-family: 'SF Mono', Menlo, Monaco, monospace; font-size: 15px;">mono diagnostics</span>、中文标签和 Arabic 片段 مثل هذا，让文本测量路径更接近真实编辑环境。</p>`,
+  "<h2>1. 为什么把它做成 text engine</h2>",
+  "<p>如果分页、导出预览、摘要卡片或者批注定位都需要一致的文字几何，那么把测量逻辑上提到 Editor 级别，比把某一种实现硬编码进单个扩展更稳妥。Pages 只是第一个消费者，不应该成为唯一消费者。</p>",
+  "<p>在这个模型里，扩展只关心“我要测一段什么样的内容”，而不需要关心底层是浏览器 DOM 读数、Pretext 还是未来别的文本引擎。切换方案时，页面和上层命令都可以保持不动。</p>",
+  "<h2>2. 当前接入范围</h2>",
+  "<p>当前版本里，Pretext 会优先接管 <strong>heading</strong> 和 <strong>paragraph</strong> 的测量。列表、引用、表格、代码块这类块级内容仍然保留原来的 DOM 路径，这样新旧路径可以明确并存，风险也更容易逐步收敛。</p>",
+  "<p>换句话说，现在的演示不是要证明“所有排版都已经完全由 Pretext 接管”，而是证明 `micromatrix-editor` 已经具备了 <em>按配置切换文本处理后端</em> 的骨架，后面可以继续把更多消费者迁过来。</p>",
+  "<h2>3. 观察方式</h2>",
+  "<p>先切到 DOM 模式记住页数，再切到 Pretext 模式。文档内容不会改变，但分页决策会改由 text engine 驱动；对于换行密集、字体混杂的段落，这个切换会更容易暴露出差异。</p>",
+  "<p>这也是为什么这页特意放了更长的正文段落、不同字体跨度和多语言片段。我们希望把“模式切换”直接暴露在 playground 里，而不是只停留在 API 层。</p>",
+  "<h2>4. 一段更像真实文稿的正文</h2>",
+  "<p>Ship the review packet once the editorial pass lands. Keep the opening paragraph calm, leave enough margin for handwritten notes, and make sure the release note still reads naturally when one sentence contains English product names、中文提示词和 Arabic confirmation مثل جاهز all in the same line.</p>",
+  "<p>当一份工作稿进入真正的评审流程之后，团队通常不再只讨论“有没有这个功能”，而会开始讨论“这一段落在第二页底部是不是太挤”“这个过渡句如果落到下一页开头会不会更稳”。这就是文本测量成为基础设施而不是局部技巧的原因。</p>",
+  "<p>Even without print export, a page-aware editor changes the conversation. Designers can discuss rhythm, editors can point to exact page positions, and engineers can evaluate whether a layout decision comes from content, spacing, or the measurement backend itself.</p>",
+  "<p></p>",
+].join("");
+
+export const pretextIntegrationSnippet = [
+  "const editor = new Editor({",
+  "  textEngine: createPretextTextEngine(),",
+  "  extensions: [",
+  "    ...createPlaygroundExtensions(),",
+  "    Pages,",
+  "  ],",
+  "  content: pretextDemoContent,",
+  "})",
+].join("\n");
+
 export const commentsDemoThreads: CommentsThread[] = [
   {
     id: "thread-launch",

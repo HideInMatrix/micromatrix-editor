@@ -5,6 +5,7 @@ import {
   MessageSquareText,
   Moon,
   ScrollText,
+  Sparkles,
   Sun,
   Users,
 } from "lucide-react";
@@ -12,6 +13,7 @@ import { CollaborationSection } from "./playground/components/CollaborationSecti
 import { CommentsSection } from "./playground/components/CommentsSection";
 import { LocalEditorSection } from "./playground/components/LocalEditorSection";
 import { PagesSection } from "./playground/components/PagesSection";
+import { PretextSection } from "./playground/components/PretextSection";
 import {
   getPlaygroundRouteHref,
   usePlaygroundRoute,
@@ -27,6 +29,10 @@ function RouteIcon({ routeId }: { routeId: PlaygroundRouteId }) {
 
   if (routeId === "pages") {
     return <ScrollText size={16} strokeWidth={2} />;
+  }
+
+  if (routeId === "pretext") {
+    return <Sparkles size={16} strokeWidth={2} />;
   }
 
   if (routeId === "collaboration") {
@@ -51,6 +57,10 @@ export function App() {
 
     if (route.id === "pages") {
       return <PagesSection {...pagesRouteProps} />;
+    }
+
+    if (route.id === "pretext") {
+      return <PretextSection />;
     }
 
     if (route.id === "collaboration") {

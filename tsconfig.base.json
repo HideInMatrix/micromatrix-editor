@@ -14,10 +14,12 @@
     "resolveJsonModule": true,
     "baseUrl": ".",
     "paths": {
+      "@chenglou/pretext": ["../pretext/src/layout.ts"],
       "@mxm-editor/pm": ["packages/pm/src/index.ts"],
       "@mxm-editor/core": ["packages/core/src/index.ts"],
       "@mxm-editor/core/jsx-runtime": ["packages/core/src/jsx-runtime.ts"],
       "@mxm-editor/core/jsx-dev-runtime": ["packages/core/src/jsx-dev-runtime.ts"],
+      "@mxm-editor/pretext": ["packages/pretext/src/index.ts"],
       "@mxm-editor/extension-audio": ["packages/extension-audio/src/index.ts"],
       "@mxm-editor/extension-blockquote": ["packages/extension-blockquote/src/index.ts"],
       "@mxm-editor/extension-background-color": ["packages/extension-background-color/src/index.ts"],

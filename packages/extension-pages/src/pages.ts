@@ -1,4 +1,9 @@
-import type { CommandProps, Extensions, JSONContent } from "@mxm-editor/core";
+import type {
+  CommandProps,
+  Editor as CoreEditor,
+  Extensions,
+  JSONContent,
+} from "@mxm-editor/core";
 import { Extension } from "@mxm-editor/core";
 import {
   Decoration,
@@ -33,6 +38,7 @@ import {
   setStorageFromOptions,
   updateHeaderFooterVariant,
 } from "./utils";
+import { measureTextBlockWithTextEngine } from "./textEngine";
 
 interface PagesPluginState {
   pageBreakPositions: number[];
@@ -180,6 +186,15 @@ function resolveMetrics(storage: PagesStorage) {
   return storage.getMetrics();
 }
 
+function getAvailableContentWidth(storage: PagesStorage) {
+  const metrics = resolveMetrics(storage);
+
+  return Math.max(
+    storage.pageFormat.width - metrics.leftInset - metrics.rightInset,
+    1,
+  );
+}
+
 function setHostVariables(host: HTMLElement, storage: PagesStorage) {
   const metrics = resolveMetrics(storage);
 
@@ -258,7 +273,13 @@ function estimateNodeHeight(node: ProseMirrorNode) {
   }
 }
 
-function getNodeHeight(view: EditorView, pos: number, node: ProseMirrorNode) {
+function getNodeHeight(
+  view: EditorView,
+  editor: CoreEditor,
+  storage: PagesStorage,
+  pos: number,
+  node: ProseMirrorNode,
+) {
   const dom = view.nodeDOM(pos);
   const element =
     dom instanceof HTMLElement
@@ -269,6 +290,23 @@ function getNodeHeight(view: EditorView, pos: number, node: ProseMirrorNode) {
 
   if (!(element instanceof HTMLElement)) {
     return estimateNodeHeight(node);
+  }
+
+  const textEngine = editor.textEngine;
+  const supportsTextEngineMeasurement =
+    textEngine
+    && (node.type.name === "paragraph" || node.type.name === "heading");
+
+  if (supportsTextEngineMeasurement) {
+    const measuredHeight = measureTextBlockWithTextEngine({
+      element,
+      maxWidth: getAvailableContentWidth(storage),
+      textEngine,
+    });
+
+    if (measuredHeight !== null) {
+      return measuredHeight;
+    }
   }
 
   const rect = element.getBoundingClientRect();
@@ -291,6 +329,7 @@ function getNodeHeight(view: EditorView, pos: number, node: ProseMirrorNode) {
 
 function measurePageBreakPositions(
   view: EditorView,
+  editor: CoreEditor,
   storage: PagesStorage,
 ) {
   const { availableContentHeight } = resolveMetrics(storage);
@@ -298,7 +337,7 @@ function measurePageBreakPositions(
   let currentPageHeight = 0;
 
   view.state.doc.forEach((node, offset) => {
-    const nodeHeight = Math.max(getNodeHeight(view, offset, node), 1);
+    const nodeHeight = Math.max(getNodeHeight(view, editor, storage, offset, node), 1);
 
     if (
       currentPageHeight > 0
@@ -633,6 +672,7 @@ function updateStorageLayout(
 }
 
 function createPluginView(options: {
+  editor: CoreEditor;
   storage: PagesStorage;
 }) {
   return (view: EditorView) => {
@@ -666,6 +706,7 @@ function createPluginView(options: {
       applyClasses();
       const { pageBreakPositions, pageCount } = measurePageBreakPositions(
         view,
+        options.editor,
         options.storage,
       );
       const pluginState = pagesPluginKey.getState(view.state) ?? createEmptyPluginState();
@@ -1135,6 +1176,7 @@ export const Pages = Extension.create<PagesOptions, PagesStorage>({
           },
         },
         view: createPluginView({
+          editor: this.editor,
           storage: this.storage,
         }),
       }),

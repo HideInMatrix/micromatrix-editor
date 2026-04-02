@@ -316,6 +316,60 @@ export interface FocusOptions {
   scrollIntoView?: boolean;
 }
 
+export interface EditorTextEngineTextRun {
+  kind: "text";
+  text: string;
+  font: string;
+  chromeWidth?: number;
+  leadingGap?: number;
+  leadingWhitespace?: boolean;
+}
+
+export interface EditorTextEngineAtomRun {
+  kind: "atom";
+  width: number;
+  leadingGap?: number;
+}
+
+export interface EditorTextEngineBreakRun {
+  kind: "break";
+}
+
+export type EditorTextEngineInlineRun =
+  | EditorTextEngineTextRun
+  | EditorTextEngineAtomRun
+  | EditorTextEngineBreakRun;
+
+export interface EditorTextEngineLineFragment {
+  kind: "text" | "atom";
+  leadingGap: number;
+  text?: string;
+  width: number;
+}
+
+export interface EditorTextEngineLine {
+  fragments: EditorTextEngineLineFragment[];
+  height: number;
+  width: number;
+}
+
+export interface EditorTextEngineMeasureOptions {
+  lineHeight: number;
+  maxWidth: number;
+  runs: EditorTextEngineInlineRun[];
+}
+
+export interface EditorTextEngineMeasureResult {
+  height: number;
+  lineCount: number;
+  lines: EditorTextEngineLine[];
+}
+
+export interface EditorTextEngine {
+  name: string;
+  measure: (options: EditorTextEngineMeasureOptions) => EditorTextEngineMeasureResult;
+}
+
 export interface EditorGetTextOptions {
   blockSeparator?: string;
   textSerializers?: Record<
@@ -386,6 +440,7 @@ export interface EditorOptions {
   element?: HTMLElement | null;
   content?: Content;
   contentType?: ContentType;
+  textEngine?: EditorTextEngine | null;
   injectCSS?: boolean;
   injectNonce?: string | undefined;
   extensions?: AnyExtension[];
